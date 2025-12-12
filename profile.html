@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="8 Ball Pool - Player Profile">
+    <title>Player Profile | 8 Ball Pool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-felt: #0f6b3d;
+            --bg-felt-dark: #042a18;
+            --bg-card: rgba(15, 25, 45, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+            --neon-blue: #00d4ff;
+            --neon-blue-glow: rgba(0, 212, 255, 0.4);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #8892a0;
+            --accent-green: #00ff88;
+            --accent-red: #ff4466;
+            --gradient-blue: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            color: var(--text-primary);
+            background: radial-gradient(ellipse at center, #1d8050 0%, #0f6b3d 40%, #0a5c32 70%, #042a18 100%);
+            overflow-x: hidden;
+        }
+
+        .profile-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 25px 20px;
+            min-height: 100vh;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            padding: 12px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 25px var(--neon-blue-glow);
+        }
+
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 50%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 3px;
+        }
+
+        .settings-btn {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: var(--gold);
+            box-shadow: 0 0 25px var(--gold-glow);
+        }
+
+        .profile-card {
+            background: linear-gradient(135deg, rgba(15, 25, 45, 0.95) 0%, rgba(10, 20, 35, 0.98) 100%);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 28px;
+            padding: 35px 30px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(0, 212, 255, 0.12);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #00d4ff, #ffd700, #00d4ff, transparent);
+        }
+
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 20px;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--neon-blue), var(--gold), var(--accent-green), var(--neon-blue));
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .avatar-inner {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 142px;
+            height: 142px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a1525 0%, #0d1a28 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-image {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #222 0%, #111 60%, #0a0a0a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+        }
+
+        .edit-avatar-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-gold);
+            border: 4px solid #0a1525;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .edit-avatar-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .player-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .player-id {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 149, 0, 0.1) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 25px;
+            padding: 10px 20px;
+            margin-top: 15px;
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .level-icon {
+            font-size: 22px;
+        }
+
+        .level-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .level-xp {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+        }
+
+        .stats-section {
+            margin: 30px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .stat-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 15px 45px rgba(0, 212, 255, 0.25);
+        }
+
+        .stat-icon {
+            font-size: 30px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 30px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .stat-value.blue {
+            color: var(--neon-blue);
+        }
+
+        .stat-value.gold {
+            color: var(--gold);
+        }
+
+        .stat-value.green {
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .wallet-section {
+            margin-top: 30px;
+        }
+
+        .wallet-card {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 149, 0, 0.08) 100%);
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            border-radius: 22px;
+            padding: 28px;
+        }
+
+        .wallet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .wallet-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wallet-icon {
+            font-size: 26px;
+        }
+
+        .wallet-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .add-funds-btn {
+            background: var(--gradient-gold);
+            border: none;
+            color: #000;
+            padding: 12px 22px;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .add-funds-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px var(--gold-glow);
+        }
+
+        .balance-amount {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 52px;
+            font-weight: 900;
+            color: var(--gold);
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+
+        .balance-currency {
+            font-size: 26px;
+        }
+
+        .wallet-stats {
+            display: flex;
+            gap: 20px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 215, 0, 0.25);
+            margin-top: 18px;
+        }
+
+        .wallet-stat {
+            flex: 1;
+        }
+
+        .wallet-stat-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .wallet-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .wallet-stat-value.green {
+            color: var(--accent-green);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 28px;
+        }
+
+        .action-btn {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 212, 255, 0.12);
+            border-color: var(--neon-blue);
+            transform: translateY(-4px);
+        }
+
+        .action-btn-icon {
+            font-size: 28px;
+        }
+
+        .action-btn-text {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .achievements-preview {
+            margin-top: 28px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 22px;
+        }
+
+        .achievements-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .view-all-btn {
+            color: var(--neon-blue);
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-all-btn:hover {
+            color: var(--gold);
+        }
+
+        .achievements-list {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .achievement-badge {
+            flex-shrink: 0;
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 149, 0, 0.1) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 0 15px var(--gold-glow);
+            transition: transform 0.3s;
+        }
+
+        .achievement-badge:hover {
+            transform: scale(1.1);
+        }
+
+        .achievement-badge.locked {
+            background: var(--bg-glass);
+            border-color: var(--border-glass);
+            opacity: 0.5;
+            box-shadow: none;
+        }
+
+        .logout-section {
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(255, 68, 102, 0.1);
+            border: 2px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 16px;
+            border-radius: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 68, 102, 0.2);
+            box-shadow: 0 0 30px rgba(255, 68, 102, 0.4);
+        }
+
+        .match-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .match-item.win {
+            border-left: 3px solid #00ff88;
+        }
+
+        .match-item.loss {
+            border-left: 3px solid #ff4466;
+        }
+
+        @media (max-width: 480px) {
+            .profile-container {
+                padding: 15px;
+            }
+
+            .profile-card {
+                padding: 25px 20px;
+            }
+
+            .balance-amount {
+                font-size: 40px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="profile-container">
+        <header class="profile-header">
+            <a href="game.html" class="back-btn">
+                <span>←</span>
+                <span>Back</span>
+            </a>
+            <span class="header-title">PROFILE</span>
+            <button class="settings-btn" onclick="window.location.href='settings.html'">⚙️</button>
+        </header>
+
+        <div class="profile-card">
+            <div class="avatar-section">
+                <div class="avatar-container">
+                    <div class="avatar-ring"></div>
+                    <div class="avatar-inner">
+                        <div class="avatar-image" id="avatar-display">🎱</div>
+                    </div>
+                    <button class="edit-avatar-btn" onclick="changeAvatar()">📷</button>
+                </div>
+                <div class="player-name" id="player-name">Loading...</div>
+                <div class="player-id" id="player-id">ID: ------</div>
+                <div class="level-badge">
+                    <span class="level-icon" id="rank-icon">🏆</span>
+                    <span class="level-text" id="player-rank">BRONZE</span>
+                    <span class="level-xp" id="player-elo">1200 ELO</span>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="section-title">Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-value blue" id="total-games">0</div>
+                        <div class="stat-label">Games Played</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-value gold" id="wins">0</div>
+                        <div class="stat-label">Victories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value green" id="win-rate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value gold" id="win-streak">0</div>
+                        <div class="stat-label">Best Streak</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallet-section">
+                <div class="section-title">Wallet</div>
+                <div class="wallet-card">
+                    <div class="wallet-header">
+                        <div class="wallet-title">
+                            <span class="wallet-icon">💰</span>
+                            <span class="wallet-label">Balance</span>
+                        </div>
+                        <button class="add-funds-btn" onclick="addFunds()">
+                            <span>+</span> Add
+                        </button>
+                    </div>
+                    <div class="balance-amount">
+                        <span class="balance-currency">🪙</span>
+                        <span id="coin-balance">0</span>
+                    </div>
+                    <div class="wallet-stats">
+                        <div class="wallet-stat">
+                            <div class="wallet-stat-label">Total Earned</div>
+                            <div class="wallet-stat-value green" id="total-earned">+0</div>
+                        </div>
+                        <div class="wallet-stat">
+                            <div class="wallet-stat-label">Highest Balance</div>
+                            <div class="wallet-stat-value" id="highest-balance">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="achievements.html" class="action-btn">
+                    <span class="action-btn-icon">🏅</span>
+                    <span class="action-btn-text">Achievements</span>
+                </a>
+                <a href="history.html" class="action-btn">
+                    <span class="action-btn-icon">📜</span>
+                    <span class="action-btn-text">History</span>
+                </a>
+                <a href="friends.html" class="action-btn">
+                    <span class="action-btn-icon">👥</span>
+                    <span class="action-btn-text">Friends</span>
+                </a>
+                <a href="leaderboard.html" class="action-btn">
+                    <span class="action-btn-icon">📊</span>
+                    <span class="action-btn-text">Rankings</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Match History Preview -->
+        <div class="achievements-preview">
+            <div class="achievements-header">
+                <div class="section-title" style="margin-bottom: 0;">Recent Matches</div>
+                <a href="history.html" class="view-all-btn">View All →</a>
+            </div>
+            <div id="match-history-list" style="max-height: 200px; overflow-y: auto;">
+                <p style="color: var(--text-secondary); text-align: center; padding: 20px;">Loading matches...</p>
+            </div>
+        </div>
+
+        <!-- Achievements Preview -->
+        <div class="achievements-preview">
+            <div class="achievements-header">
+                <div class="section-title" style="margin-bottom: 0;">Achievements</div>
+                <a href="achievements.html" class="view-all-btn">View All →</a>
+            </div>
+            <div class="achievements-list" id="achievements-list">
+                <div class="achievement-badge locked">🏆</div>
+                <div class="achievement-badge locked">⭐</div>
+                <div class="achievement-badge locked">🔥</div>
+                <div class="achievement-badge locked">💎</div>
+                <div class="achievement-badge locked">👑</div>
+            </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="logout-section">
+            <button class="logout-btn" onclick="logout()">
+                <span>🚪</span>
+                <span>Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Rank info helper
+        function getRankFromElo(elo) {
+            if (elo >= 2400) return { rank: 'Grandmaster', icon: '👑', color: '#FF6B6B' };
+            if (elo >= 2000) return { rank: 'Master', icon: '🏆', color: '#C0C0C0' };
+            if (elo >= 1700) return { rank: 'Diamond', icon: '💎', color: '#00D4FF' };
+            if (elo >= 1400) return { rank: 'Platinum', icon: '💠', color: '#4ECDC4' };
+            if (elo >= 1100) return { rank: 'Gold', icon: '🥇', color: '#FFD700' };
+            if (elo >= 800) return { rank: 'Silver', icon: '🥈', color: '#A0A0A0' };
+            return { rank: 'Bronze', icon: '🥉', color: '#CD7F32' };
+        }
+
+        // Load user data
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                const data = await response.json();
+
+                if (data.success && data.user) {
+                    document.getElementById('player-name').textContent = data.user.username || 'Player';
+                    document.getElementById('player-id').textContent = 'ID: ' + (data.user.id || '------').toString().substring(0, 8);
+                    document.getElementById('coin-balance').textContent = (data.user.coins || 0).toLocaleString();
+
+                    // Stats
+                    const games = data.user.gamesPlayed || 0;
+                    const wins = data.user.gamesWon || 0;
+                    const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+
+                    document.getElementById('total-games').textContent = games;
+                    document.getElementById('wins').textContent = wins;
+                    document.getElementById('win-rate').textContent = winRate + '%';
+                    document.getElementById('win-streak').textContent = data.user.winStreak || 0;
+
+                    // Rank/ELO
+                    const elo = data.user.elo || 1200;
+                    const rankInfo = getRankFromElo(elo);
+                    document.getElementById('player-rank').textContent = rankInfo.rank.toUpperCase();
+                    document.getElementById('player-rank').style.color = rankInfo.color;
+                    document.getElementById('rank-icon').textContent = rankInfo.icon;
+                    document.getElementById('player-elo').textContent = elo + ' ELO';
+
+                    // Avatar initial
+                    document.getElementById('avatar-display').textContent = (data.user.username || 'P').charAt(0).toUpperCase();
+
+                    // Wallet stats
+                    document.getElementById('total-earned').textContent = '+' + (data.user.totalEarned || 0).toLocaleString();
+                    document.getElementById('highest-balance').textContent = (data.user.highestBalance || data.user.coins || 0).toLocaleString();
+
+                    // Load achievements and match history
+                    loadAchievements();
+                    loadMatchHistory();
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load achievements
+        async function loadAchievements() {
+            try {
+                const response = await fetch('/api/achievements', { credentials: 'include' });
+                const data = await response.json();
+
+                if (data.success && data.earned) {
+                    const list = document.getElementById('achievements-list');
+                    list.innerHTML = '';
+
+                    const toShow = [...data.earned.slice(0, 3), ...data.locked.slice(0, 2)];
+                    toShow.forEach(ach => {
+                        const badge = document.createElement('div');
+                        badge.className = 'achievement-badge' + (ach.unlocked ? '' : ' locked');
+                        badge.textContent = ach.icon;
+                        badge.title = ach.name + ': ' + ach.description;
+                        list.appendChild(badge);
+                    });
+                }
+            } catch (error) {
+                console.log('Achievements not available');
+            }
+        }
+
+        // Load match history
+        async function loadMatchHistory() {
+            try {
+                const response = await fetch('/api/matches?limit=5', { credentials: 'include' });
+                const data = await response.json();
+                const list = document.getElementById('match-history-list');
+
+                if (data.success && data.matches && data.matches.length > 0) {
+                    list.innerHTML = data.matches.map(match => {
+                        const isWin = match.isWinner;
+                        const coinsColor = match.coinsChange >= 0 ? '#00ff88' : '#ff4466';
+                        const eloColor = match.eloChange >= 0 ? '#00ff88' : '#ff4466';
+                        return '<div class="match-item ' + (isWin ? 'win' : 'loss') + '">' +
+                            '<div>' +
+                            '<div style="font-weight: 600;">' + (isWin ? '🏆 Victory' : '💔 Defeat') + '</div>' +
+                            '<div style="font-size: 11px; color: var(--text-secondary);">vs ' + (isWin ? match.loserUsername : match.winnerUsername) + '</div>' +
+                            '</div>' +
+                            '<div style="text-align: right;">' +
+                            '<div style="color: ' + coinsColor + ';">' + (match.coinsChange >= 0 ? '+' : '') + match.coinsChange + ' 💰</div>' +
+                            '<div style="font-size: 10px; color: ' + eloColor + ';">' + (match.eloChange >= 0 ? '+' : '') + match.eloChange + ' ELO</div>' +
+                            '</div>' +
+                            '</div>';
+                    }).join('');
+                } else {
+                    list.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No matches yet. Play online to see your history!</p>';
+                }
+            } catch (error) {
+                console.log('Match history not available');
+                document.getElementById('match-history-list').innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Play online matches to see your history!</p>';
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                localStorage.removeItem('user');
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Change avatar
+        function changeAvatar() {
+            alert('Avatar customization coming soon!');
+        }
+
+        // Add funds
+        function addFunds() {
+            alert('Shop coming soon! Earn coins by winning games.');
+        }
+
+        // Load profile on page load
+        loadProfile();
+    </script>
+</body>
+
+</html>
