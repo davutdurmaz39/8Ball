@@ -1,5 +1,5 @@
 /**
- * 8 Ball Pool Physics Engine - Miniclip Arcade Style
+ * 8 Ball Pool Physics Engine - 
  * Exaggerated spin mechanics: topspin = strong follow, backspin = strong draw, english = rail effect only
  */
 

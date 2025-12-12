@@ -197,7 +197,8 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('BREAK SHOT', 'Place the cue ball anywhere in the kitchen (behind the line)');
             this.startShotTimer(); // Start timer for first shot
-            this.animate();
+            // Use requestAnimationFrame to ensure timestamp is passed on first frame
+            requestAnimationFrame((ts) => this.animate(ts));
         } catch (error) {
             console.error('Error starting game:', error);
             alert('Error starting game: ' + error.message);
@@ -262,7 +263,8 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('MULTIPLAYER GAME', `${this.isMyTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'} - Wager: ${data.wager || 50} 💰`);
             this.startShotTimer();
-            this.animate();
+            // Use requestAnimationFrame to ensure timestamp is passed on first frame
+            requestAnimationFrame((ts) => this.animate(ts));
 
         } catch (error) {
             console.error('Error starting multiplayer game:', error);
@@ -270,18 +272,44 @@ class PoolGame {
         }
     }
 
-    animate() {
-        // Main game loop
-        if (this.gameState === 'shooting') {
-            // Update physics
-            this.physics.update(this.balls);
+    animate(timestamp) {
+        // Fixed timestep accumulator for consistent physics across all frame rates
+        // This ensures the physics simulation is IDENTICAL on 60Hz, 120Hz, 144Hz, etc.
+        if (!this.lastTimestamp) {
+            this.lastTimestamp = timestamp;
+            this.physicsAccumulator = 0;
         }
 
-        // Render
+        // Calculate time since last frame (in seconds)
+        const deltaTime = Math.min((timestamp - this.lastTimestamp) / 1000, 0.1); // Cap at 100ms to prevent spiral of death
+        this.lastTimestamp = timestamp;
+
+        // Fixed physics timestep (60 updates per second = 16.67ms per update)
+        const FIXED_TIMESTEP = 1 / 60;
+
+        if (this.gameState === 'shooting') {
+            // Accumulate time
+            this.physicsAccumulator += deltaTime;
+
+            // Run physics updates at fixed intervals
+            while (this.physicsAccumulator >= FIXED_TIMESTEP) {
+                const pocketed = this.physics.update(this.balls);
+
+                // Track pocketed balls
+                if (pocketed && pocketed.length > 0) {
+                    this.shotPocketedBalls.push(...pocketed);
+                    pocketed.forEach(ball => { this.updateBallRack(ball); });
+                }
+
+                this.physicsAccumulator -= FIXED_TIMESTEP;
+            }
+        }
+
+        // Render (always runs at screen refresh rate for smooth visuals)
         this.render();
 
         // Continue loop
-        this.animationId = requestAnimationFrame(() => this.animate());
+        this.animationId = requestAnimationFrame((ts) => this.animate(ts));
     }
 
     initializeBalls() {
@@ -1341,21 +1369,8 @@ class PoolGame {
         this.updateTurnIndicator(); // Refresh UI
     }
 
-    animate() {
-        this.render();
-        if (this.gameState === 'shooting') {
-            const pocketed = this.physics.update(this.balls);
-            if (pocketed.length > 0) {
-                // Accumulate pocketed balls for this shot
-                this.shotPocketedBalls.push(...pocketed);
-                pocketed.forEach(ball => { this.updateBallRack(ball); });
-                // NOTE: Do NOT call checkWinner() here - let checkShotResult() handle it
-                // after all balls have stopped. This ensures we detect if cue ball
-                // is also pocketed after 8-ball (scratch = opponent wins).
-            }
-        }
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
+    // NOTE: The main animate() method with fixed-timestep physics is defined earlier in the file (line ~275)
+    // This duplicate was removed to fix frame-rate-dependent physics in multiplayer.
 
     assignGroups(player, group) {
         this.tableState = 'closed';
