@@ -152,15 +152,41 @@ class PoolGame {
             });
         });
 
-        // Canvas interactions
+        // Canvas interactions - Mouse
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
 
+        // Canvas interactions - Touch (for mobile)
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            const touch = e.touches[0];
+            this.handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            const touch = e.touches[0];
+            this.handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            // Use the last known position from changedTouches
+            const touch = e.changedTouches[0];
+            this.handleMouseUp({ clientX: touch.clientX, clientY: touch.clientY });
+        }, { passive: false });
+
         // Spin control
         const spinBall = document.querySelector('.spin-ball');
         spinBall.addEventListener('click', (e) => this.handleSpinClick(e));
+        // Touch support for spin control
+        spinBall.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            this.handleSpinClick({ clientX: touch.clientX, clientY: touch.clientY, currentTarget: spinBall });
+        }, { passive: false });
         document.getElementById('reset-spin').addEventListener('click', () => this.resetSpin());
 
         // Call Pocket buttons
