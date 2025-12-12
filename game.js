@@ -81,6 +81,8 @@ class PoolGame {
 
         // Animation
         this.animationId = null;
+        this.lastTimestamp = null;
+        this.physicsAccumulator = 0;
 
         // UI Elements
         console.log('Setting up UI...');
@@ -176,6 +178,16 @@ class PoolGame {
 
     }
 
+    // Stop any existing animation loop to prevent multiple loops stacking
+    stopAnimation() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        this.lastTimestamp = null;
+        this.physicsAccumulator = 0;
+    }
+
     startGame(mode) {
         try {
             if (!this.startScreen) {
@@ -185,6 +197,10 @@ class PoolGame {
             }
             this.gameMode = mode;
             this.startScreen.style.display = 'none';
+
+            // IMPORTANT: Stop any existing animation loop before starting new one
+            this.stopAnimation();
+
             this.initializeBalls();
             this.gameState = 'aiming';
             this.currentPlayer = 1;
@@ -231,6 +247,10 @@ class PoolGame {
 
             // Initialize the game
             this.gameMode = 'multiplayer';
+
+            // IMPORTANT: Stop any existing animation loop before starting new one
+            this.stopAnimation();
+
             this.initializeBalls();
             this.gameState = 'aiming';
             this.currentPlayer = data.currentPlayer || 1;
@@ -1348,6 +1368,7 @@ class PoolGame {
 
     resetGame() {
         this.stopShotTimer();
+        this.stopAnimation(); // IMPORTANT: Stop animation loop to prevent stacking
         this.winnerScreen.classList.add('hidden');
         this.startScreen.classList.remove('hidden');
         this.startScreen.style.display = 'flex';
