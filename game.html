@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="player-info.css?v=4">
     <link rel="stylesheet" href="turn-bar-position.css">
+    <link rel="stylesheet" href="mobile-landscape.css?v=1">
     <style>
         .user-menu {
             position: fixed;
@@ -142,6 +143,13 @@
 </head>
 
 <body>
+    <!-- Rotate device overlay for portrait mode -->
+    <div class="rotate-device-overlay" id="rotate-overlay">
+        <div class="rotate-icon">📱</div>
+        <h2>ROTATE YOUR DEVICE</h2>
+        <p>Please turn your phone sideways for the best experience</p>
+    </div>
+
     <div id="auth-loading" class="auth-loading">
         <div class="spinner"></div>
         <p>Loading...</p>

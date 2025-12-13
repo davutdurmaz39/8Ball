@@ -1,0 +1,390 @@
+/* ============================================
+   MOBILE LANDSCAPE-ONLY GAME LAYOUT
+   Forces horizontal orientation and clean UI
+   ============================================ */
+
+/* Force landscape orientation message for portrait mode */
+.rotate-device-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0e17 0%, #1a2540 100%);
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+
+.rotate-device-overlay .rotate-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: rotatePhone 2s ease-in-out infinite;
+}
+
+.rotate-device-overlay h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: #00d4ff;
+    margin-bottom: 10px;
+}
+
+.rotate-device-overlay p {
+    font-size: 1rem;
+    color: #8892a6;
+}
+
+@keyframes rotatePhone {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-15deg);
+    }
+
+    75% {
+        transform: rotate(15deg);
+    }
+}
+
+/* Show rotate overlay only on mobile portrait */
+@media (pointer: coarse) and (orientation: portrait) {
+    .rotate-device-overlay {
+        display: flex !important;
+    }
+
+    #game-container {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   MOBILE LANDSCAPE LAYOUT
+   ============================================ */
+@media (pointer: coarse) and (orientation: landscape) {
+
+    /* Hide non-essential elements */
+    #game-header {
+        display: none !important;
+    }
+
+    #ball-rack {
+        display: none !important;
+    }
+
+    #controls-hint,
+    #mobile-controls-hint,
+    .desktop-hint,
+    .mobile-hint {
+        display: none !important;
+    }
+
+    .user-menu {
+        top: 5px !important;
+        right: 5px !important;
+        padding: 4px 10px !important;
+        gap: 8px !important;
+    }
+
+    .user-avatar {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 10px !important;
+    }
+
+    .user-name {
+        font-size: 10px !important;
+    }
+
+    .user-coins {
+        display: none !important;
+    }
+
+    .btn-logout {
+        padding: 3px 8px !important;
+        font-size: 9px !important;
+    }
+
+    /* Full screen game container */
+    body {
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #game-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #game-main {
+        padding: 0 !important;
+        height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+    }
+
+    /* Table container - centered with controls on sides */
+    #table-container {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        height: 100% !important;
+        padding: 5px !important;
+    }
+
+    /* Pool table - maximize horizontal space */
+    #pool-table {
+        max-width: calc(100vw - 180px) !important;
+        max-height: calc(100vh - 20px) !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+
+    /* Power gauge - left side, vertical */
+    #power-gauge {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 5px !important;
+        min-width: 50px !important;
+    }
+
+    .power-label {
+        font-size: 0.55rem !important;
+        letter-spacing: 1px !important;
+    }
+
+    .power-bar {
+        width: 16px !important;
+        height: 120px !important;
+    }
+
+    .power-value {
+        font-size: 0.65rem !important;
+    }
+
+    /* Spin control - right side */
+    #spin-control {
+        position: relative !important;
+        right: auto !important;
+        top: auto !important;
+        transform: none !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 5px !important;
+        min-width: 70px !important;
+    }
+
+    .spin-label {
+        font-size: 0.55rem !important;
+        letter-spacing: 1px !important;
+    }
+
+    .spin-ball {
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    .spin-indicator {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    .spin-info {
+        font-size: 0.5rem !important;
+        padding: 2px 5px !important;
+        min-width: 50px !important;
+    }
+
+    .reset-spin {
+        font-size: 0.5rem !important;
+        padding: 4px 8px !important;
+    }
+
+    /* Turn indicator - floating top center */
+    #turn-indicator,
+    .turn-indicator {
+        position: fixed !important;
+        top: 5px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        padding: 5px 15px !important;
+        border-radius: 15px !important;
+        z-index: 100 !important;
+        font-size: 0.7rem !important;
+    }
+
+    .turn-text {
+        font-size: 0.65rem !important;
+    }
+
+    .timer-text {
+        font-size: 0.6rem !important;
+        margin-left: 8px !important;
+    }
+
+    /* Game messages - smaller */
+    .message-content {
+        padding: 15px 25px !important;
+    }
+
+    .message-content h2 {
+        font-size: 1.2rem !important;
+    }
+
+    .message-content p {
+        font-size: 0.85rem !important;
+    }
+
+    /* Call pocket modal - compact */
+    .call-pocket-content {
+        padding: 15px !important;
+    }
+
+    .call-pocket-content h2 {
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+    }
+
+    .pocket-grid {
+        gap: 5px !important;
+    }
+
+    .pocket-btn {
+        min-width: 70px !important;
+        min-height: 50px !important;
+        padding: 8px !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* Winner screen - compact */
+    .winner-content .trophy {
+        font-size: 60px !important;
+    }
+
+    .winner-content h1 {
+        font-size: 1.8rem !important;
+        margin: 15px 0 !important;
+    }
+
+    .btn-primary {
+        padding: 10px 25px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* ============================================
+   VERY SMALL LANDSCAPE (short height)
+   ============================================ */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 400px) {
+    #power-gauge {
+        min-width: 40px !important;
+    }
+
+    .power-bar {
+        width: 14px !important;
+        height: 80px !important;
+    }
+
+    .power-label,
+    .spin-label {
+        display: none !important;
+    }
+
+    #spin-control {
+        min-width: 55px !important;
+    }
+
+    .spin-ball {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .spin-info,
+    .reset-spin {
+        display: none !important;
+    }
+
+    .user-menu {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   START SCREEN - MOBILE LANDSCAPE
+   ============================================ */
+@media (pointer: coarse) and (orientation: landscape) {
+    #start-screen {
+        padding: 10px !important;
+    }
+
+    .start-content {
+        padding: 20px 30px !important;
+        max-width: 90vw !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 20px !important;
+    }
+
+    .start-logo {
+        margin-bottom: 0 !important;
+    }
+
+    .big-ball {
+        font-size: 50px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .start-logo h1 {
+        font-size: 1.8rem !important;
+    }
+
+    .tagline {
+        font-size: 0.8rem !important;
+        letter-spacing: 2px !important;
+    }
+
+    .game-modes {
+        flex-direction: row !important;
+        gap: 10px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .btn-mode {
+        padding: 15px 25px !important;
+        gap: 8px !important;
+    }
+
+    .mode-icon {
+        font-size: 1.8rem !important;
+    }
+
+    .mode-text {
+        font-size: 0.75rem !important;
+    }
+
+    .instructions {
+        display: none !important;
+    }
+}
