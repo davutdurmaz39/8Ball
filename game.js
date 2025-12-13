@@ -81,8 +81,6 @@ class PoolGame {
 
         // Animation
         this.animationId = null;
-        this.lastTimestamp = null;
-        this.physicsAccumulator = 0;
 
         // UI Elements
         console.log('Setting up UI...');
@@ -152,41 +150,15 @@ class PoolGame {
             });
         });
 
-        // Canvas interactions - Mouse
+        // Canvas interactions
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
 
-        // Canvas interactions - Touch (for mobile)
-        this.canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent scrolling
-            const touch = e.touches[0];
-            this.handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
-        }, { passive: false });
-
-        this.canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevent scrolling
-            const touch = e.touches[0];
-            this.handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
-        }, { passive: false });
-
-        this.canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            // Use the last known position from changedTouches
-            const touch = e.changedTouches[0];
-            this.handleMouseUp({ clientX: touch.clientX, clientY: touch.clientY });
-        }, { passive: false });
-
         // Spin control
         const spinBall = document.querySelector('.spin-ball');
         spinBall.addEventListener('click', (e) => this.handleSpinClick(e));
-        // Touch support for spin control
-        spinBall.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            this.handleSpinClick({ clientX: touch.clientX, clientY: touch.clientY, currentTarget: spinBall });
-        }, { passive: false });
         document.getElementById('reset-spin').addEventListener('click', () => this.resetSpin());
 
         // Call Pocket buttons
@@ -204,16 +176,6 @@ class PoolGame {
 
     }
 
-    // Stop any existing animation loop to prevent multiple loops stacking
-    stopAnimation() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
-        this.lastTimestamp = null;
-        this.physicsAccumulator = 0;
-    }
-
     startGame(mode) {
         try {
             if (!this.startScreen) {
@@ -223,10 +185,6 @@ class PoolGame {
             }
             this.gameMode = mode;
             this.startScreen.style.display = 'none';
-
-            // IMPORTANT: Stop any existing animation loop before starting new one
-            this.stopAnimation();
-
             this.initializeBalls();
             this.gameState = 'aiming';
             this.currentPlayer = 1;
@@ -239,8 +197,7 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('BREAK SHOT', 'Place the cue ball anywhere in the kitchen (behind the line)');
             this.startShotTimer(); // Start timer for first shot
-            // Use requestAnimationFrame to ensure timestamp is passed on first frame
-            requestAnimationFrame((ts) => this.animate(ts));
+            this.animate();
         } catch (error) {
             console.error('Error starting game:', error);
             alert('Error starting game: ' + error.message);
@@ -273,10 +230,6 @@ class PoolGame {
 
             // Initialize the game
             this.gameMode = 'multiplayer';
-
-            // IMPORTANT: Stop any existing animation loop before starting new one
-            this.stopAnimation();
-
             this.initializeBalls();
             this.gameState = 'aiming';
             this.currentPlayer = data.currentPlayer || 1;
@@ -309,8 +262,7 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('MULTIPLAYER GAME', `${this.isMyTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'} - Wager: ${data.wager || 50} 💰`);
             this.startShotTimer();
-            // Use requestAnimationFrame to ensure timestamp is passed on first frame
-            requestAnimationFrame((ts) => this.animate(ts));
+            this.animate();
 
         } catch (error) {
             console.error('Error starting multiplayer game:', error);
@@ -318,44 +270,18 @@ class PoolGame {
         }
     }
 
-    animate(timestamp) {
-        // Fixed timestep accumulator for consistent physics across all frame rates
-        // This ensures the physics simulation is IDENTICAL on 60Hz, 120Hz, 144Hz, etc.
-        if (!this.lastTimestamp) {
-            this.lastTimestamp = timestamp;
-            this.physicsAccumulator = 0;
-        }
-
-        // Calculate time since last frame (in seconds)
-        const deltaTime = Math.min((timestamp - this.lastTimestamp) / 1000, 0.1); // Cap at 100ms to prevent spiral of death
-        this.lastTimestamp = timestamp;
-
-        // Fixed physics timestep (60 updates per second = 16.67ms per update)
-        const FIXED_TIMESTEP = 1 / 60;
-
+    animate() {
+        // Main game loop
         if (this.gameState === 'shooting') {
-            // Accumulate time
-            this.physicsAccumulator += deltaTime;
-
-            // Run physics updates at fixed intervals
-            while (this.physicsAccumulator >= FIXED_TIMESTEP) {
-                const pocketed = this.physics.update(this.balls);
-
-                // Track pocketed balls
-                if (pocketed && pocketed.length > 0) {
-                    this.shotPocketedBalls.push(...pocketed);
-                    pocketed.forEach(ball => { this.updateBallRack(ball); });
-                }
-
-                this.physicsAccumulator -= FIXED_TIMESTEP;
-            }
+            // Update physics
+            this.physics.update(this.balls);
         }
 
-        // Render (always runs at screen refresh rate for smooth visuals)
+        // Render
         this.render();
 
         // Continue loop
-        this.animationId = requestAnimationFrame((ts) => this.animate(ts));
+        this.animationId = requestAnimationFrame(() => this.animate());
     }
 
     initializeBalls() {
@@ -1394,7 +1320,6 @@ class PoolGame {
 
     resetGame() {
         this.stopShotTimer();
-        this.stopAnimation(); // IMPORTANT: Stop animation loop to prevent stacking
         this.winnerScreen.classList.add('hidden');
         this.startScreen.classList.remove('hidden');
         this.startScreen.style.display = 'flex';
@@ -1416,8 +1341,21 @@ class PoolGame {
         this.updateTurnIndicator(); // Refresh UI
     }
 
-    // NOTE: The main animate() method with fixed-timestep physics is defined earlier in the file (line ~275)
-    // This duplicate was removed to fix frame-rate-dependent physics in multiplayer.
+    animate() {
+        this.render();
+        if (this.gameState === 'shooting') {
+            const pocketed = this.physics.update(this.balls);
+            if (pocketed.length > 0) {
+                // Accumulate pocketed balls for this shot
+                this.shotPocketedBalls.push(...pocketed);
+                pocketed.forEach(ball => { this.updateBallRack(ball); });
+                // NOTE: Do NOT call checkWinner() here - let checkShotResult() handle it
+                // after all balls have stopped. This ensures we detect if cue ball
+                // is also pocketed after 8-ball (scratch = opponent wins).
+            }
+        }
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
 
     assignGroups(player, group) {
         this.tableState = 'closed';
@@ -2548,27 +2486,8 @@ class ChatManager {
             this.chatClose.addEventListener('click', () => this.closeChat());
         }
 
-        // Send message
-        if (this.chatSend) {
-            this.chatSend.addEventListener('click', () => this.sendMessage());
-        }
-
-        // Enter key to send
-        if (this.chatInput) {
-            this.chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.sendMessage();
-                }
-            });
-        }
-
-        // Quick chat buttons
-        this.quickBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const msg = btn.getAttribute('data-msg');
-                this.sendQuickMessage(msg);
-            });
-        });
+        // NOTE: Send message and quick chat buttons are handled by network chat in game.html
+        // Do NOT add event listeners here to prevent duplicate messages
     }
 
     toggleChat() {

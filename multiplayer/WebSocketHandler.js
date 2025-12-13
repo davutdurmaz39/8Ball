@@ -541,12 +541,25 @@ class MultiplayerServer {
         const message = String(data.message || '').slice(0, 200);
         if (!message.trim()) return;
 
-        this.io.to(room.id).emit('chat_message', {
-            from: player.username,
+        // Broadcast to all players in the room (including sender)
+        // The server will send it once to each socket in the room
+        const chatData = {
+            username: player.username,
             playerId: socket.id,
             message,
             timestamp: Date.now()
-        });
+        };
+
+        // Send to all sockets in room individually to ensure single delivery
+        const roomSockets = this.io.sockets.adapter.rooms.get(room.id);
+        if (roomSockets) {
+            roomSockets.forEach(socketId => {
+                const targetSocket = this.io.sockets.sockets.get(socketId);
+                if (targetSocket) {
+                    targetSocket.emit('chat_message', chatData);
+                }
+            });
+        }
     }
 
     handleQuickChat(socket, data) {

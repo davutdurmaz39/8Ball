@@ -168,8 +168,8 @@
                 <div class="turn-indicator" id="turn-indicator"><span class="turn-text">PLAYER 1's TURN</span><span
                         class="timer-text" id="timer-text"></span></div>
                 <div class="player player-2">
-                    <div class="player-details"><span class="player-name">Player 2</span><span class="ball-type"
-                            id="p2-ball-type">--</span></div>
+                    <div class="player-details"><span class="player-name" id="p2-name">Player 2</span><span
+                            class="ball-type" id="p2-ball-type">--</span></div>
                     <div class="avatar">P2</div>
                 </div>
             </div>
@@ -289,6 +289,36 @@
                 </div><button id="close-cues" class="btn-primary">CONFIRM</button>
             </div>
         </div>
+
+        <!-- Chat Panel -->
+        <div id="chat-panel">
+            <div class="chat-toggle" id="chat-toggle">
+                <span class="chat-icon">💬</span>
+                <span class="chat-badge" id="chat-badge"></span>
+            </div>
+            <div class="chat-container" id="chat-container">
+                <div class="chat-header">
+                    <span>💬 CHAT</span>
+                    <button class="chat-close" id="chat-close">✕</button>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-welcome">Click a quick message or type below!</div>
+                </div>
+                <div class="quick-chat">
+                    <button class="quick-btn" data-msg="Good luck!">🍀 Good luck!</button>
+                    <button class="quick-btn" data-msg="Nice shot!">👏 Nice shot!</button>
+                    <button class="quick-btn" data-msg="Oops!">😅 Oops!</button>
+                    <button class="quick-btn" data-msg="Well played!">🎯 Well played!</button>
+                    <button class="quick-btn" data-msg="Your turn!">⏰ Your turn!</button>
+                    <button class="quick-btn" data-msg="GG">🏆 GG</button>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100">
+                    <button id="chat-send">➤</button>
+                </div>
+            </div>
+        </div>
+
         <div id="controls-hint"><span>🖱️ CLICK TO LOCK AIM</span><span>⬅️ DRAG BACK FOR POWER</span><span>🎯 RELEASE TO
                 SHOOT</span></div>
     </div>
@@ -322,6 +352,86 @@
             localStorage.removeItem('user');
             window.location.href = '/login.html';
         });
+
+        // Chat functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatToggle = document.getElementById('chat-toggle');
+            const chatContainer = document.getElementById('chat-container');
+            const chatClose = document.getElementById('chat-close');
+            const chatInput = document.getElementById('chat-input');
+            const chatSend = document.getElementById('chat-send');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatBadge = document.getElementById('chat-badge');
+            const quickBtns = document.querySelectorAll('.quick-btn');
+
+            let unreadCount = 0;
+            let isOpen = false;
+
+            // Toggle chat
+            chatToggle.addEventListener('click', () => {
+                isOpen = !isOpen;
+                chatContainer.classList.toggle('open', isOpen);
+                if (isOpen) {
+                    unreadCount = 0;
+                    chatBadge.textContent = '';
+                    chatBadge.style.display = 'none';
+                    chatInput.focus();
+                }
+            });
+
+            chatClose.addEventListener('click', () => {
+                isOpen = false;
+                chatContainer.classList.remove('open');
+            });
+
+            // Send message
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (message && window.networkManager) {
+                    window.networkManager.sendMessage(message);
+                    // Don't add message locally - wait for server to broadcast it back
+                    chatInput.value = '';
+                }
+            }
+
+            chatSend.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            // Quick chat
+            quickBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const msg = btn.dataset.msg;
+                    if (window.networkManager) {
+                        window.networkManager.sendMessage(msg);
+                        // Don't add locally - server will broadcast it back
+                    }
+                });
+            });
+
+            // Add message to chat (exposed globally)
+            window.addChatMessage = function (username, message, isMe = false) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `chat-msg ${isMe ? 'chat-sender' : 'opponent'}`;
+                msgDiv.innerHTML = `<strong>${username}:</strong> ${message}`;
+                chatMessages.appendChild(msgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Update unread count if chat is closed
+                if (!isMe && !isOpen) {
+                    unreadCount++;
+                    chatBadge.textContent = unreadCount;
+                    chatBadge.style.display = 'block';
+                }
+            };
+
+            // Local helper that uses the global function
+            function addMessage(username, message, isMe) {
+                window.addChatMessage(username, message, isMe);
+            }
+        });
+
     </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -343,6 +453,39 @@
                         if (onlineBtn) {
                             onlineBtn.addEventListener('click', () => {
                                 window.matchmakingUI.show();
+                            });
+                        }
+
+                        // Prevent duplicate chat listener registration
+                        if (!window.chatListenerRegistered) {
+                            window.chatListenerRegistered = true;
+
+                            // Track last message to prevent duplicates
+                            let lastMessageKey = '';
+                            let lastMessageTime = 0;
+
+                            // Set up chat listener after connection
+                            window.networkManager.on('chat_message', (data) => {
+                                console.log('💬 Chat message received:', data);
+
+                                // Create unique key for deduplication
+                                const messageKey = `${data.username}:${data.message}`;
+                                const now = Date.now();
+
+                                // Ignore if same message within 500ms
+                                if (messageKey === lastMessageKey && (now - lastMessageTime) < 500) {
+                                    console.log('💬 Duplicate message ignored');
+                                    return;
+                                }
+
+                                lastMessageKey = messageKey;
+                                lastMessageTime = now;
+
+                                if (window.addChatMessage) {
+                                    // Check if message is from us
+                                    const isMe = data.username === window.currentUser?.username;
+                                    window.addChatMessage(data.username || 'Player', data.message, isMe);
+                                }
                             });
                         }
                     }).catch(err => {
