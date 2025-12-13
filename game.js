@@ -150,11 +150,33 @@ class PoolGame {
             });
         });
 
-        // Canvas interactions
+        // Canvas interactions - Mouse events
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
+
+        // Canvas interactions - Touch events for mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = this.touchToMouse(touch, 'mousedown');
+            this.handleMouseDown(mouseEvent);
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = this.touchToMouse(touch, 'mousemove');
+            this.handleMouseMove(mouseEvent);
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            const mouseEvent = this.touchToMouse(touch, 'mouseup');
+            this.handleMouseUp(mouseEvent);
+        }, { passive: false });
 
         // Spin control
         const spinBall = document.querySelector('.spin-ball');
@@ -335,6 +357,16 @@ class PoolGame {
         }
     }
 
+    touchToMouse(touch, type) {
+        return {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            type: type,
+            preventDefault: () => { },
+            stopPropagation: () => { }
+        };
+    }
+
     handleMouseMove(e) {
         const rect = this.canvas.getBoundingClientRect();
         // Account for canvas scaling (CSS size vs internal size)
@@ -409,7 +441,7 @@ class PoolGame {
             for (let i = 0; i < this.physics.pockets.length; i++) {
                 const pocket = this.physics.pockets[i];
                 const dist = Math.hypot(mouseX - pocket.x, mouseY - pocket.y);
-                if (dist < this.physics.pocketRadius + 20) {
+                if (dist < this.physics.pocketRadius + 40) {
                     // Clicked on this pocket
                     this.calledPocket = i;
                     this.needsCallPocket = false;
