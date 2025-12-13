@@ -105,10 +105,12 @@ class PoolGame {
             startTime: 0,
             currentX: 0,
             currentY: 0,
+            lastX: 0,              // For delta tracking
+            lastY: 0,              // For delta tracking
             isAiming: false,
             isPullingBack: false,
             initialAimAngle: 0,
-            touchId: null,              // Track the specific touch
+            touchId: null,
         };
 
         // Visual feedback for mobile
@@ -577,7 +579,8 @@ class PoolGame {
     }
 
     // ==========================================
-    // IMPROVED MOBILE TOUCH CONTROLS
+    // SIMPLIFIED MOBILE TOUCH CONTROLS
+    // Drag anywhere = rotate cue, pull back = power
     // ==========================================
 
     handleTouchStart(e) {
@@ -597,6 +600,8 @@ class PoolGame {
         this.mobileTouch.currentX = touchX;
         this.mobileTouch.currentY = touchY;
         this.mobileTouch.startTime = Date.now();
+        this.mobileTouch.lastX = touchX;
+        this.mobileTouch.lastY = touchY;
 
         // Visual feedback
         this.touchFeedback.visible = true;
@@ -613,7 +618,7 @@ class PoolGame {
             for (let i = 0; i < this.physics.pockets.length; i++) {
                 const pocket = this.physics.pockets[i];
                 const dist = Math.hypot(touchX - pocket.x, touchY - pocket.y);
-                if (dist < this.physics.pocketRadius + 50) { // Larger touch target
+                if (dist < this.physics.pocketRadius + 50) {
                     this.calledPocket = i;
                     this.needsCallPocket = false;
                     this.gameState = 'aiming';
@@ -633,16 +638,11 @@ class PoolGame {
             return;
         }
 
-        // Calculate initial aim angle from cue ball to touch point
-        const cueBall = this.balls[0];
-        this.mobileTouch.initialAimAngle = Math.atan2(touchY - cueBall.y, touchX - cueBall.x);
-
-        // Lock aim on touch
-        this.aimAngle = this.mobileTouch.initialAimAngle;
-        this.aimLocked = true;
+        // Start aiming - store current aim angle
         this.mobileTouch.isAiming = true;
+        this.mobileTouch.initialAimAngle = this.aimAngle;
 
-        // Show pull indicator
+        // Show pull indicator at touch start
         this.touchFeedback.pullIndicator.visible = true;
         this.touchFeedback.pullIndicator.x = touchX;
         this.touchFeedback.pullIndicator.y = touchY;
@@ -665,10 +665,16 @@ class PoolGame {
         const touchX = (touch.clientX - rect.left) * scaleX;
         const touchY = (touch.clientY - rect.top) * scaleY;
 
+        // Calculate movement delta from last position
+        const deltaX = touchX - this.mobileTouch.lastX;
+        const deltaY = touchY - this.mobileTouch.lastY;
+
+        this.mobileTouch.lastX = touchX;
+        this.mobileTouch.lastY = touchY;
         this.mobileTouch.currentX = touchX;
         this.mobileTouch.currentY = touchY;
 
-        // Update visual feedback position
+        // Update visual feedback
         this.touchFeedback.x = touchX;
         this.touchFeedback.y = touchY;
 
@@ -696,50 +702,35 @@ class PoolGame {
         if (this.gameState !== 'aiming' || !this.mobileTouch.isAiming) return;
 
         const cueBall = this.balls[0];
-        const dx = touchX - this.mobileTouch.startX;
-        const dy = touchY - this.mobileTouch.startY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Check for dead zone
-        if (distance < this.mobileSettings.deadZone) {
-            return;
-        }
+        // Calculate total drag distance from start
+        const totalDx = touchX - this.mobileTouch.startX;
+        const totalDy = touchY - this.mobileTouch.startY;
+        const totalDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
 
-        // Calculate the pull direction (from start touch to current touch)
-        const pullAngle = Math.atan2(dy, dx);
+        // SIMPLE CONTROL SCHEME:
+        // - Horizontal movement (deltaX) rotates the cue
+        // - Vertical movement down (positive deltaY) adds power
 
-        // The "back" direction is opposite to the aim angle
-        const backAngle = this.mobileTouch.initialAimAngle + Math.PI;
+        // Rotate aim based on horizontal drag
+        // Use a simple multiplier - moving finger left/right rotates cue
+        const aimSensitivity = 0.008; // Radians per pixel of horizontal movement
+        this.aimAngle += deltaX * aimSensitivity;
 
-        // Normalize angles for comparison
-        let angleDiff = pullAngle - backAngle;
-        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-
-        // If pulling somewhat backwards (within ~90 degrees of back), increase power
-        if (Math.abs(angleDiff) < Math.PI / 2) {
-            // Calculate power based on pull distance
-            const powerDistance = distance * Math.cos(angleDiff);
-            this.power = Math.min(
-                this.mobileSettings.maxPower,
-                powerDistance * this.mobileSettings.powerSensitivity
-            );
+        // Build power based on downward drag (or any backward drag)
+        // Pulling down = more power (intuitive "pull back" feel)
+        if (deltaY > 0) {
+            this.power = Math.min(100, this.power + deltaY * 0.5);
             this.mobileTouch.isPullingBack = true;
-
-            // Slight aim adjustment while pulling (optional fine-tuning)
-            // Perpendicular component adjusts aim
-            const perpComponent = distance * Math.sin(angleDiff);
-            const aimAdjust = perpComponent * this.mobileSettings.aimSensitivity;
-            this.aimAngle = this.mobileTouch.initialAimAngle + aimAdjust;
-        } else {
-            // Pulling forward - reduce power
-            this.power = Math.max(0, this.power - 2);
-            this.mobileTouch.isPullingBack = false;
+        } else if (deltaY < -2) {
+            // Pushing up reduces power
+            this.power = Math.max(0, this.power + deltaY * 0.3);
         }
 
         // Update pull indicator
         this.touchFeedback.pullIndicator.x = this.mobileTouch.startX;
         this.touchFeedback.pullIndicator.y = this.mobileTouch.startY;
+        this.touchFeedback.pullIndicator.visible = this.power > 5;
 
         this.updatePowerGauge();
     }
@@ -791,36 +782,20 @@ class PoolGame {
                 this.ballInHandKitchen = false;
                 this.isPlacingCueBall = false;
                 this.updateTurnIndicator();
-                this.showMessage('CUE BALL PLACED', 'Ready to shoot - pull back and release');
             } else {
-                this.showMessage('INVALID PLACEMENT', 'Cue ball overlaps - try again');
+                this.showMessage('INVALID', 'Ball overlaps!');
             }
             return;
         }
 
-        // Check if this was a tap (quick touch without much movement)
-        const touchDuration = Date.now() - this.mobileTouch.startTime;
-        const wasTap = touchDuration < this.mobileSettings.tapThreshold && this.power < 5;
-
-        if (wasTap && this.mobileTouch.isAiming) {
-            // Tap just locks/unlocks aim
-            this.aimLocked = !this.aimLocked;
-            if (this.aimLocked) {
-                this.showMessage('AIM LOCKED', 'Pull back to set power, release to shoot', 1500);
-            }
-            this.mobileTouch.isAiming = false;
-            return;
-        }
-
-        // Shoot if we have enough power
+        // SHOOT if we have power
         if (this.power > 5 && this.mobileTouch.isAiming) {
             this.shoot();
         }
 
-        // Reset mobile touch state
+        // Reset state
         this.mobileTouch.isAiming = false;
         this.mobileTouch.isPullingBack = false;
-        this.aimLocked = false;
         this.power = 0;
         this.updatePowerGauge();
     }
