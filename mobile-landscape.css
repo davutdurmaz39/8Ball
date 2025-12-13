@@ -156,42 +156,97 @@
         object-fit: contain !important;
     }
 
-    /* Power gauge - left side, vertical */
+    /* Power gauge - Interactive Slider on Left */
     #power-gauge {
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        transform: none !important;
+        position: absolute !important;
+        left: 20px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
         flex-direction: column !important;
         align-items: center !important;
         gap: 5px !important;
-        min-width: 50px !important;
+        width: 60px !important;
+        height: 250px !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 30px !important;
+        padding: 10px 0 !important;
+        z-index: 100 !important;
+        touch-action: none !important;
+        /* Critical for sliding */
     }
 
     .power-label {
-        font-size: 0.55rem !important;
+        font-size: 0.6rem !important;
         letter-spacing: 1px !important;
+        margin-bottom: 5px !important;
+        pointer-events: none;
     }
 
     .power-bar {
-        width: 16px !important;
-        height: 120px !important;
+        width: 20px !important;
+        height: 180px !important;
+        background: #1a1a1a !important;
+        border-radius: 10px !important;
+        position: relative !important;
+        overflow: visible !important;
+        /* Allow handle to stick out */
+        pointer-events: none;
+        /* Let clicks pass to parent or handle */
+    }
+
+    /* The fill inside the bar */
+    .power-fill {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: linear-gradient(to top, #00ff88, #ffaa00, #ff4444) !important;
+        border-radius: 10px !important;
+        height: 0%;
+        /* JS will update this */
+        transition: height 0.05s linear !important;
+    }
+
+    /* New Power Handle for sliding */
+    #power-handle {
+        display: block !important;
+        /* Visible on mobile */
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 40px;
+        background: radial-gradient(circle, #fff, #ccc);
+        border: 2px solid #00d4ff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        top: 0;
+        /* Starts at top (0% power) */
+        margin-top: -20px;
+        /* Center on the point */
+        pointer-events: none;
+        /* The gauge container handles events */
     }
 
     .power-value {
-        font-size: 0.65rem !important;
+        font-size: 0.8rem !important;
+        margin-top: 5px !important;
+        font-weight: bold !important;
+        pointer-events: none;
     }
 
-    /* Spin control - right side */
+    /* Spin control - Right side */
     #spin-control {
-        position: relative !important;
-        right: auto !important;
-        top: auto !important;
-        transform: none !important;
+        position: absolute !important;
+        right: 20px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
         flex-direction: column !important;
         align-items: center !important;
-        gap: 5px !important;
-        min-width: 70px !important;
+        gap: 10px !important;
+        min-width: 80px !important;
+        z-index: 100 !important;
     }
 
     .spin-label {
@@ -297,12 +352,13 @@
    ============================================ */
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 400px) {
     #power-gauge {
-        min-width: 40px !important;
+        width: 40px !important;
+        height: 200px !important;
     }
 
     .power-bar {
         width: 14px !important;
-        height: 80px !important;
+        height: 140px !important;
     }
 
     .power-label,

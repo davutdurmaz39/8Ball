@@ -139,6 +139,8 @@ class PoolGame {
         this.winnerScreen = document.getElementById('winner-screen');
         this.gameMessage = document.getElementById('game-message');
         this.powerFill = document.getElementById('power-fill');
+        this.powerHandle = document.getElementById('power-handle'); // New handle
+        this.powerGauge = document.getElementById('power-gauge');   // Gauge container
         this.powerValue = document.getElementById('power-value');
         this.spinIndicator = document.getElementById('spin-indicator');
         this.turnIndicator = document.getElementById('turn-indicator');
@@ -216,6 +218,27 @@ class PoolGame {
             e.preventDefault();
             this.handleTouchEnd(e);
         }, { passive: false });
+
+        // Power Gauge Touch Events (Mobile)
+        if (this.powerGauge) {
+            this.powerGauge.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handlePowerTouchStart(e);
+            }, { passive: false });
+
+            this.powerGauge.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handlePowerTouchMove(e);
+            }, { passive: false });
+
+            this.powerGauge.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handlePowerTouchEnd(e);
+            }, { passive: false });
+        }
 
         // Spin control
         const spinBall = document.querySelector('.spin-ball');
@@ -579,14 +602,15 @@ class PoolGame {
     }
 
     // ==========================================
-    // SIMPLIFIED MOBILE TOUCH CONTROLS
-    // Drag anywhere = rotate cue, pull back = power
+    // NEW MOBILE CONTROLS: DIRECT AIM + POWER SLIDER
     // ==========================================
 
+    // --- CANVAS TOUCH: AIMING ---
     handleTouchStart(e) {
         if (e.touches.length === 0) return;
         const touch = e.touches[0];
 
+        // Convert touch to canvas coordinates
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
@@ -595,25 +619,18 @@ class PoolGame {
 
         // Store touch info
         this.mobileTouch.touchId = touch.identifier;
-        this.mobileTouch.startX = touchX;
-        this.mobileTouch.startY = touchY;
         this.mobileTouch.currentX = touchX;
         this.mobileTouch.currentY = touchY;
-        this.mobileTouch.startTime = Date.now();
-        this.mobileTouch.lastX = touchX;
-        this.mobileTouch.lastY = touchY;
 
         // Visual feedback
         this.touchFeedback.visible = true;
         this.touchFeedback.x = touchX;
         this.touchFeedback.y = touchY;
 
-        // MULTIPLAYER: Only allow interaction if it's your turn
-        if (this.isMultiplayer && !this.isMyTurn) {
-            return;
-        }
+        // MULTIPLAYER CHECK
+        if (this.isMultiplayer && !this.isMyTurn) return;
 
-        // CALL POCKET - Tap on pocket
+        // CALL POCKET LOGIC
         if (this.gameState === 'calling-pocket') {
             for (let i = 0; i < this.physics.pockets.length; i++) {
                 const pocket = this.physics.pockets[i];
@@ -632,24 +649,20 @@ class PoolGame {
 
         if (this.gameState !== 'aiming') return;
 
-        // BALL IN HAND - Start dragging cue ball
+        // BALL IN HAND LOGIC
         if (this.ballInHand) {
             this.isDraggingBall = true;
             return;
         }
 
-        // Start aiming - store current aim angle
+        // DIRECT AIMING: Point cue at finger
+        const cueBall = this.balls[0];
+        this.aimAngle = Math.atan2(touchY - cueBall.y, touchX - cueBall.x);
         this.mobileTouch.isAiming = true;
-        this.mobileTouch.initialAimAngle = this.aimAngle;
-
-        // Show pull indicator at touch start
-        this.touchFeedback.pullIndicator.visible = true;
-        this.touchFeedback.pullIndicator.x = touchX;
-        this.touchFeedback.pullIndicator.y = touchY;
     }
 
     handleTouchMove(e) {
-        // Find the right touch
+        // Find the active touch
         let touch = null;
         for (let i = 0; i < e.touches.length; i++) {
             if (e.touches[i].identifier === this.mobileTouch.touchId) {
@@ -665,25 +678,14 @@ class PoolGame {
         const touchX = (touch.clientX - rect.left) * scaleX;
         const touchY = (touch.clientY - rect.top) * scaleY;
 
-        // Calculate movement delta from last position
-        const deltaX = touchX - this.mobileTouch.lastX;
-        const deltaY = touchY - this.mobileTouch.lastY;
-
-        this.mobileTouch.lastX = touchX;
-        this.mobileTouch.lastY = touchY;
         this.mobileTouch.currentX = touchX;
         this.mobileTouch.currentY = touchY;
-
-        // Update visual feedback
         this.touchFeedback.x = touchX;
         this.touchFeedback.y = touchY;
 
-        // MULTIPLAYER: Only allow interaction if it's your turn
-        if (this.isMultiplayer && !this.isMyTurn) {
-            return;
-        }
+        if (this.isMultiplayer && !this.isMyTurn) return;
 
-        // BALL IN HAND - Drag cue ball
+        // BALL IN HAND DRAG
         if (this.ballInHand && this.isDraggingBall) {
             const cueBall = this.balls[0];
             const r = this.physics.BALL_RADIUS;
@@ -699,72 +701,20 @@ class PoolGame {
             return;
         }
 
-        if (this.gameState !== 'aiming' || !this.mobileTouch.isAiming) return;
-
-        const cueBall = this.balls[0];
-
-        // Calculate total drag distance from start
-        const totalDx = touchX - this.mobileTouch.startX;
-        const totalDy = touchY - this.mobileTouch.startY;
-        const totalDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
-
-        // SIMPLE CONTROL SCHEME:
-        // - Horizontal movement (deltaX) rotates the cue
-        // - Vertical movement down (positive deltaY) adds power
-
-        // Rotate aim based on horizontal drag
-        // Use a simple multiplier - moving finger left/right rotates cue
-        const aimSensitivity = 0.008; // Radians per pixel of horizontal movement
-        this.aimAngle += deltaX * aimSensitivity;
-
-        // Build power based on downward drag (or any backward drag)
-        // Pulling down = more power (intuitive "pull back" feel)
-        if (deltaY > 0) {
-            this.power = Math.min(100, this.power + deltaY * 0.5);
-            this.mobileTouch.isPullingBack = true;
-        } else if (deltaY < -2) {
-            // Pushing up reduces power
-            this.power = Math.max(0, this.power + deltaY * 0.3);
+        // UPDATE AIM
+        if (this.gameState === 'aiming' && this.mobileTouch.isAiming) {
+            const cueBall = this.balls[0];
+            this.aimAngle = Math.atan2(touchY - cueBall.y, touchX - cueBall.x);
         }
-
-        // Update pull indicator
-        this.touchFeedback.pullIndicator.x = this.mobileTouch.startX;
-        this.touchFeedback.pullIndicator.y = this.mobileTouch.startY;
-        this.touchFeedback.pullIndicator.visible = this.power > 5;
-
-        this.updatePowerGauge();
     }
 
     handleTouchEnd(e) {
-        // Find the right touch that ended
-        let touch = null;
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            if (e.changedTouches[i].identifier === this.mobileTouch.touchId) {
-                touch = e.changedTouches[i];
-                break;
-            }
-        }
-
-        // Hide visual feedback
         this.touchFeedback.visible = false;
-        this.touchFeedback.pullIndicator.visible = false;
+        this.mobileTouch.isAiming = false;
 
-        if (this.gameState !== 'aiming') {
-            this.mobileTouch.isAiming = false;
-            this.mobileTouch.isPullingBack = false;
-            return;
-        }
-
-        // MULTIPLAYER: Only allow interaction if it's your turn
-        if (this.isMultiplayer && !this.isMyTurn) {
-            this.mobileTouch.isAiming = false;
-            return;
-        }
-
-        // BALL IN HAND - Place cue ball
+        // BALL IN HAND PLACEMENT
         if (this.ballInHand && this.isDraggingBall) {
             this.isDraggingBall = false;
-
             const cueBall = this.balls[0];
             let valid = true;
             for (const ball of this.balls) {
@@ -782,22 +732,64 @@ class PoolGame {
                 this.ballInHandKitchen = false;
                 this.isPlacingCueBall = false;
                 this.updateTurnIndicator();
+                this.showMessage('READY', 'Use the slider on left to shoot!');
             } else {
                 this.showMessage('INVALID', 'Ball overlaps!');
             }
-            return;
         }
+    }
 
-        // SHOOT if we have power
-        if (this.power > 5 && this.mobileTouch.isAiming) {
+    // --- POWER SLIDER CONTROLS ---
+    handlePowerTouchStart(e) {
+        if (this.gameState !== 'aiming') return;
+        if (this.isMultiplayer && !this.isMyTurn) return;
+
+        this.updatePowerFromTouch(e.touches[0]);
+    }
+
+    handlePowerTouchMove(e) {
+        if (this.gameState !== 'aiming') return;
+        this.updatePowerFromTouch(e.touches[0]);
+    }
+
+    handlePowerTouchEnd(e) {
+        if (this.gameState !== 'aiming') return;
+
+        // Shoot if power is sufficient
+        if (this.power > 5) {
             this.shoot();
         }
 
-        // Reset state
-        this.mobileTouch.isAiming = false;
-        this.mobileTouch.isPullingBack = false;
+        // Reset power visual
         this.power = 0;
         this.updatePowerGauge();
+
+        // Reset handle position visually
+        if (this.powerHandle) {
+            this.powerHandle.style.top = '0%';
+        }
+    }
+
+    updatePowerFromTouch(touch) {
+        const rect = this.powerGauge.getBoundingClientRect();
+        // Calculate relative Y position (0 at top, 1 at bottom)
+        // We want 0 at top (0% power) and 1 at bottom (100% power)
+
+        let relativeY = (touch.clientY - rect.top) / rect.height;
+
+        // Clamp between 0 and 1
+        relativeY = Math.max(0, Math.min(1, relativeY));
+
+        // Set power (0 to 100)
+        this.power = relativeY * 100;
+
+        // Update UI
+        this.updatePowerGauge();
+
+        // Update handle position
+        if (this.powerHandle) {
+            this.powerHandle.style.top = `${relativeY * 100}%`;
+        }
     }
 
     handleSpinClick(e) {

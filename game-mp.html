@@ -226,133 +226,116 @@
                     <div class="avatar">P2</div>
                 </div>
             </div>
-        </header>
-        <main id="game-main">
-            <div id="table-container">
-                <canvas id="pool-table"></canvas>
-                <div id="power-gauge">
-                    <div class="power-label">POWER</div>
-                    <div class="power-bar">
-                        <div class="power-fill" id="power-fill"></div>
-                    </div>
-                    <div class="power-value" id="power-value">0%</div>
-                </div>
-                <div id="spin-control">
-                    <div class="spin-label">ENGLISH</div>
-                    <div class="spin-ball" id="spin-ball-control">
-                        <div class="spin-indicator" id="spin-indicator"></div>
-                        <div class="spin-crosshair"></div>
-                    </div>
-                    <div class="spin-info" id="spin-info">Center Hit</div><button class="reset-spin"
-                        id="reset-spin">RESET</button>
-                </div>
+            <div class="spin-info" id="spin-info">Center Hit</div><button class="reset-spin"
+                id="reset-spin">RESET</button>
+    </div>
+    </div>
+    <div id="ball-rack">
+        <div class="rack-section solids">
+            <div class="rack-label">SOLIDS</div>
+            <div class="rack-balls" id="solids-rack"></div>
+        </div>
+        <div class="rack-section stripes">
+            <div class="rack-label">STRIPES</div>
+            <div class="rack-balls" id="stripes-rack"></div>
+        </div>
+    </div>
+    </main>
+    <div id="game-message" class="hidden">
+        <div class="message-content">
+            <h2 id="message-title">FOUL!</h2>
+            <p id="message-text">Cue ball pocketed. Ball in hand.</p>
+        </div>
+    </div>
+    <div id="call-pocket-modal" class="hidden">
+        <div class="modal-overlay"></div>
+        <div class="call-pocket-content">
+            <h2>🎯 CALL YOUR POCKET</h2>
+            <p>Select which pocket for the 8-ball</p>
+            <div class="pocket-grid"><button class="pocket-btn" data-pocket="0"><span class="pocket-label">Top
+                        Left</span><span class="pocket-icon">↖️</span></button><button class="pocket-btn"
+                    data-pocket="1"><span class="pocket-label">Top Center</span><span
+                        class="pocket-icon">⬆️</span></button><button class="pocket-btn" data-pocket="2"><span
+                        class="pocket-label">Top Right</span><span class="pocket-icon">↗️</span></button><button
+                    class="pocket-btn" data-pocket="3"><span class="pocket-label">Bottom Left</span><span
+                        class="pocket-icon">↙️</span></button><button class="pocket-btn" data-pocket="4"><span
+                        class="pocket-label">Bottom Center</span><span class="pocket-icon">⬇️</span></button><button
+                    class="pocket-btn" data-pocket="5"><span class="pocket-label">Bottom Right</span><span
+                        class="pocket-icon">↘️</span></button></div>
+        </div>
+    </div>
+    <div id="winner-screen" class="hidden">
+        <div class="winner-content">
+            <div class="trophy">🏆</div>
+            <h1 id="winner-text">PLAYER 1 WINS!</h1><button id="play-again" class="btn-primary">PLAY AGAIN</button>
+        </div>
+    </div>
+    <div id="start-screen">
+        <div class="start-content">
+            <div class="start-logo"><span class="big-ball">🎱</span>
+                <h1>8 BALL POOL</h1>
+                <p class="tagline">Miniclip Rules Edition</p>
             </div>
-            <div id="ball-rack">
-                <div class="rack-section solids">
-                    <div class="rack-label">SOLIDS</div>
-                    <div class="rack-balls" id="solids-rack"></div>
-                </div>
-                <div class="rack-section stripes">
-                    <div class="rack-label">STRIPES</div>
-                    <div class="rack-balls" id="stripes-rack"></div>
-                </div>
+            <div class="game-modes">
+                <button id="btn-online" class="btn-mode btn-online-play"><span class="mode-icon">🌐</span><span
+                        class="mode-text">PLAY ONLINE</span><span class="online-badge">LIVE</span></button>
+                <button id="btn-2player" class="btn-mode"><span class="mode-icon">👥</span><span class="mode-text">2
+                        PLAYERS</span></button>
+                <button id="btn-cues" class="btn-mode"><span class="mode-icon">🎱</span><span
+                        class="mode-text">CUES</span></button>
             </div>
-        </main>
-        <div id="game-message" class="hidden">
-            <div class="message-content">
-                <h2 id="message-title">FOUL!</h2>
-                <p id="message-text">Cue ball pocketed. Ball in hand.</p>
+            <div class="instructions">
+                <h3>HOW TO PLAY</h3>
+                <ul class="desktop-instructions">
+                    <li>🖱️ Click to lock aim direction</li>
+                    <li>⬅️ Drag back to set power</li>
+                    <li>🔄 Click spin control for English</li>
+                    <li>🎯 Release to shoot</li>
+                    <li>🎱 Pocket the 8-ball last to win!</li>
+                    <li>⏱️ 30 seconds per shot</li>
+                </ul>
+                <ul class="mobile-instructions">
+                    <li>👆 Tap where you want to aim</li>
+                    <li>↙️ Pull finger back to set power</li>
+                    <li>🔄 Tap spin ball for English</li>
+                    <li>✋ Release finger to shoot</li>
+                    <li>🎱 Pocket the 8-ball last to win!</li>
+                </ul>
             </div>
         </div>
-        <div id="call-pocket-modal" class="hidden">
-            <div class="modal-overlay"></div>
-            <div class="call-pocket-content">
-                <h2>🎯 CALL YOUR POCKET</h2>
-                <p>Select which pocket for the 8-ball</p>
-                <div class="pocket-grid"><button class="pocket-btn" data-pocket="0"><span class="pocket-label">Top
-                            Left</span><span class="pocket-icon">↖️</span></button><button class="pocket-btn"
-                        data-pocket="1"><span class="pocket-label">Top Center</span><span
-                            class="pocket-icon">⬆️</span></button><button class="pocket-btn" data-pocket="2"><span
-                            class="pocket-label">Top Right</span><span class="pocket-icon">↗️</span></button><button
-                        class="pocket-btn" data-pocket="3"><span class="pocket-label">Bottom Left</span><span
-                            class="pocket-icon">↙️</span></button><button class="pocket-btn" data-pocket="4"><span
-                            class="pocket-label">Bottom Center</span><span class="pocket-icon">⬇️</span></button><button
-                        class="pocket-btn" data-pocket="5"><span class="pocket-label">Bottom Right</span><span
-                            class="pocket-icon">↘️</span></button></div>
-            </div>
-        </div>
-        <div id="winner-screen" class="hidden">
-            <div class="winner-content">
-                <div class="trophy">🏆</div>
-                <h1 id="winner-text">PLAYER 1 WINS!</h1><button id="play-again" class="btn-primary">PLAY AGAIN</button>
-            </div>
-        </div>
-        <div id="start-screen">
-            <div class="start-content">
-                <div class="start-logo"><span class="big-ball">🎱</span>
-                    <h1>8 BALL POOL</h1>
-                    <p class="tagline">Miniclip Rules Edition</p>
-                </div>
-                <div class="game-modes">
-                    <button id="btn-online" class="btn-mode btn-online-play"><span class="mode-icon">🌐</span><span
-                            class="mode-text">PLAY ONLINE</span><span class="online-badge">LIVE</span></button>
-                    <button id="btn-2player" class="btn-mode"><span class="mode-icon">👥</span><span class="mode-text">2
-                            PLAYERS</span></button>
-                    <button id="btn-cues" class="btn-mode"><span class="mode-icon">🎱</span><span
-                            class="mode-text">CUES</span></button>
-                </div>
-                <div class="instructions">
-                    <h3>HOW TO PLAY</h3>
-                    <ul class="desktop-instructions">
-                        <li>🖱️ Click to lock aim direction</li>
-                        <li>⬅️ Drag back to set power</li>
-                        <li>🔄 Click spin control for English</li>
-                        <li>🎯 Release to shoot</li>
-                        <li>🎱 Pocket the 8-ball last to win!</li>
-                        <li>⏱️ 30 seconds per shot</li>
-                    </ul>
-                    <ul class="mobile-instructions">
-                        <li>👆 Tap where you want to aim</li>
-                        <li>↙️ Pull finger back to set power</li>
-                        <li>🔄 Tap spin ball for English</li>
-                        <li>✋ Release finger to shoot</li>
-                        <li>🎱 Pocket the 8-ball last to win!</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div id="cue-selection-modal" class="hidden">
-            <div class="cue-modal-content">
-                <h2>SELECT YOUR CUE</h2>
-                <div class="cue-list">
-                    <div class="cue-card active" data-cue="standard">
-                        <div class="cue-image"><img src="assets/cue_standard.png" alt="Standard Cue"></div>
-                        <div class="cue-info">
-                            <h3>STANDARD</h3>
-                            <p>Classic maple wood</p>
-                        </div>
+    </div>
+    <div id="cue-selection-modal" class="hidden">
+        <div class="cue-modal-content">
+            <h2>SELECT YOUR CUE</h2>
+            <div class="cue-list">
+                <div class="cue-card active" data-cue="standard">
+                    <div class="cue-image"><img src="assets/cue_standard.png" alt="Standard Cue"></div>
+                    <div class="cue-info">
+                        <h3>STANDARD</h3>
+                        <p>Classic maple wood</p>
                     </div>
-                    <div class="cue-card" data-cue="premium">
-                        <div class="cue-image"><img src="assets/cue_premium.png" alt="Premium Cue"></div>
-                        <div class="cue-info">
-                            <h3>PREMIUM</h3>
-                            <p>Carbon fiber tech</p>
-                        </div>
+                </div>
+                <div class="cue-card" data-cue="premium">
+                    <div class="cue-image"><img src="assets/cue_premium.png" alt="Premium Cue"></div>
+                    <div class="cue-info">
+                        <h3>PREMIUM</h3>
+                        <p>Carbon fiber tech</p>
                     </div>
-                    <div class="cue-card" data-cue="legendary">
-                        <div class="cue-image"><img src="assets/cue_legendary.png" alt="Legendary Cue"></div>
-                        <div class="cue-info">
-                            <h3>LEGENDARY</h3>
-                            <p>Ancient power</p>
-                        </div>
+                </div>
+                <div class="cue-card" data-cue="legendary">
+                    <div class="cue-image"><img src="assets/cue_legendary.png" alt="Legendary Cue"></div>
+                    <div class="cue-info">
+                        <h3>LEGENDARY</h3>
+                        <p>Ancient power</p>
                     </div>
-                </div><button id="close-cues" class="btn-primary">CONFIRM</button>
-            </div>
+                </div>
+            </div><button id="close-cues" class="btn-primary">CONFIRM</button>
         </div>
-        <div id="controls-hint" class="desktop-hint"><span>🖱️ CLICK TO LOCK AIM</span><span>⬅️ DRAG BACK FOR
-                POWER</span><span>🎯 RELEASE TO SHOOT</span></div>
-        <div id="mobile-controls-hint" class="mobile-hint"><span>👆 TAP TO AIM</span><span>↙️ PULL BACK</span><span>✋
-                RELEASE TO SHOOT</span></div>
+    </div>
+    <div id="controls-hint" class="desktop-hint"><span>🖱️ CLICK TO LOCK AIM</span><span>⬅️ DRAG BACK FOR
+            POWER</span><span>🎯 RELEASE TO SHOOT</span></div>
+    <div id="mobile-controls-hint" class="mobile-hint"><span>👆 TAP TO AIM</span><span>↙️ PULL BACK</span><span>✋
+            RELEASE TO SHOOT</span></div>
     </div>
 
     <script>
