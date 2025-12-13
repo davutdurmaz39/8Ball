@@ -82,6 +82,44 @@ class PoolGame {
         // Animation
         this.animationId = null;
 
+        // ========== MOBILE CONTROLS ==========
+        // Detect mobile/touch device
+        this.isMobile = ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints > 0) ||
+            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+        // Mobile control settings (adjustable for sensitivity)
+        this.mobileSettings = {
+            aimSensitivity: 0.003,      // How fast aim changes with swipe (lower = more precise)
+            powerSensitivity: 0.8,      // How fast power builds (lower = more control)
+            minSwipeDistance: 20,       // Minimum pixels to register as a swipe
+            maxPower: 100,              // Max power cap
+            tapThreshold: 200,          // Time in ms to distinguish tap from drag
+            deadZone: 10,               // Pixels of movement ignored (prevents jitter)
+        };
+
+        // Mobile touch state tracking
+        this.mobileTouch = {
+            startX: 0,
+            startY: 0,
+            startTime: 0,
+            currentX: 0,
+            currentY: 0,
+            isAiming: false,
+            isPullingBack: false,
+            initialAimAngle: 0,
+            touchId: null,              // Track the specific touch
+        };
+
+        // Visual feedback for mobile
+        this.touchFeedback = {
+            visible: false,
+            x: 0,
+            y: 0,
+            radius: 30,
+            pullIndicator: { x: 0, y: 0, visible: false }
+        };
+
         // UI Elements
         console.log('Setting up UI...');
         this.setupUI();
@@ -156,26 +194,25 @@ class PoolGame {
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
 
-        // Canvas interactions - Touch events for mobile
+        // Canvas interactions - Touch events for mobile (IMPROVED)
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = this.touchToMouse(touch, 'mousedown');
-            this.handleMouseDown(mouseEvent);
+            this.handleTouchStart(e);
         }, { passive: false });
 
         this.canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = this.touchToMouse(touch, 'mousemove');
-            this.handleMouseMove(mouseEvent);
+            this.handleTouchMove(e);
         }, { passive: false });
 
         this.canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
-            const touch = e.changedTouches[0];
-            const mouseEvent = this.touchToMouse(touch, 'mouseup');
-            this.handleMouseUp(mouseEvent);
+            this.handleTouchEnd(e);
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            this.handleTouchEnd(e);
         }, { passive: false });
 
         // Spin control
@@ -537,6 +574,255 @@ class PoolGame {
 
     handleMouseLeave() {
         this.isDragging = false;
+    }
+
+    // ==========================================
+    // IMPROVED MOBILE TOUCH CONTROLS
+    // ==========================================
+
+    handleTouchStart(e) {
+        if (e.touches.length === 0) return;
+        const touch = e.touches[0];
+
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        const touchX = (touch.clientX - rect.left) * scaleX;
+        const touchY = (touch.clientY - rect.top) * scaleY;
+
+        // Store touch info
+        this.mobileTouch.touchId = touch.identifier;
+        this.mobileTouch.startX = touchX;
+        this.mobileTouch.startY = touchY;
+        this.mobileTouch.currentX = touchX;
+        this.mobileTouch.currentY = touchY;
+        this.mobileTouch.startTime = Date.now();
+
+        // Visual feedback
+        this.touchFeedback.visible = true;
+        this.touchFeedback.x = touchX;
+        this.touchFeedback.y = touchY;
+
+        // MULTIPLAYER: Only allow interaction if it's your turn
+        if (this.isMultiplayer && !this.isMyTurn) {
+            return;
+        }
+
+        // CALL POCKET - Tap on pocket
+        if (this.gameState === 'calling-pocket') {
+            for (let i = 0; i < this.physics.pockets.length; i++) {
+                const pocket = this.physics.pockets[i];
+                const dist = Math.hypot(touchX - pocket.x, touchY - pocket.y);
+                if (dist < this.physics.pocketRadius + 50) { // Larger touch target
+                    this.calledPocket = i;
+                    this.needsCallPocket = false;
+                    this.gameState = 'aiming';
+                    this.showMessage('POCKET CALLED', `You called pocket #${i + 1}`);
+                    this.startShotTimer();
+                    return;
+                }
+            }
+            return;
+        }
+
+        if (this.gameState !== 'aiming') return;
+
+        // BALL IN HAND - Start dragging cue ball
+        if (this.ballInHand) {
+            this.isDraggingBall = true;
+            return;
+        }
+
+        // Calculate initial aim angle from cue ball to touch point
+        const cueBall = this.balls[0];
+        this.mobileTouch.initialAimAngle = Math.atan2(touchY - cueBall.y, touchX - cueBall.x);
+
+        // Lock aim on touch
+        this.aimAngle = this.mobileTouch.initialAimAngle;
+        this.aimLocked = true;
+        this.mobileTouch.isAiming = true;
+
+        // Show pull indicator
+        this.touchFeedback.pullIndicator.visible = true;
+        this.touchFeedback.pullIndicator.x = touchX;
+        this.touchFeedback.pullIndicator.y = touchY;
+    }
+
+    handleTouchMove(e) {
+        // Find the right touch
+        let touch = null;
+        for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === this.mobileTouch.touchId) {
+                touch = e.touches[i];
+                break;
+            }
+        }
+        if (!touch) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        const touchX = (touch.clientX - rect.left) * scaleX;
+        const touchY = (touch.clientY - rect.top) * scaleY;
+
+        this.mobileTouch.currentX = touchX;
+        this.mobileTouch.currentY = touchY;
+
+        // Update visual feedback position
+        this.touchFeedback.x = touchX;
+        this.touchFeedback.y = touchY;
+
+        // MULTIPLAYER: Only allow interaction if it's your turn
+        if (this.isMultiplayer && !this.isMyTurn) {
+            return;
+        }
+
+        // BALL IN HAND - Drag cue ball
+        if (this.ballInHand && this.isDraggingBall) {
+            const cueBall = this.balls[0];
+            const r = this.physics.BALL_RADIUS;
+            const c = this.cushionWidth;
+            const kitchenLine = this.tableWidth * 0.25;
+
+            if (this.ballInHandKitchen) {
+                cueBall.x = Math.max(c + r, Math.min(kitchenLine - r, touchX));
+            } else {
+                cueBall.x = Math.max(c + r, Math.min(this.tableWidth - c - r, touchX));
+            }
+            cueBall.y = Math.max(c + r, Math.min(this.tableHeight - c - r, touchY));
+            return;
+        }
+
+        if (this.gameState !== 'aiming' || !this.mobileTouch.isAiming) return;
+
+        const cueBall = this.balls[0];
+        const dx = touchX - this.mobileTouch.startX;
+        const dy = touchY - this.mobileTouch.startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Check for dead zone
+        if (distance < this.mobileSettings.deadZone) {
+            return;
+        }
+
+        // Calculate the pull direction (from start touch to current touch)
+        const pullAngle = Math.atan2(dy, dx);
+
+        // The "back" direction is opposite to the aim angle
+        const backAngle = this.mobileTouch.initialAimAngle + Math.PI;
+
+        // Normalize angles for comparison
+        let angleDiff = pullAngle - backAngle;
+        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+        // If pulling somewhat backwards (within ~90 degrees of back), increase power
+        if (Math.abs(angleDiff) < Math.PI / 2) {
+            // Calculate power based on pull distance
+            const powerDistance = distance * Math.cos(angleDiff);
+            this.power = Math.min(
+                this.mobileSettings.maxPower,
+                powerDistance * this.mobileSettings.powerSensitivity
+            );
+            this.mobileTouch.isPullingBack = true;
+
+            // Slight aim adjustment while pulling (optional fine-tuning)
+            // Perpendicular component adjusts aim
+            const perpComponent = distance * Math.sin(angleDiff);
+            const aimAdjust = perpComponent * this.mobileSettings.aimSensitivity;
+            this.aimAngle = this.mobileTouch.initialAimAngle + aimAdjust;
+        } else {
+            // Pulling forward - reduce power
+            this.power = Math.max(0, this.power - 2);
+            this.mobileTouch.isPullingBack = false;
+        }
+
+        // Update pull indicator
+        this.touchFeedback.pullIndicator.x = this.mobileTouch.startX;
+        this.touchFeedback.pullIndicator.y = this.mobileTouch.startY;
+
+        this.updatePowerGauge();
+    }
+
+    handleTouchEnd(e) {
+        // Find the right touch that ended
+        let touch = null;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === this.mobileTouch.touchId) {
+                touch = e.changedTouches[i];
+                break;
+            }
+        }
+
+        // Hide visual feedback
+        this.touchFeedback.visible = false;
+        this.touchFeedback.pullIndicator.visible = false;
+
+        if (this.gameState !== 'aiming') {
+            this.mobileTouch.isAiming = false;
+            this.mobileTouch.isPullingBack = false;
+            return;
+        }
+
+        // MULTIPLAYER: Only allow interaction if it's your turn
+        if (this.isMultiplayer && !this.isMyTurn) {
+            this.mobileTouch.isAiming = false;
+            return;
+        }
+
+        // BALL IN HAND - Place cue ball
+        if (this.ballInHand && this.isDraggingBall) {
+            this.isDraggingBall = false;
+
+            const cueBall = this.balls[0];
+            let valid = true;
+            for (const ball of this.balls) {
+                if (ball.id !== 0 && ball.active) {
+                    const d = Math.hypot(cueBall.x - ball.x, cueBall.y - ball.y);
+                    if (d < this.physics.BALL_RADIUS * 2) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if (valid) {
+                this.ballInHand = false;
+                this.ballInHandKitchen = false;
+                this.isPlacingCueBall = false;
+                this.updateTurnIndicator();
+                this.showMessage('CUE BALL PLACED', 'Ready to shoot - pull back and release');
+            } else {
+                this.showMessage('INVALID PLACEMENT', 'Cue ball overlaps - try again');
+            }
+            return;
+        }
+
+        // Check if this was a tap (quick touch without much movement)
+        const touchDuration = Date.now() - this.mobileTouch.startTime;
+        const wasTap = touchDuration < this.mobileSettings.tapThreshold && this.power < 5;
+
+        if (wasTap && this.mobileTouch.isAiming) {
+            // Tap just locks/unlocks aim
+            this.aimLocked = !this.aimLocked;
+            if (this.aimLocked) {
+                this.showMessage('AIM LOCKED', 'Pull back to set power, release to shoot', 1500);
+            }
+            this.mobileTouch.isAiming = false;
+            return;
+        }
+
+        // Shoot if we have enough power
+        if (this.power > 5 && this.mobileTouch.isAiming) {
+            this.shoot();
+        }
+
+        // Reset mobile touch state
+        this.mobileTouch.isAiming = false;
+        this.mobileTouch.isPullingBack = false;
+        this.aimLocked = false;
+        this.power = 0;
+        this.updatePowerGauge();
     }
 
     handleSpinClick(e) {
@@ -1467,6 +1753,87 @@ class PoolGame {
         if (canAim) this.drawAimLine(ctx);
         this.drawBalls(ctx);
         if (canAim) this.drawCue(ctx);
+
+        // Draw mobile touch feedback
+        if (this.isMobile) {
+            this.drawMobileTouchFeedback(ctx);
+        }
+    }
+
+    // Visual feedback for mobile touch controls
+    drawMobileTouchFeedback(ctx) {
+        if (!this.touchFeedback.visible) return;
+
+        ctx.save();
+
+        // Draw touch point indicator
+        const x = this.touchFeedback.x;
+        const y = this.touchFeedback.y;
+
+        // Outer ring (pulsing)
+        const time = Date.now() / 200;
+        const pulse = 0.5 + Math.sin(time) * 0.3;
+
+        ctx.beginPath();
+        ctx.arc(x, y, this.touchFeedback.radius + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 212, 255, ${pulse})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner circle
+        ctx.beginPath();
+        ctx.arc(x, y, this.touchFeedback.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.15)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw pull indicator line (from start to current)
+        if (this.mobileTouch.isAiming && this.mobileTouch.isPullingBack) {
+            const startX = this.mobileTouch.startX;
+            const startY = this.mobileTouch.startY;
+
+            // Draw line from start to current touch
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(x, y);
+
+            // Gradient based on power
+            const powerRatio = this.power / 100;
+            let color;
+            if (powerRatio < 0.33) {
+                color = `rgba(0, 255, 136, ${0.5 + powerRatio})`; // Green
+            } else if (powerRatio < 0.66) {
+                color = `rgba(255, 215, 0, ${0.5 + powerRatio})`; // Gold
+            } else {
+                color = `rgba(255, 71, 87, ${0.5 + powerRatio})`; // Red
+            }
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.setLineDash([8, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw start point marker
+            ctx.beginPath();
+            ctx.arc(startX, startY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Power text near touch point
+            ctx.font = 'bold 14px Orbitron, sans-serif';
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(`${Math.round(this.power)}%`, x, y - 40);
+        }
+
+        ctx.restore();
     }
 
     drawDebugInfo(ctx) {
