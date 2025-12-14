@@ -321,10 +321,9 @@
         position: absolute !important;
         right: max(20px, env(safe-area-inset-right)) !important;
         left: auto !important;
-        top: auto !important;
-        bottom: max(20px, 15vh) !important;
-        /* Responsive bottom spacing */
-        transform: none !important;
+        top: 50% !important;
+        bottom: auto !important;
+        transform: translateY(-50%) !important;
         flex-direction: column !important;
         align-items: center !important;
         gap: 10px !important;
