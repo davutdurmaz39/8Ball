@@ -11,6 +11,8 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { Server } = require('socket.io');
+const multer = require('multer');
+const fs = require('fs');
 
 // Multiplayer modules
 const { MultiplayerServer } = require('./multiplayer/WebSocketHandler');
@@ -277,6 +279,105 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 app.post('/api/auth/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// ============ AVATAR UPLOAD ============
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads', 'avatars');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for avatar uploads
+const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const filename = `avatar_${req.user.id}_${Date.now()}${ext}`;
+        cb(null, filename);
+    }
+});
+
+const avatarUpload = multer({
+    storage: avatarStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+        }
+    }
+});
+
+// Serve uploaded avatars statically
+app.use('/uploads/avatars', express.static(uploadsDir));
+
+// Upload avatar endpoint
+app.post('/api/profile/avatar', authenticateToken, avatarUpload.single('avatar'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded' });
+        }
+
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Delete old avatar if exists
+        if (user.profilePicture && user.profilePicture.startsWith('/uploads/avatars/')) {
+            const oldPath = path.join(__dirname, user.profilePicture);
+            if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+            }
+        }
+
+        // Save new avatar path
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        user.profilePicture = avatarUrl;
+
+        res.json({
+            success: true,
+            avatarUrl: avatarUrl,
+            message: 'Avatar uploaded successfully'
+        });
+    } catch (error) {
+        console.error('Avatar upload error:', error);
+        res.status(500).json({ success: false, error: 'Failed to upload avatar' });
+    }
+});
+
+// Delete avatar endpoint
+app.delete('/api/profile/avatar', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Delete avatar file if exists
+        if (user.profilePicture && user.profilePicture.startsWith('/uploads/avatars/')) {
+            const avatarPath = path.join(__dirname, user.profilePicture);
+            if (fs.existsSync(avatarPath)) {
+                fs.unlinkSync(avatarPath);
+            }
+        }
+
+        user.profilePicture = null;
+
+        res.json({
+            success: true,
+            message: 'Avatar removed successfully'
+        });
+    } catch (error) {
+        console.error('Avatar delete error:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete avatar' });
+    }
 });
 
 // ============ GOOGLE OAUTH ============

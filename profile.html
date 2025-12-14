@@ -782,8 +782,13 @@
                     document.getElementById('rank-icon').textContent = rankInfo.icon;
                     document.getElementById('player-elo').textContent = elo + ' ELO';
 
-                    // Avatar initial
-                    document.getElementById('avatar-display').textContent = (data.user.username || 'P').charAt(0).toUpperCase();
+                    // Avatar - show image or initial
+                    const avatarDisplay = document.getElementById('avatar-display');
+                    if (data.user.profilePicture) {
+                        avatarDisplay.innerHTML = '<img src="' + data.user.profilePicture + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                    } else {
+                        avatarDisplay.textContent = (data.user.username || 'P').charAt(0).toUpperCase();
+                    }
 
                     // Wallet stats
                     document.getElementById('total-earned').textContent = '+' + (data.user.totalEarned || 0).toLocaleString();
@@ -871,7 +876,54 @@
 
         // Change avatar
         function changeAvatar() {
-            alert('Avatar customization coming soon!');
+            // Create a hidden file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/jpeg,image/png,image/gif,image/webp';
+
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File too large! Maximum size is 5MB.');
+                    return;
+                }
+
+                // Show loading state
+                const avatarDisplay = document.getElementById('avatar-display');
+                const originalContent = avatarDisplay.innerHTML;
+                avatarDisplay.innerHTML = '⏳';
+
+                try {
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+
+                    const response = await fetch('/api/profile/avatar', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update avatar display with the uploaded image
+                        avatarDisplay.innerHTML = '<img src="' + data.avatarUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                        alert('Avatar updated successfully!');
+                    } else {
+                        avatarDisplay.innerHTML = originalContent;
+                        alert('Failed to upload avatar: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Avatar upload error:', error);
+                    avatarDisplay.innerHTML = originalContent;
+                    alert('Failed to upload avatar. Please try again.');
+                }
+            };
+
+            input.click();
         }
 
         // Add funds
