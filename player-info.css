@@ -159,3 +159,27 @@
 .player-flag:empty {
     display: none;
 }
+/* Player-specific avatar image styles */
+.player-1 .avatar-img,
+.player-1-panel .avatar-img {
+    border-color: #00bbff;
+    box-shadow: 0 0 12px rgba(0, 187, 255, 0.5);
+}
+
+.player-2 .avatar-img,
+.player-2-panel .avatar-img {
+    border-color: #ff6666;
+    box-shadow: 0 0 12px rgba(255, 102, 102, 0.5);
+}
+
+/* Header avatar wrapper */
+.player .avatar-wrapper {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.player .avatar-img {
+    width: 40px;
+    height: 40px;
+}

@@ -21,6 +21,21 @@ const COUNTRY_NAMES = {
     'AU': 'Australia', 'CA': 'Canada', 'PL': 'Poland', 'SE': 'Sweden'
 };
 
+// Default avatar images
+const DEFAULT_AVATARS = [
+    'assets/avatars/default_1.png',
+    'assets/avatars/default_2.png',
+    'assets/avatars/default_3.png',
+    'assets/avatars/default_4.png'
+];
+
+// Get a consistent default avatar based on username
+function getDefaultAvatar(username) {
+    if (!username) return DEFAULT_AVATARS[0];
+    const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return DEFAULT_AVATARS[hash % DEFAULT_AVATARS.length];
+}
+
 // Create and inject the player info bar above the table
 function createPlayerInfoBar() {
     // Check if already exists
@@ -34,13 +49,14 @@ function createPlayerInfoBar() {
         return;
     }
 
-    // Create the player info bar HTML
+    // Create the player info bar HTML with image avatars
     const playerInfoBar = document.createElement('div');
     playerInfoBar.id = 'player-info-bar';
     playerInfoBar.innerHTML = `
         <div class="player-panel player-1-panel" id="p1-panel">
             <div class="avatar-wrapper">
-                <div class="avatar" id="p1-avatar-top">P1</div>
+                <img class="avatar-img" id="p1-avatar-img" src="${DEFAULT_AVATARS[0]}" alt="Player 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="avatar avatar-fallback" id="p1-avatar-top" style="display:none;">P1</div>
             </div>
             <div class="player-panel-details">
                 <span class="player-panel-name" id="p1-name-top">Player 1</span>
@@ -56,14 +72,15 @@ function createPlayerInfoBar() {
                 <span class="player-panel-flag" id="p2-flag-top"></span>
             </div>
             <div class="avatar-wrapper">
-                <div class="avatar" id="p2-avatar-top">P2</div>
+                <img class="avatar-img" id="p2-avatar-img" src="${DEFAULT_AVATARS[1]}" alt="Player 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="avatar avatar-fallback" id="p2-avatar-top" style="display:none;">P2</div>
             </div>
         </div>
     `;
 
     // Insert before table container
     tableContainer.parentNode.insertBefore(playerInfoBar, tableContainer);
-    console.log('✅ Player info bar created above table');
+    console.log('✅ Player info bar created above table with avatar images');
 }
 
 // Update player 1 info with user data
@@ -84,11 +101,31 @@ function updatePlayer1Info(user) {
         p1Flag.textContent = getFlagEmoji(user.nationality);
     }
 
+    // Update header avatar image
+    const p1AvatarHeader = document.getElementById('p1-avatar-header');
+    if (p1AvatarHeader) {
+        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        p1AvatarHeader.src = avatarSrc;
+        p1AvatarHeader.style.display = 'block';
+        if (p1AvatarFallback) p1AvatarFallback.style.display = 'none';
+    }
+
     // Update in new info bar (above table)
     const p1NameTop = document.getElementById('p1-name-top');
     if (p1NameTop) p1NameTop.textContent = user.username;
 
+    // Update avatar image
+    const p1AvatarImg = document.getElementById('p1-avatar-img');
     const p1AvatarTop = document.getElementById('p1-avatar-top');
+
+    if (p1AvatarImg) {
+        // Use profile picture if available, otherwise use default based on username
+        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        p1AvatarImg.src = avatarSrc;
+        p1AvatarImg.style.display = 'block';
+        if (p1AvatarTop) p1AvatarTop.style.display = 'none';
+    }
+
     if (p1AvatarTop) {
         p1AvatarTop.textContent = user.username ? user.username.charAt(0).toUpperCase() : 'P1';
     }
@@ -118,11 +155,31 @@ function updatePlayer2Info(user) {
         p2Flag.textContent = getFlagEmoji(user.nationality);
     }
 
+    // Update header avatar image
+    const p2AvatarHeader = document.getElementById('p2-avatar-header');
+    if (p2AvatarHeader) {
+        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        p2AvatarHeader.src = avatarSrc;
+        p2AvatarHeader.style.display = 'block';
+        if (p2AvatarFallback) p2AvatarFallback.style.display = 'none';
+    }
+
     // Update in new info bar
     const p2NameTop = document.getElementById('p2-name-top');
     if (p2NameTop) p2NameTop.textContent = user.username;
 
+    // Update avatar image
+    const p2AvatarImg = document.getElementById('p2-avatar-img');
     const p2AvatarTop = document.getElementById('p2-avatar-top');
+
+    if (p2AvatarImg) {
+        // Use profile picture if available, otherwise use default based on username
+        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        p2AvatarImg.src = avatarSrc;
+        p2AvatarImg.style.display = 'block';
+        if (p2AvatarTop) p2AvatarTop.style.display = 'none';
+    }
+
     if (p2AvatarTop) {
         p2AvatarTop.textContent = user.username ? user.username.charAt(0).toUpperCase() : 'P2';
     }
