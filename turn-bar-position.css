@@ -1,116 +1,94 @@
-/* Turn Bar Position - Over Table with Player Names */
+/* Compact Turn Indicator - Two Avatar Squares with Green Border for Active Turn */
+/* This file replaces the old large turn bar with a minimal avatar-based indicator */
 
-/* Hide the player info from header */
+/* Hide everything in the old header player info except avatars */
 #game-header .player-info {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 20px !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 10px 0 !important;
+    width: 100% !important;
+}
+
+/* Hide the text-based turn indicator completely */
+#game-header .turn-indicator,
+.turn-indicator {
     display: none !important;
 }
 
-/* Player info bar container - positioned above table */
-#player-bar-above-table {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 900px;
-    padding: 10px 20px;
-    margin-bottom: 15px;
-    background: linear-gradient(180deg, rgba(10, 20, 40, 0.95) 0%, rgba(5, 15, 30, 0.9) 100%);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
-/* Player panels */
-.player-bar-panel {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 15px;
-    background: linear-gradient(135deg, rgba(0, 100, 200, 0.25) 0%, rgba(0, 80, 160, 0.15) 100%);
-    border-radius: 25px;
-    border: 2px solid rgba(0, 150, 255, 0.4);
-    min-width: 140px;
-}
-
-.player-bar-panel.player-2 {
-    background: linear-gradient(135deg, rgba(200, 50, 50, 0.25) 0%, rgba(160, 30, 30, 0.15) 100%);
-    border-color: rgba(255, 100, 100, 0.4);
-    flex-direction: row-reverse;
-}
-
-.player-bar-panel.active {
-    border-color: #ffd700;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-}
-
-.player-bar-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #00bbff 0%, #0077cc 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.player-bar-panel.player-2 .player-bar-avatar {
-    background: linear-gradient(135deg, #ff6666 0%, #cc3333 100%);
-}
-
-.player-bar-details {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.player-bar-panel.player-2 .player-bar-details {
-    text-align: right;
-}
-
-.player-bar-name {
-    font-weight: 600;
-    font-size: 13px;
-    color: #fff;
-}
-
-.player-bar-type {
-    font-size: 11px;
-    color: #8892a6;
-    text-transform: uppercase;
-}
-
-/* Turn bar in center */
-.turn-bar-center {
-    flex: 1;
-    max-width: 350px;
-    padding: 10px 25px;
-    margin: 0 15px;
-    background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
-    border-radius: 25px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.turn-bar-text-center {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    color: #1a1a2e;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Hide old turn indicator from header */
-#game-header .turn-indicator {
+/* Hide player names, ball types, details */
+#game-header .player-details,
+#game-header .player-name,
+#game-header .ball-type {
     display: none !important;
 }
 
-/* Adjust game-main to include the bar */
+/* Player container - minimal, just avatar */
+#game-header .player {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 0.5 !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Active player state */
+#game-header .player.active {
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+}
+
+/* Avatar Styling - Square with rounded corners */
+#game-header .avatar {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 10px !important;
+    border: 3px solid rgba(255, 255, 255, 0.3) !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #2a3a5a 0%, #1a2a40 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Green border for active turn */
+#game-header .player.active .avatar {
+    border-color: #00ff00 !important;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6), 0 0 40px rgba(0, 255, 0, 0.3) !important;
+}
+
+/* Hide any other player info bar */
+#player-bar-above-table,
+#player-info-bar {
+    display: none !important;
+}
+
+/* Adjust game-main padding */
 #game-main {
     padding-top: 10px !important;
+}
+
+/* Keep header visible but minimal */
+#game-header {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 10px !important;
+    background: transparent !important;
+}
+
+/* Hide logo on game screen */
+#game-header .logo {
+    display: none !important;
 }
