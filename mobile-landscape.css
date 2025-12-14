@@ -156,10 +156,10 @@
         object-fit: contain !important;
     }
 
-    /* Power gauge - Interactive Slider on Left */
+    /* Power gauge - Interactive Slider on Right */
     #power-gauge {
         position: absolute !important;
-        left: 20px !important;
+        right: 20px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         flex-direction: column !important;
@@ -236,10 +236,10 @@
         pointer-events: none;
     }
 
-    /* Spin control - Right side */
+    /* Spin control - Left side */
     #spin-control {
         position: absolute !important;
-        right: 20px !important;
+        left: 20px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         flex-direction: column !important;
@@ -252,6 +252,8 @@
     .spin-label {
         font-size: 0.55rem !important;
         letter-spacing: 1px !important;
+        margin-bottom: 5px !important;
+        pointer-events: none;
     }
 
     .spin-ball {
