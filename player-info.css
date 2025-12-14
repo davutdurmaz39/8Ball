@@ -19,6 +19,12 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
+@media (pointer: coarse) and (orientation: landscape) {
+    #player-info-bar {
+        display: none !important;
+    }
+}
+
 /* Player Panel */
 .player-panel {
     display: flex;
