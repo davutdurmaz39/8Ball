@@ -88,8 +88,8 @@
     }
 
     .user-menu {
-        top: 5px !important;
-        right: 5px !important;
+        top: max(5px, env(safe-area-inset-top)) !important;
+        right: max(5px, env(safe-area-inset-right)) !important;
         padding: 4px 10px !important;
         gap: 8px !important;
     }
@@ -118,6 +118,8 @@
         overflow: hidden !important;
         margin: 0 !important;
         padding: 0 !important;
+        background-color: #000 !important;
+        /* Fill notches with black */
     }
 
     #game-container {
@@ -142,25 +144,132 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 10px !important;
+        gap: 0 !important;
+        width: 100% !important;
         height: 100% !important;
-        padding: 5px !important;
+        padding: 0 !important;
+        /* Ensure safe areas don't cut off content */
+        padding-left: env(safe-area-inset-left) !important;
+        padding-right: env(safe-area-inset-right) !important;
     }
 
-    /* Pool table - maximize horizontal space */
+    /* Pool table - maximize space but leave room for controls */
     #pool-table {
-        max-width: calc(100vw - 180px) !important;
+        /* Calculate max width based on viewport minus control space */
+        /* We reserve ~15% or ~80px on each side for controls */
+        max-width: calc(100vw - max(160px, 20vw)) !important;
+        max-height: 90vh !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+        pointer-events: none;
+    }
+
+    /* Power gauge - Interactive Slider on Left */
+    #power-gauge {
+        position: absolute !important;
+        left: max(20px, env(safe-area-inset-left)) !important;
+        right: auto !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1vh !important;
+        width: max(50px, 8vw) !important;
+        height: 60vh !important;
+        /* Responsive height */
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 30px !important;
+        padding: 10px 0 !important;
+        z-index: 100 !important;
+        touch-action: none !important;
+    }
+
+    .power-label {
+        font-size: 0.6rem !important;
+        letter-spacing: 1px !important;
+        margin-bottom: 5px !important;
+        pointer-events: none;
+    }
+
+    .power-bar {
+        width: 30% !important;
+        height: 80% !important;
+        background: #1a1a1a !important;
+        border-radius: 10px !important;
+        position: relative !important;
+        overflow: visible !important;
+        pointer-events: none;
+    }
+
+    /* The fill inside the bar */
+    .power-fill {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: linear-gradient(to top, #00ff88, #ffaa00, #ff4444) !important;
+        border-radius: 10px !important;
+        height: 0%;
+        transition: height 0.05s linear !important;
+    }
+
+    /* New Power Handle for sliding */
+    #power-handle {
+        display: block !important;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: max(30px, 5vh);
+        height: max(30px, 5vh);
+        background: radial-gradient(circle, #fff, #ccc);
+        border: 2px solid #00d4ff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        top: 0;
+        margin-top: calc(max(30px, 5vh) / -2);
+        pointer-events: none;
+    }
+
+    .power-value {
+        font-size: 0.8rem !important;
+        margin-top: 5px !important;
+        font-weight: bold !important;
+        pointer-events: none;
+    }
+
+    /* Spin control - Right side, above chat */
+    #spin-control {
+        position: absolute !important;
+        right: max(20px, env(safe-area-inset-right)) !important;
+        left: auto !important;
+        top: auto !important;
+        bottom: max(20px, 15vh) !important;
+        /* Responsive bottom spacing */
+        transform: none !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-width: 80px !important;
+        z-index: 100 !important;
+    }
+
+    .spin-label {
+        font-size: 0.55rem !important;
+        letter-spacing: 1px !important;
+        margin-bottom: 5px !important;
         pointer-events: none;
     }
 
     .spin-ball {
-        width: 50px !important;
-        height: 50px !important;
+        width: max(50px, 12vh) !important;
+        height: max(50px, 12vh) !important;
     }
 
     .spin-indicator {
-        width: 10px !important;
-        height: 10px !important;
+        width: 20% !important;
+        height: 20% !important;
     }
 
     .spin-info {
@@ -178,7 +287,7 @@
     #turn-indicator,
     .turn-indicator {
         position: fixed !important;
-        top: 5px !important;
+        top: max(5px, env(safe-area-inset-top)) !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
         padding: 5px 15px !important;
