@@ -296,7 +296,8 @@ const avatarStorage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);
-        const filename = `avatar_${req.user.id}_${Date.now()}${ext}`;
+        // Use timestamp for unique filename (user id will be added after auth)
+        const filename = `avatar_${Date.now()}_${Math.random().toString(36).substring(7)}${ext}`;
         cb(null, filename);
     }
 });
@@ -317,39 +318,51 @@ const avatarUpload = multer({
 // Serve uploaded avatars statically
 app.use('/uploads/avatars', express.static(uploadsDir));
 
-// Upload avatar endpoint
-app.post('/api/profile/avatar', authenticateToken, avatarUpload.single('avatar'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, error: 'No file uploaded' });
-        }
-
-        const user = users.get(req.user.email);
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
-
-        // Delete old avatar if exists
-        if (user.profilePicture && user.profilePicture.startsWith('/uploads/avatars/')) {
-            const oldPath = path.join(__dirname, user.profilePicture);
-            if (fs.existsSync(oldPath)) {
-                fs.unlinkSync(oldPath);
+// Upload avatar endpoint with error handling
+app.post('/api/profile/avatar', authenticateToken, (req, res) => {
+    avatarUpload.single('avatar')(req, res, (err) => {
+        if (err) {
+            console.error('Multer error:', err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ success: false, error: 'File too large. Maximum size is 5MB.' });
             }
+            return res.status(400).json({ success: false, error: err.message || 'Upload failed' });
         }
 
-        // Save new avatar path
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-        user.profilePicture = avatarUrl;
+        try {
+            if (!req.file) {
+                return res.status(400).json({ success: false, error: 'No file uploaded' });
+            }
 
-        res.json({
-            success: true,
-            avatarUrl: avatarUrl,
-            message: 'Avatar uploaded successfully'
-        });
-    } catch (error) {
-        console.error('Avatar upload error:', error);
-        res.status(500).json({ success: false, error: 'Failed to upload avatar' });
-    }
+            const user = users.get(req.user.email);
+            if (!user) {
+                return res.status(404).json({ success: false, error: 'User not found' });
+            }
+
+            // Delete old avatar if exists
+            if (user.profilePicture && user.profilePicture.startsWith('/uploads/avatars/')) {
+                const oldPath = path.join(__dirname, user.profilePicture);
+                if (fs.existsSync(oldPath)) {
+                    fs.unlinkSync(oldPath);
+                }
+            }
+
+            // Save new avatar path
+            const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+            user.profilePicture = avatarUrl;
+
+            console.log('Avatar uploaded successfully:', avatarUrl);
+
+            res.json({
+                success: true,
+                avatarUrl: avatarUrl,
+                message: 'Avatar uploaded successfully'
+            });
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            res.status(500).json({ success: false, error: 'Failed to upload avatar' });
+        }
+    });
 });
 
 // Delete avatar endpoint
