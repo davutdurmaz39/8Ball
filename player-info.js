@@ -38,49 +38,9 @@ function getDefaultAvatar(username) {
 
 // Create and inject the player info bar above the table
 function createPlayerInfoBar() {
-    // Check if already exists
-    if (document.getElementById('player-info-bar')) return;
-
-    // Find the table container
-    const tableContainer = document.getElementById('table-container');
-    if (!tableContainer) {
-        console.warn('Table container not found, retrying...');
-        setTimeout(createPlayerInfoBar, 500);
-        return;
-    }
-
-    // Create the player info bar HTML with image avatars
-    const playerInfoBar = document.createElement('div');
-    playerInfoBar.id = 'player-info-bar';
-    playerInfoBar.innerHTML = `
-        <div class="player-panel player-1-panel" id="p1-panel">
-            <div class="avatar-wrapper">
-                <img class="avatar-img" id="p1-avatar-img" src="${DEFAULT_AVATARS[0]}" alt="Player 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="avatar avatar-fallback" id="p1-avatar-top" style="display:none;">P1</div>
-            </div>
-            <div class="player-panel-details">
-                <span class="player-panel-name" id="p1-name-top">Player 1</span>
-                <span class="player-panel-flag" id="p1-flag-top"></span>
-            </div>
-        </div>
-        <div class="turn-bar" id="turn-bar">
-            <span class="turn-bar-text" id="turn-bar-text">PLAYER 1'S TURN</span>
-        </div>
-        <div class="player-panel player-2-panel" id="p2-panel">
-            <div class="player-panel-details">
-                <span class="player-panel-name" id="p2-name-top">Player 2</span>
-                <span class="player-panel-flag" id="p2-flag-top"></span>
-            </div>
-            <div class="avatar-wrapper">
-                <img class="avatar-img" id="p2-avatar-img" src="${DEFAULT_AVATARS[1]}" alt="Player 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="avatar avatar-fallback" id="p2-avatar-top" style="display:none;">P2</div>
-            </div>
-        </div>
-    `;
-
-    // Insert before table container
-    tableContainer.parentNode.insertBefore(playerInfoBar, tableContainer);
-    console.log('✅ Player info bar created above table with avatar images');
+    // DISABLED: Player info bar removed per user request (removed D and P2 panels from all devices)
+    // The function is kept for compatibility but does nothing
+    return;
 }
 
 // Update player 1 info with user data

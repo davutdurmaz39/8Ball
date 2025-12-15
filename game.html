@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="player-info.css?v=5">
     <link rel="stylesheet" href="turn-bar-position.css?v=2">
     <link rel="stylesheet" href="mobile-landscape.css?v=3">
+    <link rel="stylesheet" href="chat-updates.css">
     <style>
         .user-menu {
             position: fixed;
@@ -176,6 +177,7 @@
                     </div>
                     <div class="player-details"><span class="player-name" id="p1-name">Player 1</span><span
                             class="ball-type" id="p1-ball-type">--</span></div>
+                    <div class="speech-bubble hidden" id="p1-speech-bubble"></div>
                 </div>
                 <div class="turn-indicator" id="turn-indicator"><span class="turn-text">PLAYER 1's TURN</span><span
                         class="timer-text" id="timer-text"></span></div>
@@ -187,6 +189,7 @@
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="avatar" id="p2-avatar-fallback" style="display:none;">P2</div>
                     </div>
+                    <div class="speech-bubble hidden" id="p2-speech-bubble"></div>
                 </div>
             </div>
         </header>
@@ -318,9 +321,7 @@
                     <span>💬 CHAT</span>
                     <button class="chat-close" id="chat-close">✕</button>
                 </div>
-                <div class="chat-messages" id="chat-messages">
-                    <div class="chat-welcome">Click a quick message or type below!</div>
-                </div>
+                <!-- Chat messages removed -->
                 <div class="quick-chat">
                     <button class="quick-btn" data-msg="Good luck!">🍀 Good luck!</button>
                     <button class="quick-btn" data-msg="Nice shot!">👏 Nice shot!</button>
@@ -429,17 +430,21 @@
 
             // Add message to chat (exposed globally)
             window.addChatMessage = function (username, message, isMe = false) {
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `chat-msg ${isMe ? 'chat-sender' : 'opponent'}`;
-                msgDiv.innerHTML = `<strong>${username}:</strong> ${message}`;
-                chatMessages.appendChild(msgDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                // Show speech bubble
+                const bubbleId = isMe ? 'p1-speech-bubble' : 'p2-speech-bubble';
+                const bubble = document.getElementById(bubbleId);
 
-                // Update unread count if chat is closed
-                if (!isMe && !isOpen) {
-                    unreadCount++;
-                    chatBadge.textContent = unreadCount;
-                    chatBadge.style.display = 'block';
+                if (bubble) {
+                    bubble.textContent = message;
+                    bubble.classList.remove('hidden');
+                    bubble.classList.add('visible');
+
+                    // Hide after 4 seconds
+                    if (bubble.hideTimeout) clearTimeout(bubble.hideTimeout);
+                    bubble.hideTimeout = setTimeout(() => {
+                        bubble.classList.remove('visible');
+                        bubble.classList.add('hidden');
+                    }, 4000);
                 }
             };
 

@@ -60,6 +60,7 @@ class PhysicsEngine {
             if (ball.sidespin === undefined) ball.sidespin = 0;
         });
 
+        // Use fixed timestep for consistent physics
         const steps = 4;
         const dt = this.dt / steps;
 
@@ -72,8 +73,6 @@ class PhysicsEngine {
                 this.updateBallPhysics(ball, dt);
             }
         }
-
-
 
         return this.checkPockets(balls);
     }

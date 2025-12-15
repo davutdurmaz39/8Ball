@@ -4,6 +4,7 @@
 /* Hide everything in the old header player info except avatars */
 #game-header .player-info {
     display: flex !important;
+    /* HIDDEN per user request - remove D and P2 */
     justify-content: center !important;
     align-items: center !important;
     gap: 20px !important;
@@ -53,7 +54,7 @@
     border: 3px solid rgba(255, 255, 255, 0.3) !important;
     font-size: 1rem !important;
     font-weight: 700 !important;
-    display: flex !important;
+    display: flex;
     align-items: center !important;
     justify-content: center !important;
     background: linear-gradient(135deg, #2a3a5a 0%, #1a2a40 100%) !important;
