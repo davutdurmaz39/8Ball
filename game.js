@@ -494,6 +494,7 @@ class PoolGame {
             while (this.physicsAccumulator >= fixedStep) {
                 const pocketed = this.physics.update(this.balls);
                 this.physicsAccumulator -= fixedStep;
+                this.shotSteps = (this.shotSteps || 0) + 1; // Count steps for debug
 
                 // Handle pocketed balls from each physics step
                 if (pocketed && pocketed.length > 0) {
@@ -505,6 +506,17 @@ class PoolGame {
 
         // Render
         this.render();
+
+        // Debug display - show step count on screen
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(10, 10, 180, 50);
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '14px Arial';
+        ctx.fillText(`Shot steps: ${this.shotSteps || 0}`, 20, 30);
+        ctx.fillText(`Last power: ${this.lastShotPower || 0}%`, 20, 50);
+        ctx.restore();
 
         // Continue loop with timestamp
         this.animationId = requestAnimationFrame((ts) => this.animate(ts));
@@ -1082,6 +1094,8 @@ class PoolGame {
         this.stopShotTimer(); // Stop timer when shot is made
         this.shotPocketedBalls = []; // Reset pocketed balls tracker for this shot
         this.physicsAccumulator = 0; // Reset physics timing for consistent behavior
+        this.shotSteps = 0; // Reset step counter for debug
+        this.lastShotPower = Math.round(this.power); // Track power for debug
         this.gameState = 'shooting';
 
         // Clear ball-in-hand since we're taking a shot
