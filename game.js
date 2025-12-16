@@ -492,8 +492,14 @@ class PoolGame {
 
             // Run multiple physics steps if needed to catch up
             while (this.physicsAccumulator >= fixedStep) {
-                this.physics.update(this.balls);
+                const pocketed = this.physics.update(this.balls);
                 this.physicsAccumulator -= fixedStep;
+
+                // Handle pocketed balls
+                if (pocketed && pocketed.length > 0) {
+                    this.shotPocketedBalls.push(...pocketed);
+                    pocketed.forEach(ball => { this.updateBallRack(ball); });
+                }
             }
         }
 
@@ -1763,22 +1769,7 @@ class PoolGame {
         this.updateTurnIndicator(); // Refresh UI
     }
 
-    animate() {
-        this.render();
-        if (this.gameState === 'shooting') {
-            const pocketed = this.physics.update(this.balls);
-            if (pocketed.length > 0) {
-                // Accumulate pocketed balls for this shot
-                this.shotPocketedBalls.push(...pocketed);
-                pocketed.forEach(ball => { this.updateBallRack(ball); });
-                // NOTE: Do NOT call checkWinner() here - let checkShotResult() handle it
-                // after all balls have stopped. This ensures we detect if cue ball
-                // is also pocketed after 8-ball (scratch = opponent wins).
-            }
-        }
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
-
+    // NOTE: The main animate() function with frame-rate independent physics is defined earlier in this class.
     assignGroups(player, group) {
         this.tableState = 'closed';
         this.playerTypes[player] = group;
