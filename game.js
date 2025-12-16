@@ -468,44 +468,24 @@ class PoolGame {
     }
 
     animate(timestamp) {
-        // Initialize timing on first call
-        if (!this.gameStartTime) {
-            this.gameStartTime = performance.now();
-            this.lastSimTime = 0;
+        // Calculate delta time for frame-rate independent physics
+        if (!this.lastFrameTime) {
+            this.lastFrameTime = timestamp || performance.now();
         }
+        const now = timestamp || performance.now();
+        const deltaTime = (now - this.lastFrameTime) / 1000; // Convert to seconds
+        this.lastFrameTime = now;
 
-        // Calculate total elapsed time since game start (more reliable than frame deltas)
-        const now = performance.now();
-        const totalElapsed = (now - this.gameStartTime) / 1000; // in seconds
-
-        // Main game loop - SIMULATION-TIME BASED PHYSICS
-        // Physics runs at fixed 60 steps/second, based on wall-clock time
+        // Main game loop - Pass actual delta time for frame-rate independence
         if (this.gameState === 'shooting') {
-            const fixedStep = 1 / 60; // 60 FPS physics
-            const targetSimTime = totalElapsed;
+            // Pass delta time to physics engine - it will scale physics accordingly
+            const pocketed = this.physics.update(this.balls, deltaTime);
 
-            // Run physics steps to catch up to current time
-            // Cap at max 6 steps per frame to prevent spiral of death
-            let steps = 0;
-            while (this.lastSimTime + fixedStep <= targetSimTime && steps < 6) {
-                const pocketed = this.physics.update(this.balls);
-                this.lastSimTime += fixedStep;
-                steps++;
-
-                // Handle pocketed balls
-                if (pocketed && pocketed.length > 0) {
-                    this.shotPocketedBalls.push(...pocketed);
-                    pocketed.forEach(ball => { this.updateBallRack(ball); });
-                }
+            // Handle pocketed balls
+            if (pocketed && pocketed.length > 0) {
+                this.shotPocketedBalls.push(...pocketed);
+                pocketed.forEach(ball => { this.updateBallRack(ball); });
             }
-
-            // If we're too far behind, just skip ahead
-            if (targetSimTime - this.lastSimTime > 0.2) {
-                this.lastSimTime = targetSimTime;
-            }
-        } else {
-            // Keep sim time synced when not shooting
-            this.lastSimTime = totalElapsed;
         }
 
         // Render
@@ -1087,9 +1067,8 @@ class PoolGame {
         this.stopShotTimer(); // Stop timer when shot is made
         this.shotPocketedBalls = []; // Reset pocketed balls tracker for this shot
 
-        // Reset simulation timing for consistent physics
-        this.gameStartTime = performance.now();
-        this.lastSimTime = 0;
+        // Reset frame timing for consistent physics
+        this.lastFrameTime = null;
 
         this.gameState = 'shooting';
 
@@ -1134,9 +1113,8 @@ class PoolGame {
             this.stopShotTimer();
             this.shotPocketedBalls = [];
 
-            // Reset simulation timing for consistent physics
-            this.gameStartTime = performance.now();
-            this.lastSimTime = 0;
+            // Reset frame timing for consistent physics
+            this.lastFrameTime = null;
 
             this.gameState = 'shooting';
             this.wasMyShot = false; // Mark this as NOT my shot
