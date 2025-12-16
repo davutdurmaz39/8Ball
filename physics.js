@@ -10,11 +10,20 @@ class PhysicsEngine {
         this.BALL_RADIUS = 14;
         this.MAX_CUE_SPEED = 750;      // User's preferred max power
 
-        // Friction
+        // Detect mobile device
+        this.isMobile = ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints > 0) ||
+            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+        // Mobile friction multiplier - compensates for lower frame rate on mobile
+        // Mobile typically runs at 30-45fps vs PC at 60fps, so apply ~1.8x friction
+        this.mobileFrictionMultiplier = this.isMobile ? 1.8 : 1.0;
+
+        // Friction (adjusted for mobile)
         this.GRAVITY = 980;
-        this.MU_ROLL = 0.018;     // Rolling friction
-        this.MU_SLIDE = 0.10;
-        this.MU_SPIN = 0.12;      // Spin friction
+        this.MU_ROLL = 0.018 * this.mobileFrictionMultiplier;     // Rolling friction
+        this.MU_SLIDE = 0.10 * this.mobileFrictionMultiplier;
+        this.MU_SPIN = 0.12 * this.mobileFrictionMultiplier;      // Spin friction
 
         // Elasticity - High for impactful breaks
         this.E_BALL = 0.98;       // High elasticity for strong break impact
@@ -30,6 +39,10 @@ class PhysicsEngine {
         this.pockets = [];
         this.pocketRadius = 22;          // Corner pocket radius
         this.centerPocketRadius = 18;    // Center pocket radius (smaller, more recessed)
+
+        if (this.isMobile) {
+            console.log('📱 Mobile detected - applying friction multiplier:', this.mobileFrictionMultiplier);
+        }
     }
 
     initTable(width, height, cushion) {
