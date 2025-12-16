@@ -545,12 +545,14 @@ class PoolGame {
         if (this.physicsStepsPerSecond) {
             const ctx = this.ctx;
             ctx.save();
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(10, 10, 200, 50);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(10, 10, 220, 70);
             ctx.fillStyle = this.physicsStepsPerSecond >= 55 ? '#00ff00' : '#ff0000';
             ctx.font = '14px Arial';
-            ctx.fillText(`Physics: ${this.physicsStepsPerSecond} steps/sec`, 20, 30);
-            ctx.fillText(`Shot steps: ${this.currentShotSteps || 0}`, 20, 50);
+            ctx.fillText(`Physics: ${this.physicsStepsPerSecond} steps/sec`, 20, 28);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`Shot steps: ${this.currentShotSteps || 0}`, 20, 48);
+            ctx.fillText(`Last power: ${this.lastShotPower || 0}%`, 20, 68);
             ctx.restore();
         }
 
@@ -1132,6 +1134,7 @@ class PoolGame {
 
         // Reset debug counter for this shot
         this.currentShotSteps = 0;
+        this.lastShotPower = Math.round(this.power); // Save for debug display
         console.log(`🎱 Shot started: power=${this.power}%, aim=${(this.aimAngle * 180 / Math.PI).toFixed(1)}°`);
 
         this.gameState = 'shooting';
