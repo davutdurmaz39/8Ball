@@ -53,23 +53,17 @@ class PhysicsEngine {
         ];
     }
 
-    update(balls, deltaTime = null) {
+    update(balls) {
         balls.forEach(ball => {
             if (!ball.w) ball.w = { x: 0, y: 0, z: 0 };
             if (ball.topspin === undefined) ball.topspin = 0;
             if (ball.sidespin === undefined) ball.sidespin = 0;
         });
 
-        // Use provided deltaTime or default to 1/60
-        // This allows frame-rate independent physics
-        const totalDt = deltaTime !== null ? deltaTime : this.dt;
-
-        // Cap delta time to prevent physics explosion (max 100ms)
-        const cappedDt = Math.min(totalDt, 0.1);
-
-        // Use fixed substep for collision accuracy
-        const steps = Math.max(1, Math.round(cappedDt / (1 / 240))); // ~240 Hz substeps
-        const dt = cappedDt / steps;
+        // Fixed timestep - called at exactly 60Hz from game loop
+        // 4 substeps at 240Hz for collision accuracy
+        const steps = 4;
+        const dt = this.dt / steps;
 
         for (let s = 0; s < steps; s++) {
             this.handleBallCollisions(balls);

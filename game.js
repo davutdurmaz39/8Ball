@@ -284,7 +284,7 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('BREAK SHOT', 'Place the cue ball anywhere in the kitchen (behind the line)');
             this.startShotTimer(); // Start timer for first shot
-            this.animate();
+            this.startGameLoops();
         } catch (error) {
             console.error('Error starting game:', error);
             alert('Error starting game: ' + error.message);
@@ -350,7 +350,7 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('MULTIPLAYER GAME', `${this.isMyTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'} - Wager: ${data.wager || 50} 💰`);
             this.startShotTimer();
-            this.animate();
+            this.startGameLoops();
 
         } catch (error) {
             console.error('Error starting multiplayer game:', error);
@@ -402,7 +402,7 @@ class PoolGame {
             this.updateTurnIndicator();
             this.showMessage('RECONNECTED', 'You have rejoined the game!');
             this.startShotTimer();
-            this.animate();
+            this.startGameLoops();
         } catch (error) {
             console.error('Error rejoining game:', error);
         }
@@ -467,19 +467,39 @@ class PoolGame {
         }
     }
 
-    animate(timestamp) {
-        // Calculate delta time for frame-rate independent physics
-        if (!this.lastFrameTime) {
-            this.lastFrameTime = timestamp || performance.now();
+    // Start the separate physics and render loops
+    startGameLoops() {
+        // Physics loop - FIXED 60Hz using setInterval
+        // This ensures EXACTLY 60 physics updates per second on ALL devices
+        if (!this.physicsInterval) {
+            this.physicsInterval = setInterval(() => {
+                this.physicsStep();
+            }, 1000 / 60); // 16.67ms interval = 60 FPS physics
         }
-        const now = timestamp || performance.now();
-        const deltaTime = (now - this.lastFrameTime) / 1000; // Convert to seconds
-        this.lastFrameTime = now;
 
-        // Main game loop - Pass actual delta time for frame-rate independence
+        // Render loop - runs at display refresh rate
+        if (!this.animationId) {
+            this.animate();
+        }
+    }
+
+    // Stop the game loops
+    stopGameLoops() {
+        if (this.physicsInterval) {
+            clearInterval(this.physicsInterval);
+            this.physicsInterval = null;
+        }
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+    }
+
+    // Physics step - called exactly 60 times per second
+    physicsStep() {
         if (this.gameState === 'shooting') {
-            // Pass delta time to physics engine - it will scale physics accordingly
-            const pocketed = this.physics.update(this.balls, deltaTime);
+            // Run physics with fixed timestep (no deltaTime needed)
+            const pocketed = this.physics.update(this.balls);
 
             // Handle pocketed balls
             if (pocketed && pocketed.length > 0) {
@@ -487,12 +507,15 @@ class PoolGame {
                 pocketed.forEach(ball => { this.updateBallRack(ball); });
             }
         }
+    }
 
-        // Render
+    // Render loop - runs at display refresh rate (for smooth visuals)
+    animate() {
+        // Only render, no physics here
         this.render();
 
-        // Continue loop
-        this.animationId = requestAnimationFrame((ts) => this.animate(ts));
+        // Continue render loop
+        this.animationId = requestAnimationFrame(() => this.animate());
     }
 
     initializeBalls() {
@@ -1066,10 +1089,6 @@ class PoolGame {
     shoot() {
         this.stopShotTimer(); // Stop timer when shot is made
         this.shotPocketedBalls = []; // Reset pocketed balls tracker for this shot
-
-        // Reset frame timing for consistent physics
-        this.lastFrameTime = null;
-
         this.gameState = 'shooting';
 
         // Clear ball-in-hand since we're taking a shot
@@ -1112,10 +1131,6 @@ class PoolGame {
 
             this.stopShotTimer();
             this.shotPocketedBalls = [];
-
-            // Reset frame timing for consistent physics
-            this.lastFrameTime = null;
-
             this.gameState = 'shooting';
             this.wasMyShot = false; // Mark this as NOT my shot
             const cueBall = this.balls[0];
