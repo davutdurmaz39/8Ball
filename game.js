@@ -467,59 +467,23 @@ class PoolGame {
         }
     }
 
-    animate(timestamp) {
-        // Initialize last timestamp on first call
-        if (!this.lastTimestamp) {
-            this.lastTimestamp = timestamp || performance.now();
-        }
-
-        // Calculate delta time in seconds
-        const now = timestamp || performance.now();
-        let deltaTime = (now - this.lastTimestamp) / 1000;
-        this.lastTimestamp = now;
-
-        // Cap delta time to prevent spiral of death on slow devices
-        // Max 100ms (10 FPS) to prevent huge jumps
-        deltaTime = Math.min(deltaTime, 0.1);
-
-        // Main game loop - FRAME-RATE INDEPENDENT PHYSICS
+    animate() {
+        // Simple physics: one update per frame
         if (this.gameState === 'shooting') {
-            // Accumulate time and run physics at fixed rate
-            this.physicsAccumulator = (this.physicsAccumulator || 0) + deltaTime;
+            const pocketed = this.physics.update(this.balls);
 
-            // Fixed timestep: run physics at 60 FPS equivalent (1/60 = 0.01667s)
-            const fixedStep = 1 / 60;
-
-            // Run multiple physics steps if needed to catch up
-            while (this.physicsAccumulator >= fixedStep) {
-                const pocketed = this.physics.update(this.balls);
-                this.physicsAccumulator -= fixedStep;
-                this.shotSteps = (this.shotSteps || 0) + 1; // Count steps for debug
-
-                // Handle pocketed balls from each physics step
-                if (pocketed && pocketed.length > 0) {
-                    this.shotPocketedBalls.push(...pocketed);
-                    pocketed.forEach(ball => { this.updateBallRack(ball); });
-                }
+            // Handle pocketed balls
+            if (pocketed && pocketed.length > 0) {
+                this.shotPocketedBalls.push(...pocketed);
+                pocketed.forEach(ball => { this.updateBallRack(ball); });
             }
         }
 
         // Render
         this.render();
 
-        // Debug display - show step count on screen
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(10, 10, 180, 50);
-        ctx.fillStyle = '#00ff00';
-        ctx.font = '14px Arial';
-        ctx.fillText(`Shot steps: ${this.shotSteps || 0}`, 20, 30);
-        ctx.fillText(`Last power: ${this.lastShotPower || 0}%`, 20, 50);
-        ctx.restore();
-
-        // Continue loop with timestamp
-        this.animationId = requestAnimationFrame((ts) => this.animate(ts));
+        // Continue loop
+        this.animationId = requestAnimationFrame(() => this.animate());
     }
 
     initializeBalls() {
