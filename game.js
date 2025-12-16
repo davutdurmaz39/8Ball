@@ -469,12 +469,29 @@ class PoolGame {
 
     // Start the separate physics and render loops
     startGameLoops() {
+        // Initialize debug counters
+        this.physicsStepCount = 0;
+        this.physicsStepsPerSecond = 0;
+        this.lastPhysicsCountTime = performance.now();
+
         // Physics loop - FIXED 60Hz using setInterval
         // This ensures EXACTLY 60 physics updates per second on ALL devices
         if (!this.physicsInterval) {
             this.physicsInterval = setInterval(() => {
                 this.physicsStep();
             }, 1000 / 60); // 16.67ms interval = 60 FPS physics
+        }
+
+        // Physics counter - tracks actual steps per second
+        if (!this.physicsCounterInterval) {
+            this.physicsCounterInterval = setInterval(() => {
+                const now = performance.now();
+                const elapsed = (now - this.lastPhysicsCountTime) / 1000;
+                this.physicsStepsPerSecond = Math.round(this.physicsStepCount / elapsed);
+                console.log(`📊 Physics: ${this.physicsStepsPerSecond} steps/sec (target: 60)`);
+                this.physicsStepCount = 0;
+                this.lastPhysicsCountTime = now;
+            }, 1000);
         }
 
         // Render loop - runs at display refresh rate
@@ -489,6 +506,10 @@ class PoolGame {
             clearInterval(this.physicsInterval);
             this.physicsInterval = null;
         }
+        if (this.physicsCounterInterval) {
+            clearInterval(this.physicsCounterInterval);
+            this.physicsCounterInterval = null;
+        }
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
@@ -497,7 +518,13 @@ class PoolGame {
 
     // Physics step - called exactly 60 times per second
     physicsStep() {
+        this.physicsStepCount++; // Debug counter
+
         if (this.gameState === 'shooting') {
+            // Track shot physics steps
+            if (!this.currentShotSteps) this.currentShotSteps = 0;
+            this.currentShotSteps++;
+
             // Run physics with fixed timestep (no deltaTime needed)
             const pocketed = this.physics.update(this.balls);
 
@@ -513,6 +540,19 @@ class PoolGame {
     animate() {
         // Only render, no physics here
         this.render();
+
+        // Draw debug info on canvas
+        if (this.physicsStepsPerSecond) {
+            const ctx = this.ctx;
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(10, 10, 200, 50);
+            ctx.fillStyle = this.physicsStepsPerSecond >= 55 ? '#00ff00' : '#ff0000';
+            ctx.font = '14px Arial';
+            ctx.fillText(`Physics: ${this.physicsStepsPerSecond} steps/sec`, 20, 30);
+            ctx.fillText(`Shot steps: ${this.currentShotSteps || 0}`, 20, 50);
+            ctx.restore();
+        }
 
         // Continue render loop
         this.animationId = requestAnimationFrame(() => this.animate());
@@ -1089,6 +1129,11 @@ class PoolGame {
     shoot() {
         this.stopShotTimer(); // Stop timer when shot is made
         this.shotPocketedBalls = []; // Reset pocketed balls tracker for this shot
+
+        // Reset debug counter for this shot
+        this.currentShotSteps = 0;
+        console.log(`🎱 Shot started: power=${this.power}%, aim=${(this.aimAngle * 180 / Math.PI).toFixed(1)}°`);
+
         this.gameState = 'shooting';
 
         // Clear ball-in-hand since we're taking a shot
