@@ -167,7 +167,10 @@ class PoolGame {
     setupEventListeners() {
         // Start screen buttons
         document.getElementById('btn-2player').addEventListener('click', () => {
-            if (this.startScreen) this.startScreen.style.display = 'none';
+            if (this.startScreen) {
+                this.startScreen.style.display = 'none';
+                this.startScreen.classList.add('hidden');
+            }
             this.startGame('2player');
         });
         document.getElementById('play-again').addEventListener('click', () => this.resetGame());
@@ -310,6 +313,7 @@ class PoolGame {
             // Hide start screen
             if (this.startScreen) {
                 this.startScreen.style.display = 'none';
+                this.startScreen.classList.add('hidden');
             }
 
             // Initialize the game
@@ -354,18 +358,150 @@ class PoolGame {
         }
     }
 
-    animate() {
-        // Main game loop
+    // Called when opponent is disconnecting (30s timer starts)
+    onOpponentDisconnecting(data) {
+        console.log('⏱️ Opponent disconnecting, waiting for reconnection...', data);
+        this.showReconnectionTimer(data.disconnectedPlayer, data.timeout);
+    }
+
+    // Called when opponent reconnects
+    onOpponentReconnected(data) {
+        console.log('✅ Opponent reconnected!', data);
+        this.hideReconnectionTimer();
+        this.showMessage('RECONNECTED', `${data.reconnectedPlayer} has reconnected!`);
+    }
+
+    // Called when we rejoin a game after disconnecting
+    onGameRejoin(data) {
+        console.log('🔄 Rejoining game...', data);
+        try {
+            this.isMultiplayer = true;
+            this.roomId = data.roomId;
+            this.myPlayerNumber = data.myPlayerNumber;
+
+            if (this.startScreen) {
+                this.startScreen.style.display = 'none';
+                this.startScreen.classList.add('hidden');
+            }
+
+            this.gameMode = 'multiplayer';
+            this.gameState = 'aiming';
+
+            if (data.gameState && data.gameState.balls) {
+                this.balls = data.gameState.balls;
+            }
+
+            this.currentPlayer = data.gameState?.currentPlayer || 1;
+            this.isMyTurn = (this.currentPlayer === this.myPlayerNumber);
+            this.tableState = data.gameState?.tableOpen ? 'open' : 'assigned';
+            this.playerTypes = data.gameState?.playerTypes || { 1: null, 2: null };
+            this.isBreakShot = data.gameState?.isBreakShot || false;
+            this.ballInHand = data.gameState?.ballInHand || false;
+            this.ballInHandKitchen = data.gameState?.ballInHandKitchen || false;
+
+            this.updateTurnIndicator();
+            this.showMessage('RECONNECTED', 'You have rejoined the game!');
+            this.startShotTimer();
+            this.animate();
+        } catch (error) {
+            console.error('Error rejoining game:', error);
+        }
+    }
+
+    // Show reconnection timer overlay
+    showReconnectionTimer(playerName, seconds) {
+        let overlay = document.getElementById('reconnect-timer-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'reconnect-timer-overlay';
+            overlay.innerHTML = `
+                <div class="reconnect-content">
+                    <div class="reconnect-icon">⏱️</div>
+                    <h2>OPPONENT DISCONNECTED</h2>
+                    <p class="reconnect-player"></p>
+                    <div class="reconnect-timer">
+                        <span class="timer-value">30</span>
+                        <span class="timer-label">seconds remaining</span>
+                    </div>
+                    <p class="reconnect-message">Waiting for reconnection...</p>
+                </div>
+            `;
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); display: flex;
+                align-items: center; justify-content: center; z-index: 10000;
+            `;
+            const content = overlay.querySelector('.reconnect-content');
+            content.style.cssText = `
+                text-align: center; color: white; padding: 40px;
+                background: linear-gradient(135deg, rgba(255, 100, 100, 0.2), rgba(200, 50, 50, 0.3));
+                border: 2px solid rgba(255, 100, 100, 0.5); border-radius: 20px;
+                backdrop-filter: blur(10px);
+            `;
+            overlay.querySelector('.timer-value').style.cssText = `
+                font-size: 64px; font-weight: bold; color: #ff6b6b; display: block;
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        overlay.querySelector('.reconnect-player').textContent = `${playerName} has disconnected`;
+        overlay.querySelector('.timer-value').textContent = seconds;
+        overlay.style.display = 'flex';
+
+        this.reconnectCountdown = seconds;
+        this.reconnectTimerInterval = setInterval(() => {
+            this.reconnectCountdown--;
+            const timerEl = document.querySelector('#reconnect-timer-overlay .timer-value');
+            if (timerEl) timerEl.textContent = this.reconnectCountdown;
+            if (this.reconnectCountdown <= 0) clearInterval(this.reconnectTimerInterval);
+        }, 1000);
+    }
+
+    // Hide reconnection timer overlay
+    hideReconnectionTimer() {
+        const overlay = document.getElementById('reconnect-timer-overlay');
+        if (overlay) overlay.style.display = 'none';
+        if (this.reconnectTimerInterval) {
+            clearInterval(this.reconnectTimerInterval);
+            this.reconnectTimerInterval = null;
+        }
+    }
+
+    animate(timestamp) {
+        // Initialize last timestamp on first call
+        if (!this.lastTimestamp) {
+            this.lastTimestamp = timestamp || performance.now();
+        }
+
+        // Calculate delta time in seconds
+        const now = timestamp || performance.now();
+        let deltaTime = (now - this.lastTimestamp) / 1000;
+        this.lastTimestamp = now;
+
+        // Cap delta time to prevent spiral of death on slow devices
+        // Max 100ms (10 FPS) to prevent huge jumps
+        deltaTime = Math.min(deltaTime, 0.1);
+
+        // Main game loop - FRAME-RATE INDEPENDENT PHYSICS
         if (this.gameState === 'shooting') {
-            // Update physics
-            this.physics.update(this.balls);
+            // Accumulate time and run physics at fixed rate
+            this.physicsAccumulator = (this.physicsAccumulator || 0) + deltaTime;
+
+            // Fixed timestep: run physics at 60 FPS equivalent (1/60 = 0.01667s)
+            const fixedStep = 1 / 60;
+
+            // Run multiple physics steps if needed to catch up
+            while (this.physicsAccumulator >= fixedStep) {
+                this.physics.update(this.balls);
+                this.physicsAccumulator -= fixedStep;
+            }
         }
 
         // Render
         this.render();
 
-        // Continue loop
-        this.animationId = requestAnimationFrame(() => this.animate());
+        // Continue loop with timestamp
+        this.animationId = requestAnimationFrame((ts) => this.animate(ts));
     }
 
     initializeBalls() {
@@ -939,6 +1075,7 @@ class PoolGame {
     shoot() {
         this.stopShotTimer(); // Stop timer when shot is made
         this.shotPocketedBalls = []; // Reset pocketed balls tracker for this shot
+        this.physicsAccumulator = 0; // Reset physics timing for consistent behavior
         this.gameState = 'shooting';
 
         // Clear ball-in-hand since we're taking a shot
@@ -981,6 +1118,7 @@ class PoolGame {
 
             this.stopShotTimer();
             this.shotPocketedBalls = [];
+            this.physicsAccumulator = 0; // Reset physics timing for consistent behavior
             this.gameState = 'shooting';
             this.wasMyShot = false; // Mark this as NOT my shot
             const cueBall = this.balls[0];
@@ -1391,11 +1529,10 @@ class PoolGame {
                         turnChange = false;
                         console.log(`   ✅ Player continues (potted own ball)`);
                     } else if (nonCueBallsPotted.length > 0) {
-                        // Player potted ball(s) but NONE were their own type - FOUL
-                        foul = true;
+                        // Player potted ball(s) but NONE were their own type - just turn change (not a foul)
+                        // This happens when player hits own ball correctly but pockets opponent's ball
                         turnChange = true;
-                        reason = "Pocketed opponent's ball without pocketing own ball.";
-                        console.log(`   ❌ FOUL: Potted wrong ball(s) only`);
+                        console.log(`   ❌ Turn changes (potted opponent's ball only, no foul)`);
                     } else {
                         // Player didn't pot any balls - turn changes
                         turnChange = true;
@@ -2339,71 +2476,60 @@ class PoolGame {
         if (!cueBall.active) return;
         const aimData = this.physics.calculateAimLine(cueBall, this.aimAngle, this.balls, this.power);
         const { points, segments } = aimData;
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i];
-            const alpha = Math.max(0.3, 1 - (i * 0.15));
-            const dashPattern = i === 0 ? [10, 5] : [5, 3];
-            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        // Draw solid aim line (Miniclip style)
+        if (segments.length > 0) {
+            const segment = segments[0];
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 2;
-            ctx.setLineDash(dashPattern);
+            ctx.setLineDash([]); // Solid line, not dashed
             ctx.beginPath();
             ctx.moveTo(segment.start.x, segment.start.y);
             for (const point of segment.points) {
                 ctx.lineTo(point.x, point.y);
             }
             ctx.stroke();
-            ctx.setLineDash([]);
         }
         for (const point of points) {
+            // Cushion reflection point - small indicator
             if (point.type === 'reflection') {
-                const size = 6;
-                ctx.fillStyle = 'rgba(0, 212, 255, 0.7)';
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 10px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(point.num, point.x, point.y);
-            }
-            if (point.type === 'contact') {
-                ctx.save();
-                ctx.globalAlpha = 0.4;
-                ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = '#00d4ff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(point.ghostX, point.ghostY, this.physics.BALL_RADIUS, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-                ctx.restore();
-                ctx.fillStyle = '#00ff88';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
                 ctx.fill();
             }
+            // Ghost ball - circle showing where cue ball will be at impact (Miniclip style)
+            if (point.type === 'contact') {
+                ctx.save();
+                // Ghost ball outline only (no fill)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(point.ghostX, point.ghostY, this.physics.BALL_RADIUS, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+            // Target ball trajectory - solid line showing where target ball goes
             if (point.type === 'target') {
                 const willPocket = point.nearPocket !== null && point.nearPocket !== undefined;
-                const lineColor = willPocket ? 'rgba(0, 255, 100, 0.9)' : 'rgba(255, 215, 0, 0.7)';
-                const arrowColor = willPocket ? 'rgba(0, 255, 100, 0.9)' : 'rgba(255, 215, 0, 0.7)';
+                const lineColor = willPocket ? 'rgba(0, 255, 100, 0.9)' : 'rgba(255, 255, 255, 0.7)';
                 ctx.strokeStyle = lineColor;
-                ctx.lineWidth = willPocket ? 4 : 3;
-                ctx.setLineDash([8, 4]);
+                ctx.lineWidth = willPocket ? 3 : 2;
+                ctx.setLineDash([]); // Solid line
                 ctx.beginPath();
                 ctx.moveTo(point.x, point.y);
                 ctx.lineTo(point.tx, point.ty);
                 ctx.stroke();
-                ctx.setLineDash([]);
+                // Arrow head
                 const angle = Math.atan2(point.ty - point.y, point.tx - point.x);
-                const arrowSize = willPocket ? 12 : 8;
-                ctx.fillStyle = arrowColor;
+                const arrowSize = 8;
+                ctx.fillStyle = lineColor;
                 ctx.beginPath();
                 ctx.moveTo(point.tx, point.ty);
                 ctx.lineTo(point.tx - arrowSize * Math.cos(angle - Math.PI / 6), point.ty - arrowSize * Math.sin(angle - Math.PI / 6));
                 ctx.lineTo(point.tx - arrowSize * Math.cos(angle + Math.PI / 6), point.ty - arrowSize * Math.sin(angle + Math.PI / 6));
                 ctx.closePath();
                 ctx.fill();
+                // Highlight pocket if ball will go in
                 if (willPocket) {
                     ctx.strokeStyle = 'rgba(0, 255, 100, 0.5)';
                     ctx.lineWidth = 3;
@@ -2412,15 +2538,15 @@ class PoolGame {
                     ctx.stroke();
                 }
             }
+            // Cue ball deflection path - thin solid line showing where cue ball goes after impact
             if (point.type === 'deflection') {
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([4, 4]);
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([]); // Solid line
                 ctx.beginPath();
                 ctx.moveTo(point.x, point.y);
                 ctx.lineTo(point.tx, point.ty);
                 ctx.stroke();
-                ctx.setLineDash([]);
             }
         }
     }

@@ -9,12 +9,15 @@ class MatchmakingUI {
         this.isSearching = false;
         this.searchStartTime = null;
         this.timerInterval = null;
-        this.selectedTier = 'casual';
+        this.selectedTier = 'bronze';
 
         this.tiers = {
-            casual: { name: 'Casual', wager: 50, icon: '☕', color: '#4ECDC4' },
-            competitive: { name: 'Competitive', wager: 250, icon: '⚔️', color: '#FFD700' },
-            highStakes: { name: 'High Stakes', wager: 1000, icon: '💎', color: '#FF6B6B' }
+            bronze: { name: 'Bronze', wager: 10, icon: '🥉', color: '#cd7f32' },
+            silver: { name: 'Silver', wager: 25, icon: '🥈', color: '#c0c0c0' },
+            platinum: { name: 'Platinum', wager: 50, icon: '💠', color: '#00d4ff' },
+            gold: { name: 'Gold', wager: 100, icon: '🥇', color: '#ffd700' },
+            diamond: { name: 'Diamond', wager: 250, icon: '💎', color: '#b366ff' },
+            ruby: { name: 'Ruby', wager: 500, icon: '❤️‍🔥', color: '#ff4757' }
         };
 
         this.init();
@@ -39,24 +42,47 @@ class MatchmakingUI {
                 </div>
                 
                 <div class="matchmaking-content">
-                    <!-- Tier Selection -->
+                    <!-- Stake Mode Selection -->
                     <div class="tier-selection" id="tier-selection">
-                        <h3>Select Game Mode</h3>
-                        <div class="tier-cards">
-                            <div class="tier-card selected" data-tier="casual">
-                                <span class="tier-icon">☕</span>
-                                <span class="tier-name">Casual</span>
-                                <span class="tier-wager">50 💰</span>
+                        <h3 class="stake-header">💰 PLAY FOR STAKES</h3>
+                        <div class="tier-cards-row">
+                            <div class="tier-card stake-bronze selected" data-tier="bronze">
+                                <span class="tier-icon">🥉</span>
+                                <span class="tier-amount">10</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">BRONZE</span>
                             </div>
-                            <div class="tier-card" data-tier="competitive">
-                                <span class="tier-icon">⚔️</span>
-                                <span class="tier-name">Competitive</span>
-                                <span class="tier-wager">250 💰</span>
+                            <div class="tier-card stake-silver" data-tier="silver">
+                                <span class="tier-icon">🥈</span>
+                                <span class="tier-amount">25</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">SILVER</span>
                             </div>
-                            <div class="tier-card" data-tier="highStakes">
+                            <div class="tier-card stake-platinum" data-tier="platinum">
+                                <span class="tier-icon">💠</span>
+                                <span class="tier-amount">50</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">PLATINUM</span>
+                            </div>
+                        </div>
+                        <div class="tier-cards-row">
+                            <div class="tier-card stake-gold" data-tier="gold">
+                                <span class="tier-icon">🥇</span>
+                                <span class="tier-amount">100</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">GOLD</span>
+                            </div>
+                            <div class="tier-card stake-diamond" data-tier="diamond">
                                 <span class="tier-icon">💎</span>
-                                <span class="tier-name">High Stakes</span>
-                                <span class="tier-wager">1,000 💰</span>
+                                <span class="tier-amount">250</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">DIAMOND</span>
+                            </div>
+                            <div class="tier-card stake-ruby" data-tier="ruby">
+                                <span class="tier-icon">❤️‍🔥</span>
+                                <span class="tier-amount">500</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">RUBY</span>
                             </div>
                         </div>
                         <button class="btn-find-match" id="btn-start-search">
@@ -234,44 +260,274 @@ class MatchmakingUI {
                 margin-bottom: 20px;
             }
 
-            .tier-cards {
-                display: flex;
-                gap: 15px;
+            .stake-header {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.2rem;
+                color: #ffd700;
+                text-align: center;
                 margin-bottom: 25px;
+                letter-spacing: 2px;
+                text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            }
+
+            .tier-cards-row {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 12px;
+                justify-content: center;
             }
 
             .tier-card {
                 flex: 1;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.1);
-                border-radius: 15px;
-                padding: 20px 15px;
+                max-width: 120px;
+                background: rgba(30, 30, 45, 0.9);
+                border: 2px solid rgba(255, 255, 255, 0.15);
+                border-radius: 14px;
+                padding: 18px 12px;
                 text-align: center;
                 cursor: pointer;
-                transition: all 0.3s;
+                transition: all 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .tier-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                transition: left 0.5s ease;
+            }
+
+            .tier-card:hover::before {
+                left: 100%;
             }
 
             .tier-card:hover {
-                border-color: rgba(0, 212, 255, 0.5);
-                transform: translateY(-3px);
+                transform: translateY(-5px) scale(1.02);
             }
 
-            .tier-card.selected {
+            /* Bronze Card */
+            .tier-card.stake-bronze {
+                background: linear-gradient(135deg, rgba(80, 50, 30, 0.9), rgba(50, 35, 25, 0.95));
+                border-color: rgba(205, 127, 50, 0.4);
+            }
+
+            .tier-card.stake-bronze:hover,
+            .tier-card.stake-bronze.selected {
+                border-color: #cd7f32;
+                box-shadow: 0 0 30px rgba(205, 127, 50, 0.4);
+            }
+
+            .tier-card.stake-bronze .tier-amount {
+                color: #e8a962;
+                text-shadow: 0 0 15px rgba(205, 127, 50, 0.5);
+            }
+
+            .tier-card.stake-bronze .tier-name {
+                color: #cd7f32;
+            }
+
+            /* Silver Card */
+            .tier-card.stake-silver {
+                background: linear-gradient(135deg, rgba(60, 60, 70, 0.9), rgba(40, 40, 50, 0.95));
+                border-color: rgba(192, 192, 192, 0.4);
+            }
+
+            .tier-card.stake-silver:hover,
+            .tier-card.stake-silver.selected {
+                border-color: #c0c0c0;
+                box-shadow: 0 0 30px rgba(192, 192, 192, 0.4);
+            }
+
+            .tier-card.stake-silver .tier-amount {
+                color: #e8e8e8;
+                text-shadow: 0 0 15px rgba(192, 192, 192, 0.5);
+            }
+
+            .tier-card.stake-silver .tier-name {
+                color: #c0c0c0;
+            }
+
+            /* Gold Card */
+            .tier-card.stake-gold {
+                background: linear-gradient(135deg, rgba(100, 80, 20, 0.9), rgba(60, 50, 15, 0.95));
+                border-color: rgba(255, 215, 0, 0.4);
+            }
+
+            .tier-card.stake-gold:hover,
+            .tier-card.stake-gold.selected {
+                border-color: #ffd700;
+                box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+            }
+
+            .tier-card.stake-gold .tier-amount {
+                color: #ffe657;
+                text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            }
+
+            .tier-card.stake-gold .tier-name {
+                color: #ffd700;
+            }
+
+            /* Gold glow animation */
+            .tier-card.stake-gold::after {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(45deg, rgba(255, 215, 0, 0.3), transparent, rgba(255, 215, 0, 0.3));
+                border-radius: 18px;
+                z-index: -1;
+                opacity: 0.5;
+                animation: goldPulse 2s ease-in-out infinite;
+            }
+
+            @keyframes goldPulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.6; }
+            }
+
+            /* Platinum Card */
+            .tier-card.stake-platinum {
+                background: linear-gradient(135deg, rgba(0, 150, 180, 0.9), rgba(0, 80, 100, 0.95));
+                border-color: rgba(0, 212, 255, 0.4);
+            }
+
+            .tier-card.stake-platinum:hover,
+            .tier-card.stake-platinum.selected {
                 border-color: #00d4ff;
-                background: rgba(0, 212, 255, 0.1);
-                box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+                box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            }
+
+            .tier-card.stake-platinum .tier-amount {
+                color: #5ce1ff;
+                text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+            }
+
+            .tier-card.stake-platinum .tier-name {
+                color: #00d4ff;
+            }
+
+            /* Diamond Card */
+            .tier-card.stake-diamond {
+                background: linear-gradient(135deg, rgba(120, 60, 180, 0.9), rgba(80, 30, 120, 0.95));
+                border-color: rgba(179, 102, 255, 0.4);
+            }
+
+            .tier-card.stake-diamond:hover,
+            .tier-card.stake-diamond.selected {
+                border-color: #b366ff;
+                box-shadow: 0 0 35px rgba(179, 102, 255, 0.5);
+            }
+
+            .tier-card.stake-diamond .tier-amount {
+                color: #d4a3ff;
+                text-shadow: 0 0 20px rgba(179, 102, 255, 0.6);
+            }
+
+            .tier-card.stake-diamond .tier-name {
+                color: #b366ff;
+            }
+
+            /* Diamond glow animation */
+            .tier-card.stake-diamond::after {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(45deg, rgba(179, 102, 255, 0.3), transparent, rgba(179, 102, 255, 0.3));
+                border-radius: 16px;
+                z-index: -1;
+                opacity: 0.5;
+                animation: diamondPulse 2s ease-in-out infinite;
+            }
+
+            @keyframes diamondPulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.7; }
+            }
+
+            /* Ruby Card */
+            .tier-card.stake-ruby {
+                background: linear-gradient(135deg, rgba(180, 40, 60, 0.9), rgba(100, 20, 30, 0.95));
+                border-color: rgba(255, 71, 87, 0.4);
+            }
+
+            .tier-card.stake-ruby:hover,
+            .tier-card.stake-ruby.selected {
+                border-color: #ff4757;
+                box-shadow: 0 0 35px rgba(255, 71, 87, 0.5);
+            }
+
+            .tier-card.stake-ruby .tier-amount {
+                color: #ff7a85;
+                text-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+            }
+
+            .tier-card.stake-ruby .tier-name {
+                color: #ff4757;
+            }
+
+            /* Ruby glow animation */
+            .tier-card.stake-ruby::after {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(45deg, rgba(255, 71, 87, 0.3), transparent, rgba(255, 71, 87, 0.3));
+                border-radius: 16px;
+                z-index: -1;
+                opacity: 0.5;
+                animation: rubyPulse 1.5s ease-in-out infinite;
+            }
+
+            @keyframes rubyPulse {
+                0%, 100% { opacity: 0.4; }
+                50% { opacity: 0.8; }
             }
 
             .tier-icon {
-                font-size: 2rem;
+                font-size: 1.5rem;
                 display: block;
-                margin-bottom: 10px;
+                margin-bottom: 3px;
+            }
+
+            .tier-amount {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.6rem;
+                font-weight: 900;
+                display: block;
+                color: #fff;
+            }
+
+            .tier-coin {
+                font-size: 0.9rem;
+                display: block;
+                margin-top: -2px;
             }
 
             .tier-name {
+                font-family: 'Rajdhani', sans-serif;
+                font-size: 0.75rem;
+                font-weight: 700;
                 display: block;
-                font-weight: 600;
-                margin-bottom: 5px;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                margin-top: 5px;
             }
 
             .tier-wager {

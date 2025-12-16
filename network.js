@@ -184,6 +184,32 @@ class NetworkManager {
             }
         });
 
+        // Reconnection events
+        this.socket.on('opponent_disconnecting', (data) => {
+            console.log('⏱️ Opponent disconnecting, starting timer:', data.timeout + 's');
+            this.emit('opponent_disconnecting', data);
+            if (this.game && this.game.onOpponentDisconnecting) {
+                this.game.onOpponentDisconnecting(data);
+            }
+        });
+
+        this.socket.on('opponent_reconnected', (data) => {
+            console.log('✅ Opponent reconnected:', data.reconnectedPlayer);
+            this.emit('opponent_reconnected', data);
+            if (this.game && this.game.onOpponentReconnected) {
+                this.game.onOpponentReconnected(data);
+            }
+        });
+
+        this.socket.on('game_rejoin', (data) => {
+            console.log('🔄 Rejoining game:', data.roomId);
+            this.roomId = data.roomId;
+            this.emit('game_rejoin', data);
+            if (this.game && this.game.onGameRejoin) {
+                this.game.onGameRejoin(data);
+            }
+        });
+
         // Chat events
         this.socket.on('chat_message', (data) => {
             this.emit('chat_message', data);

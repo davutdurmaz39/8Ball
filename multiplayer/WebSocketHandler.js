@@ -17,6 +17,8 @@ class MultiplayerServer {
         this.matchHistory = new MatchHistory();
         this.achievements = new AchievementManager();
         this.connectedPlayers = new Map(); // socketId -> playerData
+        this.disconnectedPlayers = new Map(); // oderId -> { playerData, roomId, timeout, disconnectTime }
+        this.RECONNECT_TIMEOUT = 30000; // 30 seconds to reconnect
 
         this.setupSocketHandlers();
         this.startBackgroundTasks();
@@ -73,15 +75,75 @@ class MultiplayerServer {
             return;
         }
 
-        // Store player data
-        this.connectedPlayers.set(socket.id, {
+        // Store player data (include profile info for opponent display)
+        const playerData = {
             id: socket.id,
             oderId: user.id,
             username: user.username,
             email: user.email,
             elo: user.elo || 1200,
-            coins: user.coins || 1000
-        });
+            coins: user.coins || 1000,
+            profilePicture: user.profilePicture || null,
+            nationality: user.nationality || null
+        };
+
+        this.connectedPlayers.set(socket.id, playerData);
+
+        // Check for reconnection to ongoing game
+        const disconnectData = this.disconnectedPlayers.get(user.id || user.email);
+        if (disconnectData) {
+            console.log(`🔄 Player ${user.username} reconnecting to game in room ${disconnectData.roomId}`);
+
+            // Clear the forfeit timeout
+            if (disconnectData.timeout) {
+                clearTimeout(disconnectData.timeout);
+            }
+
+            // Remove from disconnected list
+            this.disconnectedPlayers.delete(user.id || user.email);
+
+            // Get the room
+            const room = this.roomManager.getRoom(disconnectData.roomId);
+            if (room && room.status === 'playing') {
+                // Rejoin the room
+                socket.join(room.id);
+
+                // Update room with new socket ID
+                if (disconnectData.playerNumber === 1) {
+                    room.host.id = socket.id;
+                } else {
+                    room.guest.id = socket.id;
+                }
+
+                // Notify reconnection
+                this.io.to(room.id).emit('opponent_reconnected', {
+                    reconnectedPlayer: user.username,
+                    playerNumber: disconnectData.playerNumber
+                });
+
+                // Send game state to reconnected player
+                socket.emit('game_rejoin', {
+                    roomId: room.id,
+                    gameState: room.gameState,
+                    host: room.host,
+                    guest: room.guest,
+                    wager: room.wager,
+                    myPlayerNumber: disconnectData.playerNumber
+                });
+
+                socket.emit('authenticated', {
+                    success: true,
+                    playerId: socket.id,
+                    reconnected: true,
+                    roomId: room.id,
+                    stats: this.roomManager.getStats(),
+                    queueStats: this.matchmaking.getQueueStats()
+                });
+
+                console.log(`✅ Player ${user.username} successfully reconnected to room ${room.id}`);
+                return;
+            }
+        }
 
         socket.emit('authenticated', {
             success: true,
@@ -673,8 +735,62 @@ class MultiplayerServer {
             // Remove from matchmaking
             this.matchmaking.removePlayer(player.id);
 
-            // Handle leaving room
-            this.handleLeaveRoom(socket);
+            // Check if player was in a game
+            const room = this.roomManager.getPlayerRoom(player.id);
+
+            if (room && room.status === 'playing') {
+                // Start reconnection timer
+                console.log(`⏱️ Player ${player.username} disconnected during game. Starting 30s reconnection timer...`);
+
+                const disconnectData = {
+                    playerData: { ...player },
+                    roomId: room.id,
+                    disconnectTime: Date.now(),
+                    playerNumber: room.getPlayerNumber(player.id)
+                };
+
+                // Store for potential reconnection
+                this.disconnectedPlayers.set(player.oderId || player.email, disconnectData);
+
+                // Notify remaining player about disconnect and timer
+                this.io.to(room.id).emit('opponent_disconnecting', {
+                    disconnectedPlayer: player.username,
+                    playerNumber: disconnectData.playerNumber,
+                    timeout: this.RECONNECT_TIMEOUT / 1000 // in seconds
+                });
+
+                // Set timeout for forfeit
+                disconnectData.timeout = setTimeout(() => {
+                    // Check if still disconnected
+                    const stillDisconnected = this.disconnectedPlayers.get(player.oderId || player.email);
+                    if (stillDisconnected && stillDisconnected.roomId === room.id) {
+                        console.log(`❌ Player ${player.username} failed to reconnect. Opponent wins.`);
+
+                        // Remove from disconnected list
+                        this.disconnectedPlayers.delete(player.oderId || player.email);
+
+                        // Determine winner (the player who stayed connected)
+                        const winnerNum = disconnectData.playerNumber === 1 ? 2 : 1;
+
+                        // End the game with forfeit
+                        room.status = 'finished';
+                        room.winner = winnerNum;
+
+                        this.io.to(room.id).emit('opponent_disconnected', {
+                            winner: winnerNum,
+                            reason: 'disconnect_timeout',
+                            disconnectedPlayer: player.username
+                        });
+
+                        // Process as game over
+                        this.handleGameOver(room, { winner: winnerNum, reason: 'disconnect' });
+                    }
+                }, this.RECONNECT_TIMEOUT);
+
+            } else {
+                // Not in a game, just remove from room normally
+                this.handleLeaveRoom(socket);
+            }
 
             // Remove from connected players
             this.connectedPlayers.delete(socket.id);

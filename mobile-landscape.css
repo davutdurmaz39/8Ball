@@ -539,3 +539,101 @@
         display: none !important;
     }
 }
+/* Fix: Remove blocking background under avatars */
+@media (pointer: coarse) and (orientation: landscape) {
+    #game-header {
+        background: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        height: auto !important;
+        min-height: unset !important;
+    }
+    
+    #game-header .player-info {
+        background: none !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        height: auto !important;
+    }
+    
+    #game-header::before,
+    #game-header::after,
+    .player-info::before,
+    .player-info::after {
+        display: none !important;
+        content: none !important;
+    }
+}
+
+/* Mobile-optimized stake mode cards in Find Match popup */
+@media (pointer: coarse) and (orientation: landscape) {
+    .matchmaking-modal {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+        padding: 15px !important;
+        overflow-y: auto !important;
+    }
+    
+    .matchmaking-header h2 {
+        font-size: 1rem !important;
+    }
+    
+    .stake-header {
+        font-size: 0.9rem !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .tier-cards-row {
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .tier-card {
+        max-width: 80px !important;
+        min-width: 70px !important;
+        padding: 10px 8px !important;
+        border-radius: 10px !important;
+    }
+    
+    .tier-icon {
+        font-size: 1rem !important;
+        margin-bottom: 2px !important;
+    }
+    
+    .tier-amount {
+        font-size: 1.1rem !important;
+    }
+    
+    .tier-coin {
+        font-size: 0.7rem !important;
+    }
+    
+    .tier-name {
+        font-size: 0.55rem !important;
+        letter-spacing: 1px !important;
+    }
+    
+    .btn-find-match {
+        padding: 10px !important;
+        font-size: 0.85rem !important;
+        margin-top: 8px !important;
+    }
+    
+    .room-options {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+        gap: 8px !important;
+    }
+    
+    .btn-room {
+        padding: 8px !important;
+        font-size: 0.7rem !important;
+    }
+    
+    .room-icon {
+        font-size: 1rem !important;
+    }
+}
