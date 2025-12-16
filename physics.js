@@ -16,8 +16,8 @@ class PhysicsEngine {
             (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
         // Mobile friction multiplier - compensates for lower frame rate on mobile
-        // Mobile typically runs at 30-45fps vs PC at 60fps, so apply ~1.8x friction
-        this.mobileFrictionMultiplier = this.isMobile ? 1.8 : 1.0;
+        // Mobile typically runs at 30-45fps vs PC at 60fps, so apply ~1.9x friction
+        this.mobileFrictionMultiplier = this.isMobile ? 1.9 : 1.0;
 
         // Friction (adjusted for mobile)
         this.GRAVITY = 980;
