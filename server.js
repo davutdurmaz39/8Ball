@@ -1,5 +1,5 @@
 /**
- * 8-Ball Pool Game Server with Multiplayer Support
+ * Mine Pool Game Server with Multiplayer Support
  * Features: Authentication, WebSocket, Matchmaking, Tournaments
  */
 
@@ -17,6 +17,7 @@ const fs = require('fs');
 // Multiplayer modules
 const { MultiplayerServer } = require('./multiplayer/WebSocketHandler');
 const { TournamentManager } = require('./multiplayer/Tournament');
+const { TournamentManager16, ENTRY_FEE_TIERS, TournamentState } = require('./multiplayer/Tournament16');
 const { EloCalculator } = require('./multiplayer/MatchmakingQueue');
 
 const app = express();
@@ -96,6 +97,7 @@ const io = new Server(server, {
 // Initialize multiplayer server
 const multiplayer = new MultiplayerServer(io, users);
 const tournamentManager = new TournamentManager();
+const tournament16Manager = new TournamentManager16();
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -746,6 +748,373 @@ app.post('/api/tournaments/:id/register', authenticateToken, (req, res) => {
     }
 });
 
+// ============ 16-PLAYER TOURNAMENTS ============
+
+// Get available entry fee tiers
+app.get('/api/tournaments16/tiers', (req, res) => {
+    res.json({ success: true, tiers: ENTRY_FEE_TIERS });
+});
+
+// Get queue status for all tiers (how many players waiting in each queue)
+app.get('/api/tournaments16/queues', (req, res) => {
+    try {
+        const queueStatus = tournament16Manager.getQueueStatus();
+        res.json({ success: true, queues: queueStatus });
+    } catch (error) {
+        console.error('Queue status error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load queue status' });
+    }
+});
+
+// Get all active 16-player tournaments (in progress)
+app.get('/api/tournaments16', (req, res) => {
+    try {
+        const tournaments = tournament16Manager.getActiveTournaments();
+        res.json({ success: true, tournaments });
+    } catch (error) {
+        console.error('16-Player tournaments error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load tournaments' });
+    }
+});
+
+// Register to a queue for a specific tier
+app.post('/api/tournaments16/queue/:tier/register', authenticateToken, (req, res) => {
+    try {
+        const tier = parseInt(req.params.tier);
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Validate tier
+        if (!ENTRY_FEE_TIERS.includes(tier)) {
+            return res.status(400).json({
+                success: false,
+                error: `Invalid tier. Must be one of: ${ENTRY_FEE_TIERS.join(', ')}`
+            });
+        }
+
+        // Check coins
+        if (user.coins < tier) {
+            return res.status(400).json({
+                success: false,
+                error: `Insufficient coins. Need ${tier}, have ${user.coins}`
+            });
+        }
+
+        const result = tournament16Manager.registerToQueue(tier, {
+            id: user.id,
+            username: user.username,
+            elo: user.elo,
+            coins: user.coins
+        });
+
+        if (result.error) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+
+        // Deduct entry fee immediately upon queue join
+        user.coins -= tier;
+
+        // Emit queue update
+        io.emit('tournament16:queue_update', {
+            tier,
+            playersInQueue: tournament16Manager.getQueue(tier).players.length,
+            maxPlayers: 16
+        });
+
+        // If tournament started, emit to all players
+        if (result.tournamentStarted) {
+            io.emit('tournament16:started', {
+                tournamentId: result.tournamentId,
+                tier,
+                players: result.players,
+                tournament: result.tournament
+            });
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Queue registration error:', error);
+        res.status(500).json({ success: false, error: 'Failed to register' });
+    }
+});
+
+// Leave queue
+app.post('/api/tournaments16/queue/:tier/leave', authenticateToken, (req, res) => {
+    try {
+        const tier = parseInt(req.params.tier);
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const result = tournament16Manager.leaveQueue(tier, user.id);
+
+        if (result.error) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+
+        // Refund entry fee
+        user.coins += result.refund;
+
+        // Emit queue update
+        io.emit('tournament16:queue_update', {
+            tier,
+            playersInQueue: tournament16Manager.getQueue(tier).players.length,
+            maxPlayers: 16
+        });
+
+        res.json({ success: true, refund: result.refund, newBalance: user.coins });
+    } catch (error) {
+        console.error('Queue leave error:', error);
+        res.status(500).json({ success: false, error: 'Failed to leave queue' });
+    }
+});
+
+// Check which queue player is in
+app.get('/api/tournaments16/queue/status', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const queueInfo = tournament16Manager.getPlayerQueue(user.id);
+        const tournamentInfo = tournament16Manager.getPlayerTournament(user.id);
+
+        res.json({
+            success: true,
+            inQueue: queueInfo,
+            inTournament: tournamentInfo ? {
+                id: tournamentInfo.id,
+                status: tournamentInfo.status,
+                tier: tournamentInfo.entryFee
+            } : null
+        });
+    } catch (error) {
+        console.error('Queue status error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get status' });
+    }
+});
+
+// Get specific tournament details
+app.get('/api/tournaments16/:id', (req, res) => {
+    try {
+        const tournament = tournament16Manager.getTournament(req.params.id);
+        if (!tournament) {
+            return res.status(404).json({ success: false, error: 'Tournament not found' });
+        }
+        res.json({ success: true, tournament: tournament.toJSON() });
+    } catch (error) {
+        console.error('Tournament details error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load tournament' });
+    }
+});
+
+// Get tournament bracket
+app.get('/api/tournaments16/:id/bracket', (req, res) => {
+    try {
+        const tournament = tournament16Manager.getTournament(req.params.id);
+        if (!tournament) {
+            return res.status(404).json({ success: false, error: 'Tournament not found' });
+        }
+        res.json({
+            success: true,
+            bracket: tournament.getBracketInfo(),
+            status: tournament.status,
+            prizes: {
+                totalPot: tournament.totalPot,
+                winner: tournament.winnerPrize,
+                runnerUp: tournament.runnerUpPrize
+            }
+        });
+    } catch (error) {
+        console.error('Tournament bracket error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load bracket' });
+    }
+});
+
+// Register for 16-player tournament
+app.post('/api/tournaments16/:id/register', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const tournament = tournament16Manager.getTournament(req.params.id);
+        if (!tournament) {
+            return res.status(404).json({ success: false, error: 'Tournament not found' });
+        }
+
+        // Atomic coin check before registration
+        if (user.coins < tournament.entryFee) {
+            return res.status(400).json({
+                success: false,
+                error: `Insufficient coins. Need ${tournament.entryFee}, have ${user.coins}`
+            });
+        }
+
+        const result = tournament16Manager.registerPlayer(req.params.id, {
+            id: user.id,
+            username: user.username,
+            elo: user.elo,
+            coins: user.coins
+        });
+
+        if (result.error) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+
+        // Deduct entry fee
+        user.coins -= tournament.entryFee;
+
+        // Emit real-time update via WebSocket
+        io.emit('tournament16:player_joined', {
+            tournamentId: req.params.id,
+            playerId: user.id,
+            playerName: user.username,
+            currentPlayers: tournament.players.length,
+            maxPlayers: 16
+        });
+
+        // If tournament started, emit bracket update
+        if (result.brackets) {
+            io.emit('tournament16:started', {
+                tournamentId: req.params.id,
+                brackets: result.brackets,
+                prizes: result.prizes
+            });
+        }
+
+        res.json({
+            success: true,
+            position: result.position,
+            playersNeeded: result.playersNeeded,
+            tournamentStarted: !!result.brackets
+        });
+    } catch (error) {
+        console.error('16-Player tournament registration error:', error);
+        res.status(500).json({ success: false, error: 'Failed to register' });
+    }
+});
+
+// Unregister from tournament
+app.post('/api/tournaments16/:id/unregister', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const result = tournament16Manager.unregisterPlayer(req.params.id, user.id);
+
+        if (result.error) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+
+        // Refund entry fee
+        user.coins += result.refund;
+
+        io.emit('tournament16:player_left', {
+            tournamentId: req.params.id,
+            playerId: user.id
+        });
+
+        res.json({ success: true, refund: result.refund });
+    } catch (error) {
+        console.error('Tournament unregister error:', error);
+        res.status(500).json({ success: false, error: 'Failed to unregister' });
+    }
+});
+
+// Report match result
+app.post('/api/tournaments16/:id/match/:matchId/result', authenticateToken, (req, res) => {
+    try {
+        const { winnerId } = req.body;
+        if (!winnerId) {
+            return res.status(400).json({ success: false, error: 'Winner ID required' });
+        }
+
+        const result = tournament16Manager.reportMatchResult(
+            req.params.id,
+            req.params.matchId,
+            winnerId
+        );
+
+        if (result.error) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+
+        // Emit bracket update
+        io.emit('tournament16:match_completed', {
+            tournamentId: req.params.id,
+            matchId: req.params.matchId,
+            winnerId,
+            match: result.match
+        });
+
+        // If tournament complete, distribute prizes
+        if (result.tournamentComplete) {
+            const tournament = tournament16Manager.getTournament(req.params.id);
+
+            // Award prizes
+            for (const [email, user] of users) {
+                if (user.id === result.winner.id) {
+                    user.coins += result.prizes.winner.amount;
+                } else if (user.id === result.runnerUp.id) {
+                    user.coins += result.prizes.runnerUp.amount;
+                }
+            }
+
+            io.emit('tournament16:finished', {
+                tournamentId: req.params.id,
+                winner: result.winner,
+                runnerUp: result.runnerUp,
+                prizes: result.prizes
+            });
+        }
+
+        res.json({ success: true, ...result });
+    } catch (error) {
+        console.error('Match result error:', error);
+        res.status(500).json({ success: false, error: 'Failed to report result' });
+    }
+});
+
+// Handle walkover (disconnect)
+app.post('/api/tournaments16/:id/match/:matchId/walkover', authenticateToken, (req, res) => {
+    try {
+        const { disconnectedPlayerId } = req.body;
+        if (!disconnectedPlayerId) {
+            return res.status(400).json({ success: false, error: 'Disconnected player ID required' });
+        }
+
+        const result = tournament16Manager.handleWalkover(
+            req.params.id,
+            req.params.matchId,
+            disconnectedPlayerId
+        );
+
+        if (result.error) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+
+        io.emit('tournament16:walkover', {
+            tournamentId: req.params.id,
+            matchId: req.params.matchId,
+            disconnectedPlayerId,
+            winnerId: result.match.winner.id
+        });
+
+        res.json({ success: true, ...result });
+    } catch (error) {
+        console.error('Walkover error:', error);
+        res.status(500).json({ success: false, error: 'Failed to process walkover' });
+    }
+});
+
 // ============ SERVER STATS ============
 
 app.get('/api/stats', (req, res) => {
@@ -768,14 +1137,14 @@ app.get('/api/stats', (req, res) => {
 // ============ STATIC FILE SERVING ============
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'www', 'login.html'));
 });
 
 app.get('/game.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'game.html'));
+    res.sendFile(path.join(__dirname, 'www', 'game.html'));
 });
 
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'www')));
 
 // ============ START SERVER ============
 

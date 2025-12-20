@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Mine Pool - Classic billiards game with realistic physics. Play against AI or friends!">
+    <title>Mine Pool | Classic Billiards Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile-app.css">
+    <style>
+        /* User Menu Styles */
+        .user-menu {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 15px;
+            border-radius: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: rgba(0, 212, 255, 0.15);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #0088aa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-coins {
+            font-size: 12px;
+            color: #ffd700;
+        }
+
+        .btn-logout {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            color: #ff6b6b;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        /* Loading overlay */
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .auth-loading.hidden {
+            display: none;
+        }
+
+        .auth-loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 212, 255, 0.2);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .auth-loading p {
+            color: #888;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Auth Loading -->
+    <div id="auth-loading" class="auth-loading hidden">
+        <div class="spinner"></div>
+
+    <!-- App Loading Screen -->
+    <div id="app-loading" class="app-loading">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <span class="loading-icon">&#127921;</span>
+                <h1>MINE POOL</h1>
+            </div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <p class="loading-text" id="loading-text">Loading Assets...</p>
+        </div>
+    </div>
+        <p>Verifying authentication...</p>
+    </div>
+
+    <div id="game-container">
+        <!-- Header -->
+        <header id="game-header">
+            <div class="logo">
+                <span class="logo-icon">&#127921;</span>
+                <span class="logo-text">MINE POOL</span>
+            </div>
+            <div class="player-info">
+                <div class="player player-1">
+                    <div class="avatar">P1</div>
+                    <div class="player-details">
+                        <span class="player-name" id="p1-name">Player 1</span>
+                        <span class="ball-type" id="p1-ball-type">--</span>
+                    </div>
+                </div>
+                <div class="turn-indicator" id="turn-indicator">
+                    <span class="turn-text">PLAYER 1's TURN</span>
+                    <span class="timer-text" id="timer-text"></span>
+                </div>
+                <div class="player player-2">
+                    <div class="player-details">
+                        <span class="player-name">Player 2</span>
+                        <span class="ball-type" id="p2-ball-type">--</span>
+                    </div>
+                    <div class="avatar">P2</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main id="game-main">
+            <div id="table-container">
+                <canvas id="pool-table"></canvas>
+
+                <!-- Power Gauge -->
+                <div id="power-gauge">
+                    <div class="power-label">POWER</div>
+                    <div class="power-bar">
+                        <div class="power-fill" id="power-fill"></div>
+                    </div>
+                    <div class="power-value" id="power-value">0%</div>
+                </div>
+
+                <!-- Enhanced Spin Control -->
+                <div id="spin-control">
+                    <div class="spin-label">ENGLISH</div>
+                    <div class="spin-ball" id="spin-ball-control">
+                        <div class="spin-indicator" id="spin-indicator"></div>
+                        <div class="spin-crosshair"></div>
+                    </div>
+                    <div class="spin-info" id="spin-info">Center Hit</div>
+                    <button class="reset-spin" id="reset-spin">RESET</button>
+                </div>
+            </div>
+
+            <!-- Ball Rack (Pocketed Balls) -->
+            <div id="ball-rack">
+                <div class="rack-section solids">
+                    <div class="rack-label">SOLIDS</div>
+                    <div class="rack-balls" id="solids-rack"></div>
+                </div>
+                <div class="rack-section stripes">
+                    <div class="rack-label">STRIPES</div>
+                    <div class="rack-balls" id="stripes-rack"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Game Messages -->
+        <div id="game-message" class="hidden">
+            <div class="message-content">
+                <h2 id="message-title">FOUL!</h2>
+                <p id="message-text">Cue ball pocketed. Ball in hand.</p>
+            </div>
+        </div>
+
+        <!-- Call Pocket Modal -->
+        <div id="call-pocket-modal" class="hidden">
+            <div class="modal-overlay"></div>
+            <div class="call-pocket-content">
+                <h2>&#127919; CALL YOUR POCKET</h2>
+                <p>Select which pocket for the 8-ball</p>
+                <div class="pocket-grid">
+                    <button class="pocket-btn" data-pocket="0">
+                        <span class="pocket-label">Top Left</span>
+                        <span class="pocket-icon">↖️</span>
+                    </button>
+                    <button class="pocket-btn" data-pocket="1">
+                        <span class="pocket-label">Top Center</span>
+                        <span class="pocket-icon">⬆️</span>
+                    </button>
+                    <button class="pocket-btn" data-pocket="2">
+                        <span class="pocket-label">Top Right</span>
+                        <span class="pocket-icon">↗️</span>
+                    </button>
+                    <button class="pocket-btn" data-pocket="3">
+                        <span class="pocket-label">Bottom Left</span>
+                        <span class="pocket-icon">↙️</span>
+                    </button>
+                    <button class="pocket-btn" data-pocket="4">
+                        <span class="pocket-label">Bottom Center</span>
+                        <span class="pocket-icon">⬇️</span>
+                    </button>
+                    <button class="pocket-btn" data-pocket="5">
+                        <span class="pocket-label">Bottom Right</span>
+                        <span class="pocket-icon">↘️</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Winner Screen -->
+        <div id="winner-screen" class="hidden">
+            <div class="winner-content">
+                <div class="trophy">&#127942;</div>
+                <h1 id="winner-text">PLAYER 1 WINS!</h1>
+                <button id="play-again" class="btn-primary">PLAY AGAIN</button>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <!-- User Menu -->
+            <div id="user-menu" class="user-menu" style="display: none;">
+                <div class="user-info" onclick="window.location.href='profile.html'" title="View Profile">
+                    <div class="user-avatar" id="user-avatar">P</div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name">Player</span>
+                        <span class="user-coins">&#128176; <span id="user-coins">1000</span></span>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logout-btn">Logout</button>
+            </div>
+
+            <!-- Bottom Left Menu -->
+            <div id="bottom-left-menu" class="bottom-left-menu">
+                <button class="side-menu-btn" id="btn-daily-reward">
+                    <span class="btn-icon">🎁</span>
+                    <span class="btn-text">DAILY REWARD</span>
+                </button>
+                <button class="side-menu-btn" id="btn-news">
+                    <span class="btn-icon">📰</span>
+                    <span class="btn-text">NEWS</span>
+                </button>
+                <button class="side-menu-btn" id="leaderboard-toggle">
+                    <span class="btn-icon">🏆</span>
+                    <span class="btn-text">LEADERBOARD</span>
+                </button>
+                            <button class="side-menu-btn" id="btn-shop">
+                    <span class="btn-icon">🛒</span>
+                    <span class="btn-text">SHOP</span>
+                </button>
+            </div>
+
+            <!-- Bottom Right Menu -->
+            <div id="bottom-right-menu" class="bottom-right-menu">
+                <button class="side-menu-btn icon-only" id="btn-settings" title="Settings">
+                    <span class="btn-icon">⚙️</span>
+                </button>
+                <button class="side-menu-btn icon-only" id="btn-messages" title="Messages">
+                    <span class="btn-icon">💬</span>
+                </button>
+            </div>
+
+            <div class="start-content">
+                <div class="start-logo">
+                    <span class="big-ball">&#127921;</span>
+                    <h1>MINE POOL</h1>
+                    <p class="tagline">Miniclip Rules Edition</p>
+                </div>
+                                <div class="game-modes">
+                    <button id="btn-2player" class="btn-mode">
+                        <span class="mode-icon">&#128101;</span>
+                        <span class="mode-text">2 PLAYERS</span>
+                    </button>
+                    <button id="btn-online" class="btn-mode btn-online-play" onclick="window.location.href='game.html'">
+                        <span class="mode-icon">&#127760;</span>
+                        <span class="mode-text">PLAY LIVE</span>
+                        <span class="online-badge">LIVE</span>
+                    </button>
+                    <button id="btn-tournament" class="btn-mode btn-tournament"
+                        onclick="window.location.href='tournament.html'">
+                        <span class="mode-icon">&#127942;</span>
+                        <span class="mode-text">TOURNAMENTS</span>
+                    </button>
+                    <button id="btn-cues" class="btn-mode">
+                        <span class="mode-icon">&#127921;</span>
+                        <span class="mode-text">CUES</span>
+                    </button>
+                </div>
+                <div class="instructions">
+                    <h3>HOW TO PLAY</h3>
+                    <ul>
+                        <li>🖱️ Click to lock aim direction</li>
+                        <li>⬅️ Drag back to set power</li>
+                        <li>🔄 Click spin control for English</li>
+                        <li>🎯 Release to shoot</li>
+                        <li>🎱 Pocket the 8-ball last to win!</li>
+                        <li>⏱️ 30 seconds per shot</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cue Selection Modal -->
+        <div id="cue-selection-modal" class="hidden">
+            <div class="cue-modal-content">
+                <h2>SELECT YOUR CUE</h2>
+                <div class="cue-carousel-container">
+                    <button class="carousel-btn prev" id="carousel-prev">&#8249;</button>
+                    <div class="cue-carousel" id="cue-carousel">
+                        <div class="cue-card active" data-cue="standard">
+                            <div class="cue-image">
+                                <img src="assets/cue_standard.png" alt="Standard Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>STANDARD</h3>
+                                <p>Classic maple wood</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="premium">
+                            <div class="cue-image">
+                                <img src="assets/cue_premium.png" alt="Premium Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>PREMIUM</h3>
+                                <p>Carbon fiber tech</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="legendary">
+                            <div class="cue-image">
+                                <img src="assets/cue_legendary.png" alt="Legendary Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>LEGENDARY</h3>
+                                <p>Ancient power</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="dragon">
+                            <div class="cue-image">
+                                <img src="assets/cue_standard.png" alt="Dragon Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>DRAGON</h3>
+                                <p>Fire & fury</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="ice">
+                            <div class="cue-image">
+                                <img src="assets/cue_premium.png" alt="Ice Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>ICE</h3>
+                                <p>Frozen precision</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="viper">
+                            <div class="cue-image">
+                                <img src="assets/cue_legendary.png" alt="Viper Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>VIPER</h3>
+                                <p>Venomous strike</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="phoenix">
+                            <div class="cue-image">
+                                <img src="assets/cue_standard.png" alt="Phoenix Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>PHOENIX</h3>
+                                <p>Rise from ashes</p>
+                            </div>
+                        </div>
+                        <div class="cue-card" data-cue="shadow">
+                            <div class="cue-image">
+                                <img src="assets/cue_premium.png" alt="Shadow Cue">
+                            </div>
+                            <div class="cue-info">
+                                <h3>SHADOW</h3>
+                                <p>Stealth master</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-btn next" id="carousel-next">&#8250;</button>
+                </div>
+                <div class="carousel-dots" id="carousel-dots"></div>
+                <button id="close-cues" class="btn-primary">CONFIRM</button>
+            </div>
+        </div>
+
+        <!-- Chat Panel -->
+        <div id="chat-panel">
+            <div class="chat-toggle" id="chat-toggle">
+                <span class="chat-icon">&#128172;</span>
+                <span class="chat-badge" id="chat-badge"></span>
+            </div>
+            <div class="chat-container" id="chat-container">
+                <div class="chat-header">
+                    <span>&#128172; CHAT</span>
+                    <button class="chat-close" id="chat-close">&#10005;</button>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-welcome">Click a quick message or type below!</div>
+                </div>
+                <div class="quick-chat">
+                    <button class="quick-btn" data-msg="Good luck!">&#127808; Good luck!</button>
+                    <button class="quick-btn" data-msg="Nice shot!">&#128079; Nice shot!</button>
+                    <button class="quick-btn" data-msg="Oops!">&#128517; Oops!</button>
+                    <button class="quick-btn" data-msg="Well played!">&#127919; Well played!</button>
+                    <button class="quick-btn" data-msg="Your turn!">&#8987; Your turn!</button>
+                    <button class="quick-btn" data-msg="GG">&#127942; GG</button>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100">
+                    <button id="chat-send">&#10148;</button>
+                </div>
+            </div>
+        </div>
+        <!-- Controls Hint -->
+        <div id="controls-hint">
+            <span>&#128433;&#65039; CLICK TO LOCK AIM</span>
+            <span>&#11013;&#65039; DRAG BACK FOR POWER</span>
+            <span>&#127919; RELEASE TO SHOOT</span>
+        </div>
+    </div>
+
+    <!-- Auth Check Script -->
+    <script>
+        // Check for logged-in user and update UI
+        (function () {
+            try {
+                const userData = localStorage.getItem('user');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.username) {
+                        window.currentUser = user;
+                        document.getElementById('user-name').textContent = user.username;
+                        document.getElementById('user-coins').textContent = user.coins || 1000;
+                        document.getElementById('user-avatar').textContent = user.username.charAt(0).toUpperCase();
+                        const p1NameEl = document.getElementById('p1-name');
+                        if (p1NameEl) p1NameEl.textContent = user.username;
+                        document.getElementById('user-menu').style.display = 'flex';
+                        console.log('User logged in:', user.username);
+                    }
+                }
+            } catch (e) {
+                console.log('No user logged in');
+            }
+        })();
+
+        // Logout handler
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (e) { }
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        });
+    </script>
+
+    <!-- Cue Selection Script -->
+    <script>
+        // Cue Selection Handler
+        (function () {
+            const cueModal = document.getElementById('cue-selection-modal');
+            const cueCards = document.querySelectorAll('.cue-card');
+            const closeCuesBtn = document.getElementById('close-cues');
+            const btnCues = document.getElementById('btn-cues');
+
+            // Load saved cue selection or default to standard
+            let selectedCue = localStorage.getItem('selectedCue') || 'standard';
+
+            // Carousel variables
+            let carousel, prevBtn, nextBtn, dotsContainer;
+            let currentIndex = 0;
+            let carouselInitialized = false;
+
+            // Initialize carousel
+            function initCarousel() {
+                if (carouselInitialized) return;
+
+                carousel = document.getElementById('cue-carousel');
+                prevBtn = document.getElementById('carousel-prev');
+                nextBtn = document.getElementById('carousel-next');
+                dotsContainer = document.getElementById('carousel-dots');
+
+                if (!carousel || !prevBtn || !nextBtn || !dotsContainer) {
+                    console.error('Carousel elements not found');
+                    return;
+                }
+
+                const cardsPerView = 2.5;
+                const totalCards = cueCards.length;
+
+                // Create dots
+                dotsContainer.innerHTML = '';
+                for (let i = 0; i < Math.ceil(totalCards / cardsPerView); i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'carousel-dot';
+                    if (i === 0) dot.classList.add('active');
+                    dot.addEventListener('click', () => goToSlide(i));
+                    dotsContainer.appendChild(dot);
+                }
+
+                function updateCarousel() {
+                    const cardWidth = 300;
+                    const offset = currentIndex * cardWidth;
+                    carousel.style.transform = `translateX(-${offset}px)`;
+
+                    document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                        dot.classList.toggle('active', i === Math.floor(currentIndex / cardsPerView));
+                    });
+                }
+
+                function goToSlide(index) {
+                    currentIndex = Math.floor(index * cardsPerView);
+                    currentIndex = Math.max(0, Math.min(currentIndex, totalCards - 1));
+                    updateCarousel();
+                }
+
+                prevBtn.onclick = function (e) {
+                    e.preventDefault();
+                    console.log('Prev clicked, index:', currentIndex);
+                    if (currentIndex > 0) {
+                        currentIndex--;
+                        updateCarousel();
+                    }
+                };
+
+                nextBtn.onclick = function (e) {
+                    e.preventDefault();
+                    console.log('Next clicked, index:', currentIndex);
+                    if (currentIndex < totalCards - 1) {
+                        currentIndex++;
+                        updateCarousel();
+                    }
+                };
+
+                document.addEventListener('keydown', (e) => {
+                    if (cueModal.classList.contains('hidden')) return;
+                    if (e.key === 'ArrowLeft') prevBtn.click();
+                    if (e.key === 'ArrowRight') nextBtn.click();
+                });
+
+                carouselInitialized = true;
+                console.log('Carousel initialized');
+            }
+
+            cueCards.forEach(card => {
+                if (card.getAttribute('data-cue') === selectedCue) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+
+            if (btnCues) {
+                btnCues.addEventListener('click', () => {
+                    cueModal.classList.remove('hidden');
+                    setTimeout(() => initCarousel(), 100);
+                });
+            }
+
+            cueCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    cueCards.forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    selectedCue = card.getAttribute('data-cue');
+                    localStorage.setItem('selectedCue', selectedCue);
+                });
+            });
+
+            if (closeCuesBtn) {
+                closeCuesBtn.addEventListener('click', () => {
+                    cueModal.classList.add('hidden');
+                    if (window.gameInstance) {
+                        window.gameInstance.selectedCue = selectedCue;
+                    }
+                });
+            }
+
+            window.selectedCue = selectedCue;
+        })();
+    </script>
+    <script src="leaderboard.js?v=1"></script>
+    <script src="physics.js?v=18"></script>
+    <script src="game.js?v=17"></script>
+<!-- Loading Screen Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const loadingScreen = document.getElementById('app-loading');
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingText = document.getElementById('loading-text');
+
+        if (!loadingScreen || !loadingBar) return;
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 100) progress = 100;
+
+            loadingBar.style.width = `${progress}%`;
+
+            if (progress < 30) {
+                loadingText.textContent = 'Loading Assets...';
+            } else if (progress < 60) {
+                loadingText.textContent = 'Initializing Physics...';
+            } else if (progress < 90) {
+                loadingText.textContent = 'Connecting to Server...';
+            } else {
+                loadingText.textContent = 'Ready!';
+            }
+
+            if (progress === 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                }, 500);
+            }
+        }, 200);
+    });
+</script></body>
+
+</html>

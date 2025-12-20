@@ -1,5 +1,5 @@
 /**
- * 8 Ball Pool Game Logic
+ * Mine Pool Game Logic
  * Main game controller and rendering
  */
 
