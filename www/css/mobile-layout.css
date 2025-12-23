@@ -20,6 +20,58 @@
 }
 
 /* ============================================
+   PLAYER AVATARS - TOP CORNERS DURING GAMEPLAY
+   Player 1 = Top Left, Player 2 = Top Right
+   ============================================ */
+.game-page .player-1 .avatar,
+.game-page .player-1 .avatar-wrapper,
+.game-page #p1-avatar-header {
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    z-index: 200 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 3px solid #00ff88 !important;
+    background: linear-gradient(135deg, #1a1a3a, #0a0a1a) !important;
+}
+
+.game-page .player-2 .avatar,
+.game-page .player-2 .avatar-wrapper,
+.game-page #p2-avatar-header {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    left: auto !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    z-index: 200 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 3px solid #ff4444 !important;
+    background: linear-gradient(135deg, #1a1a3a, #0a0a1a) !important;
+}
+
+.game-page .player-1 .avatar-img,
+.game-page .player-2 .avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}
+
+/* Hide player details text in game mode */
+.game-page .player-details {
+    display: none !important;
+}
+
+/* ============================================
    SECTION 2: MENU PAGE LAYOUT
    Works in BOTH portrait and landscape
    No rotate warning on menu page
