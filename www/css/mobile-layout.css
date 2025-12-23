@@ -6,69 +6,152 @@
  */
 
 /* ============================================
-   SECTION 1: GAME PAGE - HIDE TOP UI ONLY
-   Only hide the header bar during gameplay
-   Keep power gauge, spin control, and player avatars
+   SECTION 1: GAME PAGE - HEADER ADJUSTMENTS
+   Show avatars with player names, hide logo/text
    ============================================ */
-.game-page #game-header {
+
+/* Hide logo and turn indicator */
+.game-page #game-header .logo {
     display: none !important;
 }
 
+.game-page #game-header .turn-indicator {
+    display: none !important;
+}
+
+/* Hide ball-type text only */
+.game-page #game-header .ball-type {
+    display: none !important;
+}
+
+/* Hide user-menu */
 .game-page .user-menu,
 .game-page #user-menu {
     display: none !important;
 }
 
-/* ============================================
-   PLAYER AVATARS - TOP CORNERS DURING GAMEPLAY
-   Player 1 = Top Left, Player 2 = Top Right
-   ============================================ */
-.game-page .player-1 .avatar,
-.game-page .player-1 .avatar-wrapper,
-.game-page #p1-avatar-header {
+/* Make header transparent and positioned absolutely */
+.game-page #game-header {
     position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: transparent !important;
     z-index: 200 !important;
     display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 3px solid #00ff88 !important;
-    background: linear-gradient(135deg, #1a1a3a, #0a0a1a) !important;
+    justify-content: space-between !important;
+    padding: 10px !important;
+    pointer-events: none !important;
 }
 
-.game-page .player-2 .avatar,
-.game-page .player-2 .avatar-wrapper,
-.game-page #p2-avatar-header {
-    position: fixed !important;
-    top: 10px !important;
-    right: 10px !important;
-    left: auto !important;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important;
-    z-index: 200 !important;
+.game-page #game-header .player-info {
     display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 3px solid #ff4444 !important;
-    background: linear-gradient(135deg, #1a1a3a, #0a0a1a) !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    pointer-events: auto !important;
 }
 
-.game-page .player-1 .avatar-img,
-.game-page .player-2 .avatar-img {
+/* Player 1 - TOP LEFT */
+.game-page #game-header .player-1 {
+    position: fixed !important;
+    top: 8px !important;
+    left: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.game-page #game-header .player-1 .avatar-wrapper {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50% !important;
+    border: 2px solid #00ff88 !important;
+    overflow: hidden !important;
+    background: #1a1a3a !important;
+}
+
+.game-page #game-header .player-1 .avatar-img {
     width: 100% !important;
     height: 100% !important;
     border-radius: 50% !important;
     object-fit: cover !important;
+    border: none !important;
 }
 
-/* Hide player details text in game mode */
-.game-page .player-details {
+/* Hide the fallback text avatar for P1 */
+.game-page #game-header .player-1 .avatar {
     display: none !important;
+}
+
+.game-page #game-header .player-1 .player-details {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.game-page #game-header .player-1 .player-name {
+    display: block !important;
+    font-size: 10px !important;
+    color: #00ff88 !important;
+    font-weight: bold !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+    max-width: 60px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Player 2 - TOP RIGHT */
+.game-page #game-header .player-2 {
+    position: fixed !important;
+    top: 8px !important;
+    right: 8px !important;
+    left: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.game-page #game-header .player-2 .avatar-wrapper {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50% !important;
+    border: 2px solid #ff4444 !important;
+    overflow: hidden !important;
+    background: #1a1a3a !important;
+}
+
+.game-page #game-header .player-2 .avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: none !important;
+}
+
+/* Hide the fallback text avatar for P2 */
+.game-page #game-header .player-2 .avatar {
+    display: none !important;
+}
+
+.game-page #game-header .player-2 .player-details {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.game-page #game-header .player-2 .player-name {
+    display: block !important;
+    font-size: 10px !important;
+    color: #ff4444 !important;
+    font-weight: bold !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+    max-width: 60px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 /* ============================================
