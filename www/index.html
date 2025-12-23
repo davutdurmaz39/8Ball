@@ -133,19 +133,19 @@
     <div id="auth-loading" class="auth-loading hidden">
         <div class="spinner"></div>
 
-    <!-- App Loading Screen -->
-    <div id="app-loading" class="app-loading">
-        <div class="loading-content">
-            <div class="loading-logo">
-                <span class="loading-icon">&#127921;</span>
-                <h1>MINE POOL</h1>
+        <!-- App Loading Screen -->
+        <div id="app-loading" class="app-loading">
+            <div class="loading-content">
+                <div class="loading-logo">
+                    <span class="loading-icon">&#127921;</span>
+                    <h1>MINE POOL</h1>
+                </div>
+                <div class="loading-bar-container">
+                    <div class="loading-bar" id="loading-bar"></div>
+                </div>
+                <p class="loading-text" id="loading-text">Loading Assets...</p>
             </div>
-            <div class="loading-bar-container">
-                <div class="loading-bar" id="loading-bar"></div>
-            </div>
-            <p class="loading-text" id="loading-text">Loading Assets...</p>
         </div>
-    </div>
         <p>Verifying authentication...</p>
     </div>
 
@@ -297,7 +297,7 @@
                     <span class="btn-icon">🏆</span>
                     <span class="btn-text">LEADERBOARD</span>
                 </button>
-                            <button class="side-menu-btn" id="btn-shop">
+                <button class="side-menu-btn" id="btn-shop">
                     <span class="btn-icon">🛒</span>
                     <span class="btn-text">SHOP</span>
                 </button>
@@ -319,7 +319,7 @@
                     <h1>MINE POOL</h1>
                     <p class="tagline">Miniclip Rules Edition</p>
                 </div>
-                                <div class="game-modes">
+                <div class="game-modes">
                     <button id="btn-2player" class="btn-mode">
                         <span class="mode-icon">&#128101;</span>
                         <span class="mode-text">2 PLAYERS</span>
@@ -640,40 +640,54 @@
     <script src="leaderboard.js?v=1"></script>
     <script src="physics.js?v=18"></script>
     <script src="game.js?v=17"></script>
-<!-- Loading Screen Script -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const loadingScreen = document.getElementById('app-loading');
-        const loadingBar = document.getElementById('loading-bar');
-        const loadingText = document.getElementById('loading-text');
+    <!-- Loading Screen Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('app-loading');
+            const loadingBar = document.getElementById('loading-bar');
+            const loadingText = document.getElementById('loading-text');
 
-        if (!loadingScreen || !loadingBar) return;
+            if (!loadingScreen || !loadingBar) return;
 
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 100) progress = 100;
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
 
-            loadingBar.style.width = `${progress}%`;
+                loadingBar.style.width = `${progress}%`;
 
-            if (progress < 30) {
-                loadingText.textContent = 'Loading Assets...';
-            } else if (progress < 60) {
-                loadingText.textContent = 'Initializing Physics...';
-            } else if (progress < 90) {
-                loadingText.textContent = 'Connecting to Server...';
-            } else {
-                loadingText.textContent = 'Ready!';
+                if (progress < 30) {
+                    loadingText.textContent = 'Loading Assets...';
+                } else if (progress < 60) {
+                    loadingText.textContent = 'Initializing Physics...';
+                } else if (progress < 90) {
+                    loadingText.textContent = 'Connecting to Server...';
+                } else {
+                    loadingText.textContent = 'Ready!';
+                }
+
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loadingScreen.classList.add('hidden');
+                    }, 500);
+                }
+            }, 200);
+        });
+    </script>
+    <script>
+        // Redirect 2 PLAYERS button to game.html
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn2Player = document.getElementById('btn-2player');
+            if (btn2Player) {
+                btn2Player.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = 'game.html?mode=2player';
+                });
             }
-
-            if (progress === 100) {
-                clearInterval(interval);
-                setTimeout(() => {
-                    loadingScreen.classList.add('hidden');
-                }, 500);
-            }
-        }, 200);
-    });
-</script></body>
+        });
+    </script>
+</body>
 
 </html>

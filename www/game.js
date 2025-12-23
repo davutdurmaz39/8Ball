@@ -173,8 +173,12 @@ class PoolGame {
             }
             this.startGame('2player');
         });
-        document.getElementById('play-again').addEventListener('click', () => this.resetGame());
-        document.getElementById('btn-back-to-menu').addEventListener('click', () => this.resetGame());
+        document.getElementById('play-again').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+        document.getElementById('btn-back-to-menu').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
 
         // Cue Selection
         const cueModal = document.getElementById('cue-selection-modal');
@@ -2862,6 +2866,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize chat system
         window.chatManager = new ChatManager(window.gameInstance);
         console.log('Chat system initialized!');
+
+        // Check for auto-start from URL parameter (from index.html)
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        if (mode === '2player') {
+            console.log('Auto-starting 2 player mode from index.html');
+            // Hide start screen and start game
+            if (window.gameInstance.startScreen) {
+                window.gameInstance.startScreen.style.display = 'none';
+                window.gameInstance.startScreen.classList.add('hidden');
+            }
+            window.gameInstance.startGame('2player');
+        }
     } catch (error) {
         console.error('FATAL ERROR: Failed to initialize game:', error);
         console.error('Error stack:', error.stack);

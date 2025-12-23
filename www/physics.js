@@ -21,7 +21,7 @@ class PhysicsEngine {
 
         // Friction (adjusted for mobile)
         this.GRAVITY = 980;
-        this.MU_ROLL = 0.018 * this.mobileFrictionMultiplier;     // Rolling friction
+        this.MU_ROLL = 0.016 * this.mobileFrictionMultiplier;     // Rolling friction (reduced)
         this.MU_SLIDE = 0.10 * this.mobileFrictionMultiplier;
         this.MU_SPIN = 0.12 * this.mobileFrictionMultiplier;      // Spin friction
 

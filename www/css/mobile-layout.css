@@ -1,0 +1,322 @@
+/**
+ * Mine Pool - Mobile Layout
+ * 
+ * SINGLE SOURCE OF TRUTH for all mobile layouts.
+ * This file should be loaded LAST to override other CSS files.
+ */
+
+/* ============================================
+   SECTION 1: GAME PAGE - HIDE PLAYER UI
+   Always hide user-menu and player-info on game page
+   ============================================ */
+.game-page .user-menu,
+.game-page #user-menu {
+    display: none !important;
+}
+
+.game-page .player-info,
+.game-page #game-header .player-info {
+    display: none !important;
+}
+
+/* ============================================
+   SECTION 2: MENU PAGE LAYOUT
+   Works in BOTH portrait and landscape
+   No rotate warning on menu page
+   ============================================ */
+
+/* Menu page - hide rotate overlay */
+.menu-page .rotate-device-overlay {
+    display: none !important;
+}
+
+/* Menu page - always show game container */
+.menu-page #game-container {
+    display: block !important;
+}
+
+/* ============================================
+   SECTION 3: GAME PAGE - MOBILE RULES
+   Applied to all game page touch devices
+   ============================================ */
+@media (pointer: coarse) {
+
+    /* Game page only - hide desktop elements */
+    .game-page #controls-hint {
+        display: none !important;
+    }
+
+    .game-page #ball-rack {
+        display: none !important;
+    }
+
+    .game-page #game-header {
+        display: none !important;
+    }
+
+    .game-page .player-profile-bar,
+    .game-page #player-profile-bar {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   SECTION 4: GAME PAGE - PORTRAIT MODE
+   Show rotate warning, hide game
+   ============================================ */
+@media (pointer: coarse) and (orientation: portrait) {
+
+    /* Game page only - show rotate overlay */
+    .game-page .rotate-device-overlay {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%) !important;
+        z-index: 9999 !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: white !important;
+        text-align: center !important;
+    }
+
+    .game-page .rotate-device-overlay .rotate-icon {
+        font-size: 4rem !important;
+        margin-bottom: 20px !important;
+        animation: rotate-phone 2s infinite ease-in-out !important;
+    }
+
+    .game-page .rotate-device-overlay h2 {
+        font-size: 1.5rem !important;
+        margin-bottom: 10px !important;
+        color: #00d4ff !important;
+        font-family: 'Orbitron', sans-serif !important;
+    }
+
+    .game-page .rotate-device-overlay p {
+        font-size: 1rem !important;
+        color: #aaa !important;
+        padding: 0 20px !important;
+    }
+
+    @keyframes rotate-phone {
+
+        0%,
+        100% {
+            transform: rotate(0deg);
+        }
+
+        50% {
+            transform: rotate(90deg);
+        }
+    }
+
+    /* Game page only - hide game container in portrait */
+    .game-page #game-container {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   SECTION 5: GAME PAGE - LANDSCAPE MODE
+   Full game layout
+   ============================================ */
+@media (pointer: coarse) and (orientation: landscape) {
+
+    /* Game page only - hide rotate overlay */
+    .game-page .rotate-device-overlay {
+        display: none !important;
+    }
+
+    /* Game page only - show game container */
+    .game-page #game-container {
+        display: block !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    .game-page #game-main {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .game-page #table-container {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .game-page #pool-table {
+        max-width: calc(100vw - 120px) !important;
+        max-height: calc(100vh - 40px) !important;
+        width: auto !important;
+        height: auto !important;
+    }
+
+    /* Back button - top center */
+    .game-page .back-btn,
+    .game-page #btn-back-to-menu {
+        position: fixed !important;
+        top: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 100 !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+        border: 1px solid rgba(0, 212, 255, 0.3) !important;
+        color: white !important;
+        padding: 8px 20px !important;
+        border-radius: 20px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Power gauge - LEFT side, vertical */
+    .game-page #power-gauge {
+        position: fixed !important;
+        left: max(10px, env(safe-area-inset-left)) !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        right: auto !important;
+        bottom: auto !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        width: 50px !important;
+        height: 50vh !important;
+        max-height: 300px !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+        border-radius: 25px !important;
+        padding: 10px !important;
+        z-index: 100 !important;
+        display: flex !important;
+    }
+
+    .game-page .power-label {
+        font-size: 0.6rem !important;
+        color: #00d4ff !important;
+        margin-bottom: 8px !important;
+    }
+
+    .game-page .power-bar {
+        width: 16px !important;
+        height: calc(100% - 50px) !important;
+        background: #1a1a1a !important;
+        border-radius: 8px !important;
+        position: relative !important;
+        flex-grow: 1 !important;
+    }
+
+    .game-page .power-fill {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: linear-gradient(to top, #00ff88, #ffaa00, #ff4444) !important;
+        border-radius: 8px !important;
+    }
+
+    .game-page .power-value {
+        font-size: 0.7rem !important;
+        color: #00ff88 !important;
+        margin-top: 8px !important;
+    }
+
+    .game-page #power-handle {
+        display: none !important;
+    }
+
+    /* Spin control - RIGHT side, vertical */
+    .game-page #spin-control {
+        position: fixed !important;
+        right: max(10px, env(safe-area-inset-right)) !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        left: auto !important;
+        bottom: auto !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+        border-radius: 15px !important;
+        padding: 10px !important;
+        z-index: 100 !important;
+        display: flex !important;
+    }
+
+    .game-page .spin-label {
+        font-size: 0.6rem !important;
+        color: #00d4ff !important;
+    }
+
+    .game-page .spin-ball {
+        width: 50px !important;
+        height: 50px !important;
+        background: radial-gradient(circle at 30% 30%, #fff, #ccc) !important;
+        border-radius: 50% !important;
+        position: relative !important;
+        cursor: pointer !important;
+    }
+
+    .game-page .spin-indicator {
+        width: 12px !important;
+        height: 12px !important;
+        background: #ff4444 !important;
+        border-radius: 50% !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    .game-page .spin-info {
+        font-size: 0.55rem !important;
+        color: #aaa !important;
+        text-align: center !important;
+    }
+
+    .game-page .reset-spin {
+        font-size: 0.6rem !important;
+        padding: 4px 10px !important;
+        background: rgba(0, 212, 255, 0.2) !important;
+        border: 1px solid #00d4ff !important;
+        color: #00d4ff !important;
+        border-radius: 10px !important;
+        cursor: pointer !important;
+    }
+}
+
+/* ============================================
+   SECTION 6: START SCREEN HIDING
+   Hide start screen when game is in progress
+   ============================================ */
+#start-screen {
+    z-index: 500;
+}
+
+#start-screen.hidden,
+#start-screen[style*="display: none"],
+#start-screen[style*="display:none"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+#start-screen.hidden *,
+#start-screen[style*="display: none"] *,
+#start-screen[style*="display:none"] * {
+    display: none !important;
+    visibility: hidden !important;
+}
