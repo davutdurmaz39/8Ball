@@ -165,29 +165,47 @@ class PoolGame {
     }
 
     setupEventListeners() {
-        // Start screen buttons
-        document.getElementById('btn-2player').addEventListener('click', () => {
-            if (this.startScreen) {
-                this.startScreen.style.display = 'none';
-                this.startScreen.classList.add('hidden');
-            }
-            this.startGame('2player');
-        });
-        document.getElementById('play-again').addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-        document.getElementById('btn-back-to-menu').addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
+        // Start screen buttons (may not exist on game.html)
+        const btn2player = document.getElementById('btn-2player');
+        if (btn2player) {
+            btn2player.addEventListener('click', () => {
+                if (this.startScreen) {
+                    this.startScreen.style.display = 'none';
+                    this.startScreen.classList.add('hidden');
+                }
+                this.startGame('2player');
+            });
+        }
 
-        // Cue Selection
+        const playAgainBtn = document.getElementById('play-again');
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('click', () => {
+                window.location.href = 'index.html';
+            });
+        }
+
+        const backToMenuBtn = document.getElementById('btn-back-to-menu');
+        if (backToMenuBtn) {
+            backToMenuBtn.addEventListener('click', () => {
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Cue Selection (may not exist on game.html)
         const cueModal = document.getElementById('cue-selection-modal');
-        document.getElementById('btn-cues').addEventListener('click', () => {
-            cueModal.classList.remove('hidden');
-        });
-        document.getElementById('close-cues').addEventListener('click', () => {
-            cueModal.classList.add('hidden');
-        });
+        const btnCues = document.getElementById('btn-cues');
+        if (btnCues && cueModal) {
+            btnCues.addEventListener('click', () => {
+                cueModal.classList.remove('hidden');
+            });
+        }
+
+        const closeCuesBtn = document.getElementById('close-cues');
+        if (closeCuesBtn && cueModal) {
+            closeCuesBtn.addEventListener('click', () => {
+                cueModal.classList.add('hidden');
+            });
+        }
 
         document.querySelectorAll('.cue-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -270,13 +288,11 @@ class PoolGame {
 
     startGame(mode) {
         try {
-            if (!this.startScreen) {
-                console.error('Start screen element not found!');
-                alert('Error: Start screen element not found!');
-                return;
-            }
             this.gameMode = mode;
-            this.startScreen.style.display = 'none';
+            // Hide start screen if it exists (may not exist on game.html)
+            if (this.startScreen) {
+                this.startScreen.style.display = 'none';
+            }
             document.body.classList.add('game-active'); // Enable rotate overlay for mobile portrait
             this.initializeBalls();
             this.gameState = 'aiming';

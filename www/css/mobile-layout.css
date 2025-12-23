@@ -364,3 +364,32 @@
     pointer-events: none !important;
     z-index: -1 !important;
 }
+/* ============================================
+   SECTION 7: ONLINE MATCHMAKING MODE
+   Hide game container until match is found
+   ============================================ */
+
+/* For online mode: hide game elements until match is found */
+body.online-matchmaking #game-container {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+body.online-matchmaking #user-menu {
+    display: none !important;
+}
+
+body.online-matchmaking .rotate-device-overlay {
+    display: none !important;
+}
+
+/* Show game when match is found */
+body.online-matchmaking.match-ready #game-container {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: opacity 0.3s ease;
+}
+
+body.online-matchmaking.match-ready #user-menu {
+    display: flex !important;
+}

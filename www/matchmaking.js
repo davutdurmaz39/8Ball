@@ -929,7 +929,12 @@ class MatchmakingUI {
 
         // Close matchmaking
         document.getElementById('close-matchmaking')?.addEventListener('click', () => {
-            this.hide();
+            // If in online mode, redirect to menu since game container is hidden
+            if (window.gameMode === 'online' && !this.gameActive) {
+                window.location.href = '/index.html';
+            } else {
+                this.hide();
+            }
         });
 
         // Room options
@@ -1006,6 +1011,8 @@ class MatchmakingUI {
             this.hide();
             // Just hide the modal, don't leave the room!
             document.getElementById('room-modal')?.classList.add('hidden');
+            // Show the game container now that match is ready
+            document.body.classList.add('match-ready');
         });
 
         // Server stats
@@ -1021,6 +1028,8 @@ class MatchmakingUI {
 
     show() {
         document.getElementById('matchmaking-overlay')?.classList.remove('hidden');
+        // Hide the auth loading spinner since matchmaking is now visible
+        document.getElementById('auth-loading')?.classList.add('hidden');
         this.showTierSelection();
     }
 
@@ -1028,6 +1037,10 @@ class MatchmakingUI {
         document.getElementById('matchmaking-overlay')?.classList.add('hidden');
         if (this.isSearching) {
             this.cancelSearch();
+        }
+        // If no game is active, go back to main menu
+        if (!this.gameActive && !window.gameInstance?.isMultiplayer) {
+            window.location.href = '/index.html';
         }
     }
 

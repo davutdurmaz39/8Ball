@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mine Pool | Multiplayer</title>
+    <title>Mine Pool | Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -108,41 +108,16 @@
             }
         }
 
-        .btn-online-play {
-            position: relative;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 136, 170, 0.2)) !important;
-            border-color: #00d4ff !important;
+        /* Hide start screen - game starts directly */
+        #start-screen {
+            display: none !important;
         }
 
-        .btn-online-play:hover {
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.4) !important;
-        }
-
-        .online-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: linear-gradient(135deg, #00ff88, #00aa55);
-            color: #000;
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 10px;
-            animation: pulse-badge 2s infinite;
-        }
-
-        @keyframes pulse-badge {
-
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 0.8;
-                transform: scale(1.1);
-            }
+        /* Show game elements by default */
+        #game-header,
+        #game-main,
+        #controls-hint {
+            display: flex !important;
         }
     </style>
     <script>
@@ -157,7 +132,7 @@
     </script>
 </head>
 
-<body class="game-page">
+<body class="game-page game-active">
     <!-- Rotate device overlay for portrait mode -->
     <div class="rotate-device-overlay" id="rotate-overlay">
         <div class="rotate-icon">📱</div>
@@ -169,6 +144,7 @@
         <div class="spinner"></div>
         <p>Loading...</p>
     </div>
+
     <div id="user-menu" class="user-menu" style="display:none;">
         <div class="user-info" onclick="window.location.href='profile.html'">
             <div class="user-avatar" id="user-avatar">P</div>
@@ -179,6 +155,7 @@
         </div>
         <button class="btn-logout" id="logout-btn">Logout</button>
     </div>
+
     <div id="game-container">
         <header id="game-header">
             <div class="logo"><span class="logo-icon">🎱</span><span class="logo-text">MINE POOL</span></div>
@@ -207,6 +184,7 @@
                 </div>
             </div>
         </header>
+
         <main id="game-main">
             <button id="btn-back-to-menu" class="back-btn" title="Back to Menu"><span
                     style="font-size: 0.8em; margin-right: 6px;">❮</span> Back</button>
@@ -241,131 +219,42 @@
                 </div>
             </div>
         </main>
+
         <div id="game-message" class="hidden">
             <div class="message-content">
                 <h2 id="message-title">FOUL!</h2>
                 <p id="message-text">Cue ball pocketed. Ball in hand.</p>
             </div>
         </div>
+
         <div id="call-pocket-modal" class="hidden">
             <div class="modal-overlay"></div>
             <div class="call-pocket-content">
                 <h2>🎯 CALL YOUR POCKET</h2>
                 <p>Select which pocket for the 8-ball</p>
-                <div class="pocket-grid"><button class="pocket-btn" data-pocket="0"><span class="pocket-label">Top
-                            Left</span><span class="pocket-icon">↖️</span></button><button class="pocket-btn"
-                        data-pocket="1"><span class="pocket-label">Top Center</span><span
-                            class="pocket-icon">⬆️</span></button><button class="pocket-btn" data-pocket="2"><span
-                            class="pocket-label">Top Right</span><span class="pocket-icon">↗️</span></button><button
-                        class="pocket-btn" data-pocket="3"><span class="pocket-label">Bottom Left</span><span
-                            class="pocket-icon">↙️</span></button><button class="pocket-btn" data-pocket="4"><span
-                            class="pocket-label">Bottom Center</span><span class="pocket-icon">⬇️</span></button><button
-                        class="pocket-btn" data-pocket="5"><span class="pocket-label">Bottom Right</span><span
-                            class="pocket-icon">↘️</span></button></div>
+                <div class="pocket-grid">
+                    <button class="pocket-btn" data-pocket="0"><span class="pocket-label">Top Left</span><span
+                            class="pocket-icon">↖️</span></button>
+                    <button class="pocket-btn" data-pocket="1"><span class="pocket-label">Top Center</span><span
+                            class="pocket-icon">⬆️</span></button>
+                    <button class="pocket-btn" data-pocket="2"><span class="pocket-label">Top Right</span><span
+                            class="pocket-icon">↗️</span></button>
+                    <button class="pocket-btn" data-pocket="3"><span class="pocket-label">Bottom Left</span><span
+                            class="pocket-icon">↙️</span></button>
+                    <button class="pocket-btn" data-pocket="4"><span class="pocket-label">Bottom Center</span><span
+                            class="pocket-icon">⬇️</span></button>
+                    <button class="pocket-btn" data-pocket="5"><span class="pocket-label">Bottom Right</span><span
+                            class="pocket-icon">↘️</span></button>
+                </div>
             </div>
         </div>
+
         <div id="winner-screen" class="hidden">
             <div class="winner-content">
                 <div class="trophy">🏆</div>
-                <h1 id="winner-text">PLAYER 1 WINS!</h1><button id="play-again" class="btn-primary">PLAY AGAIN</button>
-            </div>
-        </div>
-        <div id="start-screen">
-            <!-- Bottom Left Menu -->
-            <div id="bottom-left-menu" class="bottom-left-menu">
-                <button class="side-menu-btn" id="btn-daily-reward">
-                    <span class="btn-icon">🎁</span>
-                    <span class="btn-text">DAILY REWARD</span>
-                </button>
-                <button class="side-menu-btn" id="btn-news">
-                    <span class="btn-icon">📰</span>
-                    <span class="btn-text">NEWS</span>
-                </button>
-                <button class="side-menu-btn" id="leaderboard-toggle">
-                    <span class="btn-icon">🏆</span>
-                    <span class="btn-text">LEADERBOARD</span>
-                </button>
-                <button class="side-menu-btn" id="btn-shop">
-                    <span class="btn-icon">🛒</span>
-                    <span class="btn-text">SHOP</span>
-                </button>
-            </div>
-
-            <!-- Bottom Right Menu -->
-            <div id="bottom-right-menu" class="bottom-right-menu">
-                <button class="side-menu-btn icon-only" id="btn-settings" title="Settings">
-                    <span class="btn-icon">⚙️</span>
-                </button>
-                <button class="side-menu-btn icon-only" id="btn-messages" title="Messages">
-                    <span class="btn-icon">💬</span>
-                </button>
-            </div>
-
-            <div class="start-content">
-                <div class="start-logo">
-                    <span class="big-ball">&#127921;</span>
-                    <h1>MINE POOL</h1>
-                    <p class="tagline">Miniclip Rules Edition</p>
-                </div>
-                <div class="game-modes">
-                    <button id="btn-online" class="btn-mode btn-online-play">
-                        <span class="mode-icon">&#127760;</span>
-                        <span class="mode-text">PLAY ONLINE</span>
-                        <span class="online-badge">LIVE</span>
-                    </button>
-                    <button id="btn-2player" class="btn-mode">
-                        <span class="mode-icon">&#128101;</span>
-                        <span class="mode-text">2 PLAYERS</span>
-                    </button>
-                    <button id="btn-tournament" class="btn-mode btn-tournament"
-                        onclick="window.location.href='tournament.html'">
-                        <span class="mode-icon">&#127942;</span>
-                        <span class="mode-text">TOURNAMENTS</span>
-                    </button>
-                    <button id="btn-cues" class="btn-mode">
-                        <span class="mode-icon">&#127921;</span>
-                        <span class="mode-text">CUES</span>
-                    </button>
-                </div>
-                <div class="instructions">
-                    <h3>HOW TO PLAY</h3>
-                    <ul>
-                        <li>🖱️ Click to lock aim direction</li>
-                        <li>⬅️ Drag back to set power</li>
-                        <li>🔄 Click spin control for English</li>
-                        <li>🎯 Release to shoot</li>
-                        <li>🎱 Pocket the 8-ball last to win!</li>
-                        <li>⏱️ 30 seconds per shot</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div id="cue-selection-modal" class="hidden">
-            <div class="cue-modal-content">
-                <h2>SELECT YOUR CUE</h2>
-                <div class="cue-list">
-                    <div class="cue-card active" data-cue="standard">
-                        <div class="cue-image"><img src="assets/cue_standard.png" alt="Standard Cue"></div>
-                        <div class="cue-info">
-                            <h3>STANDARD</h3>
-                            <p>Classic maple wood</p>
-                        </div>
-                    </div>
-                    <div class="cue-card" data-cue="premium">
-                        <div class="cue-image"><img src="assets/cue_premium.png" alt="Premium Cue"></div>
-                        <div class="cue-info">
-                            <h3>PREMIUM</h3>
-                            <p>Carbon fiber tech</p>
-                        </div>
-                    </div>
-                    <div class="cue-card" data-cue="legendary">
-                        <div class="cue-image"><img src="assets/cue_legendary.png" alt="Legendary Cue"></div>
-                        <div class="cue-info">
-                            <h3>LEGENDARY</h3>
-                            <p>Ancient power</p>
-                        </div>
-                    </div>
-                </div><button id="close-cues" class="btn-primary">CONFIRM</button>
+                <h1 id="winner-text">PLAYER 1 WINS!</h1>
+                <button id="play-again" class="btn-primary">PLAY AGAIN</button>
+                <button id="back-to-menu" class="btn-secondary" style="margin-top: 10px;">BACK TO MENU</button>
             </div>
         </div>
 
@@ -380,7 +269,6 @@
                     <span>💬 CHAT</span>
                     <button class="chat-close" id="chat-close">✕</button>
                 </div>
-                <!-- Chat messages removed -->
                 <div class="quick-chat">
                     <button class="quick-btn" data-msg="Good luck!">🍀 Good luck!</button>
                     <button class="quick-btn" data-msg="Nice shot!">👏 Nice shot!</button>
@@ -401,6 +289,18 @@
     </div>
 
     <script>
+        // Get game mode from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameMode = urlParams.get('mode') || 'online';
+        window.gameMode = gameMode;
+
+        // For online mode, add class to hide game container until match is found
+        if (gameMode === 'online') {
+            document.body.classList.add('online-matchmaking');
+        }
+        console.log('🎮 Game mode:', gameMode);
+
+        // Authentication check
         (async function checkAuth() {
             const loadingEl = document.getElementById('auth-loading');
             const userMenuEl = document.getElementById('user-menu');
@@ -424,10 +324,29 @@
                 window.location.href = '/login.html';
             }
         })();
+
+        // Logout handler
         document.getElementById('logout-btn').addEventListener('click', async () => {
             try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch (e) { }
             localStorage.removeItem('user');
             window.location.href = '/login.html';
+        });
+
+        // Back button handler
+        document.getElementById('btn-back-to-menu').addEventListener('click', () => {
+            if (confirm('Leave the game? You may lose progress.')) {
+                window.location.href = '/index.html';
+            }
+        });
+
+        // Play again handler
+        document.getElementById('play-again')?.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        // Back to menu from winner screen
+        document.getElementById('back-to-menu')?.addEventListener('click', () => {
+            window.location.href = '/index.html';
         });
 
         // Chat functionality
@@ -437,7 +356,6 @@
             const chatClose = document.getElementById('chat-close');
             const chatInput = document.getElementById('chat-input');
             const chatSend = document.getElementById('chat-send');
-            const chatMessages = document.getElementById('chat-messages');
             const chatBadge = document.getElementById('chat-badge');
             const quickBtns = document.querySelectorAll('.quick-btn');
 
@@ -466,7 +384,6 @@
                 const message = chatInput.value.trim();
                 if (message && window.networkManager) {
                     window.networkManager.sendMessage(message);
-                    // Don't add message locally - wait for server to broadcast it back
                     chatInput.value = '';
                 }
             }
@@ -482,29 +399,22 @@
                     const msg = btn.dataset.msg;
                     if (window.networkManager) {
                         window.networkManager.sendMessage(msg);
-                        // Don't add locally - server will broadcast it back
                     }
                 });
             });
 
             // Add message to chat (exposed globally)
             window.addChatMessage = function (username, message, isMe = false) {
-                // Determine which bubble to show based on player position
-                // In multiplayer, we need to account for which player we are
                 let bubbleId;
 
                 if (window.gameInstance && window.gameInstance.isMultiplayer) {
-                    // In multiplayer: determine based on actual player number
                     const myPlayerNum = window.gameInstance.myPlayerNumber;
                     if (isMe) {
-                        // My message shows on my side
                         bubbleId = (myPlayerNum === 1) ? 'p1-speech-bubble' : 'p2-speech-bubble';
                     } else {
-                        // Opponent's message shows on their side
                         bubbleId = (myPlayerNum === 1) ? 'p2-speech-bubble' : 'p1-speech-bubble';
                     }
                 } else {
-                    // Local game or fallback
                     bubbleId = isMe ? 'p1-speech-bubble' : 'p2-speech-bubble';
                 }
 
@@ -515,7 +425,6 @@
                     bubble.classList.remove('hidden');
                     bubble.classList.add('visible');
 
-                    // Hide after 4 seconds
                     if (bubble.hideTimeout) clearTimeout(bubble.hideTimeout);
                     bubble.hideTimeout = setTimeout(() => {
                         bubble.classList.remove('visible');
@@ -523,18 +432,12 @@
                     }, 4000);
                 }
             };
-
-            // Local helper that uses the global function
-            function addMessage(username, message, isMe) {
-                window.addChatMessage(username, message, isMe);
-            }
         });
-
     </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="physics.js?v=17"></script>
-    <script src="game.js?v=21"></script>
+    <script src="game.js?v=22"></script>
     <script src="network.js?v=2"></script>
     <script src="matchmaking.js?v=4"></script>
     <script src="player-info.js?v=2"></script>
@@ -548,30 +451,33 @@
                     window.networkManager.connect().then(() => {
                         console.log('🌐 Connected to multiplayer server');
                         window.matchmakingUI = new MatchmakingUI(window.networkManager);
-                        const onlineBtn = document.getElementById('btn-online');
-                        if (onlineBtn) {
-                            onlineBtn.addEventListener('click', () => {
+
+                        // Auto-start based on game mode
+                        if (window.gameMode === 'online') {
+                            // Show matchmaking UI for online play
+                            setTimeout(() => {
                                 window.matchmakingUI.show();
-                            });
+                            }, 500);
+                        } else if (window.gameMode === '2player') {
+                            // Start 2-player local game immediately
+                            if (window.gameInstance) {
+                                window.gameInstance.startGame('2player');
+                            }
                         }
 
                         // Prevent duplicate chat listener registration
                         if (!window.chatListenerRegistered) {
                             window.chatListenerRegistered = true;
 
-                            // Track last message to prevent duplicates
                             let lastMessageKey = '';
                             let lastMessageTime = 0;
 
-                            // Set up chat listener after connection
                             window.networkManager.on('chat_message', (data) => {
                                 console.log('💬 Chat message received:', data);
 
-                                // Create unique key for deduplication
                                 const messageKey = `${data.username}:${data.message}`;
                                 const now = Date.now();
 
-                                // Ignore if same message within 500ms
                                 if (messageKey === lastMessageKey && (now - lastMessageTime) < 500) {
                                     console.log('💬 Duplicate message ignored');
                                     return;
@@ -581,7 +487,6 @@
                                 lastMessageTime = now;
 
                                 if (window.addChatMessage) {
-                                    // Check if message is from us
                                     const isMe = data.username === window.currentUser?.username;
                                     window.addChatMessage(data.username || 'Player', data.message, isMe);
                                 }
@@ -589,6 +494,13 @@
                         }
                     }).catch(err => {
                         console.error('Failed to connect:', err);
+                        // If online mode fails, offer fallback
+                        if (window.gameMode === 'online') {
+                            alert('Could not connect to server. Starting local game.');
+                            if (window.gameInstance) {
+                                window.gameInstance.startGame('2player');
+                            }
+                        }
                     });
                 }
             }, 1000);

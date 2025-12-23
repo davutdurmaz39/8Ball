@@ -458,7 +458,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
         const token = generateToken(user);
         setAuthCookie(res, token);
-        res.redirect('/game.html');
+        res.redirect('/index.html');
 
     } catch (error) {
         console.error('Google OAuth error:', error);
@@ -521,7 +521,7 @@ app.get('/api/auth/facebook/callback', async (req, res) => {
 
         const token = generateToken(user);
         setAuthCookie(res, token);
-        res.redirect('/game.html');
+        res.redirect('/index.html');
 
     } catch (error) {
         console.error('Facebook OAuth error:', error);
@@ -1149,10 +1149,11 @@ app.use(express.static(path.join(__dirname, 'www')));
 // ============ START SERVER ============
 
 server.listen(PORT, () => {
-    console.log(`\n🎱 8-Ball Pool Multiplayer Server Running!\n`);
+    console.log(`\n🎱 Mine Pool Multiplayer Server Running!\n`);
     console.log(`   Local:    http://localhost:${PORT}`);
     console.log(`   Network:  http://127.0.0.1:${PORT}\n`);
     console.log(`   Login:    http://localhost:${PORT}/login.html`);
+    console.log(`   Menu:     http://localhost:${PORT}/index.html`);
     console.log(`   Game:     http://localhost:${PORT}/game.html\n`);
     console.log(`   WebSocket: ws://localhost:${PORT}\n`);
     console.log(`Demo credentials: demo@example.com / password123`);
