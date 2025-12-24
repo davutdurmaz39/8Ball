@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Mine Pool - Matchmaking">
+    <title>Mine Pool | Matchmaking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0f1a 0%, #1a2035 50%, #0d1520 100%);
+            font-family: 'Rajdhani', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .mm-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .mm-back-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mm-back-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .mm-title-section {
+            text-align: center;
+        }
+
+        .mm-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .mm-status {
+            font-size: 0.75rem;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .mm-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .mm-settings-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        /* Main Content */
+        .mm-content {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Table Preview */
+        .mm-table-preview {
+            background: linear-gradient(135deg, rgba(20, 60, 40, 0.6) 0%, rgba(15, 45, 30, 0.8) 100%);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-type-badge {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .table-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+        }
+
+        /* Players Section */
+        .mm-players {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .mm-player-card {
+            background: linear-gradient(135deg, rgba(25, 35, 55, 0.95) 0%, rgba(20, 30, 50, 0.98) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mm-player-card.waiting {
+            border-color: rgba(255, 165, 0, 0.3);
+        }
+
+        .mm-avatar-container {
+            position: relative;
+        }
+
+        .mm-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #0088aa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .mm-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .mm-level-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .mm-player-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .mm-player-rank {
+            font-size: 0.7rem;
+            color: #8899aa;
+        }
+
+        .mm-player-stats {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .mm-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+
+        .mm-stat-label {
+            color: #8899aa;
+        }
+
+        .mm-stat-value {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .mm-ready-status {
+            width: 100%;
+            padding: 8px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .mm-ready-status.ready {
+            background: rgba(0, 200, 100, 0.2);
+            color: #00ff88;
+            border: 1px solid rgba(0, 200, 100, 0.4);
+        }
+
+        .mm-ready-status.waiting {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.4);
+        }
+
+        .mm-ready-status.searching {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.4);
+        }
+
+        /* Waiting Placeholder */
+        .mm-player-card.placeholder {
+            border-style: dashed;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .mm-avatar.placeholder {
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 2rem;
+        }
+
+        /* Stakes Section */
+        .mm-stakes {
+            background: linear-gradient(135deg, rgba(25, 35, 55, 0.95) 0%, rgba(20, 30, 50, 0.98) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mm-stakes-left {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mm-stakes-label {
+            font-size: 0.75rem;
+            color: #8899aa;
+        }
+
+        .mm-stakes-amount {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .mm-stakes-icon {
+            font-size: 1.5rem;
+        }
+
+        .mm-stakes-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        .mm-prize-badge {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+
+        /* Timer Section */
+        .mm-timer-section {
+            background: linear-gradient(135deg, rgba(25, 35, 55, 0.95) 0%, rgba(20, 30, 50, 0.98) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .mm-timer-label {
+            font-size: 0.85rem;
+            color: #8899aa;
+            margin-bottom: 15px;
+        }
+
+        .mm-timer-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .mm-timer-box {
+            background: rgba(0, 212, 255, 0.15);
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            border-radius: 12px;
+            padding: 10px 20px;
+            min-width: 70px;
+        }
+
+        .mm-timer-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .mm-timer-unit {
+            font-size: 0.65rem;
+            color: #8899aa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mm-timer-separator {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #00d4ff;
+        }
+
+        /* Action Buttons */
+        .mm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .mm-action-btn {
+            background: linear-gradient(135deg, rgba(25, 35, 55, 0.95) 0%, rgba(20, 30, 50, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mm-action-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+
+        .mm-action-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .mm-action-btn.chat .mm-action-icon {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .mm-action-btn.emojis .mm-action-icon {
+            background: rgba(255, 200, 0, 0.2);
+        }
+
+        .mm-action-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .mm-action-subtitle {
+            font-size: 0.65rem;
+            color: #8899aa;
+        }
+
+        /* Cancel Button */
+        .mm-cancel-btn {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 50, 50, 0.2);
+            border: 1px solid rgba(255, 50, 50, 0.4);
+            border-radius: 25px;
+            color: #ff6666;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .mm-cancel-btn:hover {
+            background: rgba(255, 50, 50, 0.3);
+        }
+
+        /* Searching Animation */
+        .searching-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '.';
+            }
+
+            40% {
+                content: '..';
+            }
+
+            60%,
+            100% {
+                content: '...';
+            }
+        }
+
+        /* Match Found Overlay */
+        .mm-match-found {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .mm-match-found.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .mm-match-found-content {
+            text-align: center;
+        }
+
+        .mm-match-found h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: #00ff88;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+
+        .mm-vs-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .mm-vs-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .mm-countdown {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #00d4ff;
+        }
+
+        .mm-countdown-number {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #00d4ff;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            animation: countPulse 1s infinite;
+        }
+
+        @keyframes countPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="mm-header">
+        <button class="mm-back-btn" onclick="window.location.href='index.html'">←</button>
+        <div class="mm-title-section">
+            <h1 class="mm-title">🎱 MINE POOL</h1>
+            <div class="mm-status" id="mm-status">Finding opponent<span class="searching-dots"></span></div>
+        </div>
+        <button class="mm-settings-btn">⚙️</button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mm-content">
+                <!-- Players -->
+        <div class="mm-players">
+            <!-- Player 1 (You) -->
+            <div class="mm-player-card" id="player1-card">
+                <div class="mm-avatar-container">
+                    <div class="mm-avatar" id="player1-avatar">P</div>
+                    <span class="mm-level-badge">⭐ <span id="player1-level">15</span></span>
+                </div>
+                <span class="mm-player-name" id="player1-name">PLAYER</span>
+                <span class="mm-player-rank" id="player1-rank">Pro League</span>
+                <div class="mm-player-stats">
+                    <div class="mm-stat-row">
+                        <span class="mm-stat-label">Win Rate</span>
+                        <span class="mm-stat-value" id="player1-winrate">68%</span>
+                    </div>
+                    <div class="mm-stat-row">
+                        <span class="mm-stat-label">Total Wins</span>
+                        <span class="mm-stat-value" id="player1-wins">342</span>
+                    </div>
+                </div>
+                <div class="mm-ready-status ready">
+                    ✓ READY
+                </div>
+            </div>
+
+            <!-- Player 2 (Opponent) -->
+            <div class="mm-player-card placeholder" id="player2-card">
+                <div class="mm-avatar-container">
+                    <div class="mm-avatar placeholder" id="player2-avatar">?</div>
+                </div>
+                <span class="mm-player-name" id="player2-name">???</span>
+                <span class="mm-player-rank" id="player2-rank">Searching...</span>
+                <div class="mm-player-stats">
+                    <div class="mm-stat-row">
+                        <span class="mm-stat-label">Win Rate</span>
+                        <span class="mm-stat-value" id="player2-winrate">--</span>
+                    </div>
+                    <div class="mm-stat-row">
+                        <span class="mm-stat-label">Total Wins</span>
+                        <span class="mm-stat-value" id="player2-wins">--</span>
+                    </div>
+                </div>
+                <div class="mm-ready-status searching">
+                    🔍 SEARCHING
+                </div>
+            </div>
+        </div>
+
+        <!-- Stakes -->
+        <div class="mm-stakes">
+            <div class="mm-stakes-left">
+                <span class="mm-stakes-label">Table Stakes</span>
+                <div class="mm-stakes-amount">
+                    <span class="mm-stakes-icon">💰</span>
+                    <span id="stakes-amount">100</span>
+                </div>
+            </div>
+            <div class="mm-stakes-right">
+                <span class="mm-stakes-label">Winner Takes</span>
+                <div class="mm-prize-badge" id="prize-amount">200</div>
+            </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="mm-timer-section">
+            <div class="mm-timer-label">Match starts in</div>
+            <div class="mm-timer-display">
+                <div class="mm-timer-box">
+                    <div class="mm-timer-value" id="timer-min">00</div>
+                    <div class="mm-timer-unit">Min</div>
+                </div>
+                <div class="mm-timer-separator">:</div>
+                <div class="mm-timer-box">
+                    <div class="mm-timer-value" id="timer-sec">30</div>
+                    <div class="mm-timer-unit">Sec</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mm-actions">
+            <button class="mm-action-btn chat">
+                <div class="mm-action-icon">💬</div>
+                <span class="mm-action-title">Chat</span>
+                <span class="mm-action-subtitle">Send message</span>
+            </button>
+            <button class="mm-action-btn emojis">
+                <div class="mm-action-icon">😀</div>
+                <span class="mm-action-title">Emojis</span>
+                <span class="mm-action-subtitle">Quick react</span>
+            </button>
+        </div>
+
+        <!-- Cancel Button -->
+        <button class="mm-cancel-btn" onclick="cancelMatchmaking()">❌ CANCEL MATCHMAKING</button>
+    </main>
+
+    <!-- Match Found Overlay -->
+    <div class="mm-match-found" id="match-found-overlay">
+        <div class="mm-match-found-content">
+            <h2>✅ MATCH FOUND!</h2>
+            <div class="mm-vs-display">
+                <div class="mm-avatar" id="mf-player1-avatar">P</div>
+                <span class="mm-vs-text">VS</span>
+                <div class="mm-avatar" id="mf-player2-avatar">O</div>
+            </div>
+            <div class="mm-countdown">
+                Starting in <span class="mm-countdown-number" id="countdown-number">3</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const stake = parseInt(urlParams.get('stake')) || 100;
+
+        // Update stakes display
+        document.getElementById('stakes-amount').textContent = stake.toLocaleString();
+        document.getElementById('prize-amount').textContent = (stake * 2).toLocaleString();
+
+        // Load current user data
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            const user = JSON.parse(userData);
+            document.getElementById('player1-name').textContent = user.username.toUpperCase();
+            document.getElementById('player1-avatar').textContent = user.username.charAt(0).toUpperCase();
+
+            const winRate = user.gamesPlayed > 0
+                ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(0)
+                : '0';
+            document.getElementById('player1-winrate').textContent = winRate + '%';
+            document.getElementById('player1-wins').textContent = user.gamesWon || 0;
+
+            // Calculate level
+            const level = Math.floor((user.gamesPlayed || 0) / 5) + 1;
+            document.getElementById('player1-level').textContent = level;
+        }
+
+        // Timer countdown
+        let timerSeconds = 30;
+        const timerInterval = setInterval(() => {
+            timerSeconds--;
+            const min = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const sec = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer-min').textContent = min;
+            document.getElementById('timer-sec').textContent = sec;
+
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+            }
+        }, 1000);
+
+        // Cancel matchmaking
+        function cancelMatchmaking() {
+            clearInterval(timerInterval);
+            window.location.href = 'index.html';
+        }
+
+        // Simulate finding opponent (for demo)
+        function simulateMatchFound() {
+            const opponent = {
+                name: 'OPPONENT',
+                avatar: 'O',
+                winRate: '72',
+                wins: '256',
+                level: '22',
+                rank: 'Pro Master'
+            };
+
+            // Update opponent card
+            const card = document.getElementById('player2-card');
+            card.classList.remove('placeholder');
+
+            document.getElementById('player2-avatar').textContent = opponent.avatar;
+            document.getElementById('player2-avatar').classList.remove('placeholder');
+            document.getElementById('player2-name').textContent = opponent.name;
+            document.getElementById('player2-rank').textContent = opponent.rank;
+            document.getElementById('player2-winrate').textContent = opponent.winRate + '%';
+            document.getElementById('player2-wins').textContent = opponent.wins;
+
+            // Update status
+            document.getElementById('mm-status').innerHTML = 'Match found!';
+            card.querySelector('.mm-ready-status').className = 'mm-ready-status ready';
+            card.querySelector('.mm-ready-status').innerHTML = '✓ READY';
+
+            // Show match found overlay
+            setTimeout(() => {
+                document.getElementById('match-found-overlay').classList.add('active');
+                startGameCountdown();
+            }, 1000);
+        }
+
+        function startGameCountdown() {
+            let count = 3;
+            const countdownEl = document.getElementById('countdown-number');
+
+            const interval = setInterval(() => {
+                count--;
+                countdownEl.textContent = count;
+
+                if (count <= 0) {
+                    clearInterval(interval);
+                    // Navigate to game
+                    window.location.href = `game.html?mode=online&stake=${stake}`;
+                }
+            }, 1000);
+        }
+
+        // For demo: simulate match found after 5 seconds
+        // In production, this would be triggered by the socket server
+        setTimeout(simulateMatchFound, 5000);
+    </script>
+</body>
+
+</html>

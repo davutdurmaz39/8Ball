@@ -12,12 +12,12 @@ class MatchmakingUI {
         this.selectedTier = 'bronze';
 
         this.tiers = {
-            bronze: { name: 'Bronze', wager: 10, icon: '🥉', color: '#cd7f32' },
-            silver: { name: 'Silver', wager: 25, icon: '🥈', color: '#c0c0c0' },
-            platinum: { name: 'Platinum', wager: 50, icon: '💠', color: '#00d4ff' },
-            gold: { name: 'Gold', wager: 100, icon: '🥇', color: '#ffd700' },
-            diamond: { name: 'Diamond', wager: 250, icon: '💎', color: '#b366ff' },
-            ruby: { name: 'Ruby', wager: 500, icon: '❤️‍🔥', color: '#ff4757' }
+            bronze: { name: 'Bronze', wager: 50, icon: '🥉', color: '#cd7f32' },
+            silver: { name: 'Silver', wager: 100, icon: '🥈', color: '#c0c0c0' },
+            gold: { name: 'Gold', wager: 250, icon: '🥇', color: '#ffd700' },
+            diamond: { name: 'Diamond', wager: 500, icon: '💎', color: '#b366ff' },
+            ruby: { name: 'Ruby', wager: 1000, icon: '❤️‍🔥', color: '#ff4757' },
+            crown: { name: 'Crown', wager: 2500, icon: '👑', color: '#ffd700' }
         };
 
         this.init();
@@ -48,41 +48,41 @@ class MatchmakingUI {
                         <div class="tier-cards-row">
                             <div class="tier-card stake-bronze selected" data-tier="bronze">
                                 <span class="tier-icon">🥉</span>
-                                <span class="tier-amount">10</span>
+                                <span class="tier-amount">50</span>
                                 <span class="tier-coin">🪙</span>
                                 <span class="tier-name">BRONZE</span>
                             </div>
                             <div class="tier-card stake-silver" data-tier="silver">
                                 <span class="tier-icon">🥈</span>
-                                <span class="tier-amount">25</span>
+                                <span class="tier-amount">100</span>
                                 <span class="tier-coin">🪙</span>
                                 <span class="tier-name">SILVER</span>
                             </div>
-                            <div class="tier-card stake-platinum" data-tier="platinum">
-                                <span class="tier-icon">💠</span>
-                                <span class="tier-amount">50</span>
-                                <span class="tier-coin">🪙</span>
-                                <span class="tier-name">PLATINUM</span>
-                            </div>
-                        </div>
-                        <div class="tier-cards-row">
                             <div class="tier-card stake-gold" data-tier="gold">
                                 <span class="tier-icon">🥇</span>
-                                <span class="tier-amount">100</span>
+                                <span class="tier-amount">250</span>
                                 <span class="tier-coin">🪙</span>
                                 <span class="tier-name">GOLD</span>
                             </div>
+                        </div>
+                        <div class="tier-cards-row">
                             <div class="tier-card stake-diamond" data-tier="diamond">
                                 <span class="tier-icon">💎</span>
-                                <span class="tier-amount">250</span>
+                                <span class="tier-amount">500</span>
                                 <span class="tier-coin">🪙</span>
                                 <span class="tier-name">DIAMOND</span>
                             </div>
                             <div class="tier-card stake-ruby" data-tier="ruby">
                                 <span class="tier-icon">❤️‍🔥</span>
-                                <span class="tier-amount">500</span>
+                                <span class="tier-amount">1K</span>
                                 <span class="tier-coin">🪙</span>
                                 <span class="tier-name">RUBY</span>
+                            </div>
+                            <div class="tier-card stake-crown" data-tier="crown">
+                                <span class="tier-icon">👑</span>
+                                <span class="tier-amount">2.5K</span>
+                                <span class="tier-coin">🪙</span>
+                                <span class="tier-name">CROWN</span>
                             </div>
                         </div>
                         <button class="btn-find-match" id="btn-start-search">

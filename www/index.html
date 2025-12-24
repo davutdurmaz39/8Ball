@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-app.css">
     <link rel="stylesheet" href="mobile-landscape.css">
+    <link rel="stylesheet" href="daily-rewards.css">
+    <link rel="stylesheet" href="stake-modal.css">
     <style>
         /* Reset & Base */
         * {
@@ -875,15 +877,9 @@
     <!-- Top Header Bar -->
     <header class="top-header" id="top-header" style="display: none;">
         <div class="header-left">
-            <div class="logo-compact">
-                <span class="logo-icon">🎱</span>
-            </div>
-            <div class="header-player" onclick="window.location.href='profile.html'" title="View Profile">
-                <div class="header-avatar" id="header-avatar">P</div>
-                <div class="header-player-info">
-                    <span class="header-player-name" id="header-player-name">PLAYER</span>
-                    <span class="header-player-title" id="header-player-title">Elite Gaming</span>
-                </div>
+            <div class="header-brand" title="Mine Pool">
+                <span class="header-8ball">🎱</span>
+                <span class="header-brand-text">Mine Pool</span>
             </div>
         </div>
         <div class="header-right">
@@ -959,6 +955,41 @@
         </div>
     </div>
 
+    <!-- Daily Rewards Section -->
+    <div class="daily-rewards-section" id="daily-rewards-section" style="display: none;">
+        <div class="daily-rewards-header">
+            <span class="daily-rewards-title">🎁 DAILY REWARDS</span>
+            <span class="daily-rewards-timer">Resets in <span id="reward-timer">23h 59m</span></span>
+        </div>
+        <div class="daily-login-bonus">
+            <div class="gift-icon">🎁</div>
+            <div class="bonus-info">
+                <h4>Daily Login Bonus</h4>
+                <p>Day <span id="current-streak-day">1</span> of 7 - Keep the streak!</p>
+            </div>
+        </div>
+        <div class="daily-streak-days" id="streak-days-container">
+            <div class="streak-day current" data-day="1"><span class="day-label">D1</span><span class="day-icon"></span>
+            </div>
+            <div class="streak-day upcoming" data-day="2"><span class="day-label">D2</span><span
+                    class="day-icon"></span></div>
+            <div class="streak-day upcoming" data-day="3"><span class="day-label">D3</span><span
+                    class="day-icon"></span></div>
+            <div class="streak-day upcoming" data-day="4"><span class="day-label">D4</span><span
+                    class="day-icon"></span></div>
+            <div class="streak-day upcoming" data-day="5"><span class="day-label">D5</span><span
+                    class="day-icon"></span></div>
+            <div class="streak-day upcoming" data-day="6"><span class="day-label">D6</span><span
+                    class="day-icon"></span></div>
+            <div class="streak-day upcoming" data-day="7"><span class="day-label">D7</span><span
+                    class="day-icon"></span></div>
+        </div>
+        <button class="claim-reward-btn" id="claim-reward-btn" disabled>
+            <span class="coin-icon">💰</span> PLAY 3 GAMES TO CLAIM
+        </button>
+        <div class="games-progress">Games played today: <span id="games-today">0</span>/3</div>
+    </div>
+
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-btn active" id="nav-home">
@@ -978,6 +1009,81 @@
             <span class="nav-text">Profile</span>
         </button>
     </nav>
+
+    <!-- Stake Selection Modal -->
+    <div class="stake-modal-overlay" id="stake-modal">
+        <div class="stake-modal">
+            <div class="stake-modal-header">
+                <h2 class="stake-modal-title">🎱 PLAY LIVE</h2>
+                <button class="stake-modal-close" onclick="closeStakeModal()">✕</button>
+            </div>
+
+            <div class="stake-section-title">💰 SELECT YOUR STAKE</div>
+
+            <div class="stake-cards-grid">
+                <div class="stake-card" data-stake="50" onclick="selectStake(this, 50)">
+                    <span class="stake-card-icon">🥉</span>
+                    <span class="stake-card-amount">50</span>
+                    <span class="stake-card-name">Bronze</span>
+                    <span class="stake-card-players">👤 --</span>
+                </div>
+                <div class="stake-card selected" data-stake="100" onclick="selectStake(this, 100)">
+                    <span class="stake-card-icon">🥈</span>
+                    <span class="stake-card-amount">100</span>
+                    <span class="stake-card-name">Silver</span>
+                    <span class="stake-card-players">👤 --</span>
+                </div>
+                <div class="stake-card" data-stake="250" onclick="selectStake(this, 250)">
+                    <span class="stake-card-icon">🥇</span>
+                    <span class="stake-card-amount">250</span>
+                    <span class="stake-card-name">Gold</span>
+                    <span class="stake-card-players">👤 --</span>
+                </div>
+                <div class="stake-card" data-stake="500" onclick="selectStake(this, 500)">
+                    <span class="stake-card-icon">💎</span>
+                    <span class="stake-card-amount">500</span>
+                    <span class="stake-card-name">Diamond</span>
+                    <span class="stake-card-players">👤 --</span>
+                </div>
+                <div class="stake-card" data-stake="1000" onclick="selectStake(this, 1000)">
+                    <span class="stake-card-icon">❤️‍🔥</span>
+                    <span class="stake-card-amount">1K</span>
+                    <span class="stake-card-name">Ruby</span>
+                    <span class="stake-card-players">👤 --</span>
+                </div>
+                <div class="stake-card" data-stake="2500" onclick="selectStake(this, 2500)">
+                    <span class="stake-card-icon">👑</span>
+                    <span class="stake-card-amount">2.5K</span>
+                    <span class="stake-card-name">Crown</span>
+                    <span class="stake-card-players">👤 --</span>
+                </div>
+            </div>
+
+            <div class="stake-balance">
+                <span class="stake-balance-label">Your Balance</span>
+                <span class="stake-balance-amount">💰 <span id="modal-balance">0</span></span>
+            </div>
+
+            <button class="btn-find-match" id="btn-start-matchmaking" onclick="startMatchmaking()">
+                🎮 FIND MATCH
+            </button>
+
+            <div class="stake-room-options">
+                <button class="btn-room-option">
+                    <span class="room-icon">➕</span>
+                    Create Room
+                </button>
+                <button class="btn-room-option">
+                    <span class="room-icon">🔑</span>
+                    Join Room
+                </button>
+                <button class="btn-room-option">
+                    <span class="room-icon">👁️</span>
+                    Spectate
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Cue Selection Modal -->
     <div id="cue-selection-modal" class="cue-modal-overlay hidden">
@@ -1084,17 +1190,8 @@
                         ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(1)
                         : '0.0';
 
-                    // Update header
-                    document.getElementById('header-player-name').textContent = user.username.toUpperCase();
-                    document.getElementById('header-player-title').textContent = rankTitle;
-
-                    // Update header avatar
-                    const headerAvatar = document.getElementById('header-avatar');
-                    if (user.profilePicture) {
-                        headerAvatar.innerHTML = `<img src="${user.profilePicture}" alt="${user.username}">`;
-                    } else {
-                        headerAvatar.textContent = user.username.charAt(0).toUpperCase();
-                    }
+                    // Header now shows branding instead of player info
+                    // No header player elements to update
 
                     // Update profile card
                     document.getElementById('profile-name').textContent = user.username.toUpperCase();
@@ -1131,7 +1228,7 @@
                     const user = JSON.parse(userData);
                     window.currentUser = user;
 
-                    document.getElementById('header-player-name').textContent = user.username.toUpperCase();
+                    // Update profile with cached data
                     document.getElementById('profile-name').textContent = user.username.toUpperCase();
                     document.getElementById('stat-coins').textContent = (user.coins || 0).toLocaleString();
 
@@ -1147,7 +1244,7 @@
 
         // Navigation handlers
         document.getElementById('btn-online').addEventListener('click', () => {
-            window.location.href = 'game.html?mode=online';
+            openStakeModal();
         });
 
         document.getElementById('btn-2player').addEventListener('click', () => {
@@ -1273,6 +1370,8 @@
             window.selectedCue = selectedCue;
         })();
     </script>
+    <script src="stake-modal.js"></script>
+    <script src="daily-rewards.js"></script>
 </body>
 
 </html>
