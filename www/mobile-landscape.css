@@ -357,6 +357,7 @@
         padding: 10px 5px !important;
         background: rgba(0, 0, 0, 0.4) !important;
         border-radius: 15px !important;
+        border: 1px solid rgba(0, 212, 255, 0.4) !important;
     }
 
     .spin-label {
@@ -984,37 +985,41 @@
 /* ============================================
    BACK BUTTON STYLING (MATCHING PLAYER NAME)
    ============================================ */
-#btn-back-to-menu, .back-btn {
+#btn-back-to-menu,
+.back-btn {
     display: none !important;
     position: fixed !important;
-    top: 15px !important;
-    left: 15px !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    top: auto !important;
     z-index: 9999 !important;
-    
-    /* Typography - EXACT MATCH to .user-name (10px in mobile landscape) */
+
+    /* Typography */
     font-family: 'Orbitron', sans-serif !important;
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    letter-spacing: 1px !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
     color: #00d4ff !important;
     text-decoration: none !important;
-    
-    /* Box Model - Compact like user menu */
-    padding: 6px 15px !important;
-    width: auto !important;
-    height: auto !important;
-    
+
+    /* Box Model - Circular button */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+
     /* Visuals */
-    background: rgba(0, 0, 0, 0.2) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
     border: 1px solid rgba(0, 212, 255, 0.5) !important;
-    border-radius: 12px !important;
-    box-shadow: none !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2) !important;
     transition: all 0.2s ease !important;
 }
 
 body.game-active #btn-back-to-menu,
 body.game-active .back-btn {
-    display: block !important;
+    display: flex !important;
 }
 
 #btn-back-to-menu:active,
@@ -1025,11 +1030,14 @@ body.game-active .back-btn {
 
 /* Portrait Specific Adjustments */
 @media (pointer: coarse) and (orientation: portrait) {
-    #btn-back-to-menu, .back-btn {
-        top: 15px !important;
-        left: 15px !important;
-        /* Keep same size in portrait */
-        font-size: 10px !important;
-        padding: 6px 15px !important;
+
+    #btn-back-to-menu,
+    .back-btn {
+        bottom: 20px !important;
+        left: 20px !important;
+        top: auto !important;
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 16px !important;
     }
 }

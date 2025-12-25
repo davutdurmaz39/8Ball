@@ -65,6 +65,7 @@ function updatePlayer1Info(user) {
     const p1AvatarHeader = document.getElementById('p1-avatar-header');
     if (p1AvatarHeader) {
         const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        console.log(`🖼️ P1 Avatar Debug: profilePicture=${user.profilePicture}, using=${avatarSrc}`);
         p1AvatarHeader.src = avatarSrc;
         p1AvatarHeader.style.display = 'block';
         if (p1AvatarFallback) p1AvatarFallback.style.display = 'none';
@@ -119,6 +120,7 @@ function updatePlayer2Info(user) {
     const p2AvatarHeader = document.getElementById('p2-avatar-header');
     if (p2AvatarHeader) {
         const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        console.log(`🖼️ P2 Avatar Debug: profilePicture=${user.profilePicture}, using=${avatarSrc}`);
         p2AvatarHeader.src = avatarSrc;
         p2AvatarHeader.style.display = 'block';
         if (p2AvatarFallback) p2AvatarFallback.style.display = 'none';

@@ -645,7 +645,7 @@
                 <div class="mm-avatar" id="mf-player2-avatar">O</div>
             </div>
             <div class="mm-countdown">
-                Starting in <span class="mm-countdown-number" id="countdown-number">3</span>
+                Starting in <span class="mm-countdown-number" id="countdown-number">5</span>
             </div>
         </div>
     </div>
@@ -685,7 +685,13 @@
 
                     // Update player 1 display
                     document.getElementById('player1-name').textContent = user.username.toUpperCase();
-                    document.getElementById('player1-avatar').textContent = user.username.charAt(0).toUpperCase();
+                    // Set player 1 avatar (profilePicture or initial)
+                    const p1Avatar = document.getElementById('player1-avatar');
+                    if (user.profilePicture) {
+                        p1Avatar.innerHTML = '<img src="' + user.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                    } else {
+                        p1Avatar.textContent = user.username.charAt(0).toUpperCase();
+                    }
                     document.getElementById('player1-rank').textContent = 'ELO: ' + (user.elo || 1200);
 
                     const winRate = user.gamesPlayed > 0
@@ -717,7 +723,9 @@
                         id: user.id || user._id,
                         username: user.username,
                         elo: user.elo || 1200,
-                        coins: user.coins || 1000
+                        coins: user.coins || 1000,
+                        profilePicture: user.profilePicture || null,
+                        nationality: user.nationality || null
                     }
                 });
             });
@@ -752,7 +760,13 @@
             if (opponent) {
                 const card = document.getElementById('player2-card');
                 card.classList.remove('placeholder');
-                document.getElementById('player2-avatar').textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+                // Set opponent avatar (profilePicture or initial)
+                const p2Avatar = document.getElementById('player2-avatar');
+                if (opponent.profilePicture) {
+                    p2Avatar.innerHTML = '<img src="' + opponent.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                } else {
+                    p2Avatar.textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+                }
                 document.getElementById('player2-avatar').classList.remove('placeholder');
                 document.getElementById('player2-name').textContent = (opponent.username || 'Opponent').toUpperCase();
                 document.getElementById('player2-rank').textContent = 'ELO: ' + (opponent.elo || 1200);
@@ -764,10 +778,22 @@
             }
 
             if (window.currentUser) {
-                document.getElementById('mf-player1-avatar').textContent = window.currentUser.username.charAt(0).toUpperCase();
+                // Set player 1 avatar in match found overlay
+                const mfP1Avatar = document.getElementById('mf-player1-avatar');
+                if (window.currentUser.profilePicture) {
+                    mfP1Avatar.innerHTML = '<img src="' + window.currentUser.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                } else {
+                    mfP1Avatar.textContent = window.currentUser.username.charAt(0).toUpperCase();
+                }
             }
             if (opponent) {
-                document.getElementById('mf-player2-avatar').textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+                // Set opponent avatar in match found overlay
+                const mfP2Avatar = document.getElementById('mf-player2-avatar');
+                if (opponent.profilePicture) {
+                    mfP2Avatar.innerHTML = '<img src="' + opponent.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                } else {
+                    mfP2Avatar.textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+                }
             }
 
             setTimeout(() => {
@@ -791,7 +817,7 @@
         }
 
         function startGameCountdown(gameId) {
-            let count = 3;
+            let count = 5;
             const countdownEl = document.getElementById('countdown-number');
             const interval = setInterval(() => {
                 count--;

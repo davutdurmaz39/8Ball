@@ -270,12 +270,16 @@ class GameRoom {
             host: {
                 id: this.host.id,
                 username: this.host.username,
-                elo: this.host.elo || 1200
+                elo: this.host.elo || 1200,
+                profilePicture: this.host.profilePicture || null,
+                nationality: this.host.nationality || null
             },
             guest: this.guest ? {
                 id: this.guest.id,
                 username: this.guest.username,
-                elo: this.guest.elo || 1200
+                elo: this.guest.elo || 1200,
+                profilePicture: this.guest.profilePicture || null,
+                nationality: this.guest.nationality || null
             } : null,
             spectators: this.spectators.map(s => ({ id: s.id, username: s.username })),
             spectatorCount: this.spectators.length,
@@ -307,16 +311,20 @@ class RoomManager {
 
         // Check if this player is already in the room (rejoin after page navigation)
         if (room.host && room.host.username === player.username) {
-            // Reconnecting host - update socket ID
+            // Reconnecting host - update socket ID and profile info
             room.host.id = player.id;
+            room.host.profilePicture = player.profilePicture || room.host.profilePicture;
+            room.host.nationality = player.nationality || room.host.nationality;
             this.playerRooms.set(player.id, roomId);
             console.log(`🔄 Host ${player.username} rejoined room ${roomId}`);
             return { success: true, room, rejoin: true };
         }
 
         if (room.guest && room.guest.username === player.username) {
-            // Reconnecting guest - update socket ID
+            // Reconnecting guest - update socket ID and profile info
             room.guest.id = player.id;
+            room.guest.profilePicture = player.profilePicture || room.guest.profilePicture;
+            room.guest.nationality = player.nationality || room.guest.nationality;
             this.playerRooms.set(player.id, roomId);
             console.log(`🔄 Guest ${player.username} rejoined room ${roomId}`);
             return { success: true, room, rejoin: true };

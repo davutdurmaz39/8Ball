@@ -131,6 +131,12 @@ class PoolGame {
         this.setupEventListeners();
         console.log('Event listeners setup complete');
 
+        // Initialize balls and render table immediately so it's visible when page loads
+        console.log('Initializing table view...');
+        this.initializeBalls();
+        this.render();
+        console.log('Table rendered - ready for game start');
+
         console.log('PoolGame constructor finished successfully');
     }
 

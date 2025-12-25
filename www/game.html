@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="chat-updates.css">
     <link rel="stylesheet" href="modern-design.css">
     <link rel="stylesheet" href="stake-modes.css">
-    <link rel="stylesheet" href="css/mobile-layout.css?v=2">
+    <link rel="stylesheet" href="css/mobile-layout.css?v=3">
     <style>
         .user-menu {
             position: fixed;
@@ -186,8 +186,7 @@
         </header>
 
         <main id="game-main">
-            <button id="btn-back-to-menu" class="back-btn" title="Back to Menu"><span
-                    style="font-size: 0.8em; margin-right: 6px;">❮</span> Back</button>
+            <button id="btn-back-to-menu" class="back-btn" title="Back to Menu">❮</button>
             <div id="table-container">
                 <canvas id="pool-table"></canvas>
                 <div id="power-gauge">
@@ -292,13 +291,22 @@
         // Get game mode from URL
         const urlParams = new URLSearchParams(window.location.search);
         const gameMode = urlParams.get('mode') || 'online';
+        const gameId = urlParams.get('gameId');
         window.gameMode = gameMode;
 
-        // For online mode, add class to hide game container until match is found
+        // For online mode with no gameId, hide game container until match is found
+        // If gameId exists, we're coming from matchmaking.html with a found match - show immediately
         if (gameMode === 'online') {
-            document.body.classList.add('online-matchmaking');
+            if (gameId) {
+                // Coming from matchmaking.html with a found match - show the table immediately
+                document.body.classList.add('match-ready');
+                console.log('🎮 Game ready - match already found, showing table');
+            } else {
+                // Fresh online matchmaking - hide until match is found
+                document.body.classList.add('online-matchmaking');
+            }
         }
-        console.log('🎮 Game mode:', gameMode);
+        console.log('🎮 Game mode:', gameMode, '| Game ID:', gameId || 'none');
 
         // Authentication check
         (async function checkAuth() {
@@ -314,6 +322,18 @@
                     const p1NameEl = document.getElementById('p1-name');
                     if (p1NameEl) p1NameEl.textContent = data.user.username;
                     window.currentUser = data.user;
+
+                    // Update Player 1 avatar from profilePicture
+                    const p1AvatarHeader = document.getElementById('p1-avatar-header');
+                    const p1AvatarFallback = document.getElementById('p1-avatar-fallback');
+                    if (data.user.profilePicture) {
+                        if (p1AvatarHeader) { p1AvatarHeader.src = data.user.profilePicture; p1AvatarHeader.style.display = 'block'; }
+                        if (p1AvatarFallback) p1AvatarFallback.style.display = 'none';
+                    }
+                    if (window.playerInfoManager && window.playerInfoManager.updatePlayer1Info) {
+                        window.playerInfoManager.updatePlayer1Info(data.user);
+                    }
+
                     loadingEl.classList.add('hidden');
                     userMenuEl.style.display = 'flex';
                 } else {
@@ -437,10 +457,10 @@
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="physics.js?v=17"></script>
-    <script src="game.js?v=22"></script>
+    <script src="game.js?v=23"></script>
     <script src="network.js?v=2"></script>
     <script src="matchmaking.js?v=4"></script>
-    <script src="player-info.js?v=2"></script>
+    <script src="player-info.js?v=3"></script>
     <script src="turn-bar-position.js?v=2"></script>
 
     <script>

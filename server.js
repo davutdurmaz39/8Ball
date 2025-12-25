@@ -34,45 +34,96 @@ const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID || 'YOUR_FACEBOOK_APP_ID';
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET || 'YOUR_FACEBOOK_APP_SECRET';
 const OAUTH_CALLBACK_URL = process.env.OAUTH_CALLBACK_URL || 'http://localhost:8000';
 
-// In-memory user database (replace with real database in production)
-const users = new Map();
+// Persistent user storage
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Load users from file or create default
+function loadUsers() {
+    try {
+        if (fs.existsSync(USERS_FILE)) {
+            const data = fs.readFileSync(USERS_FILE, 'utf8');
+            const usersArray = JSON.parse(data);
+            const usersMap = new Map();
+            usersArray.forEach(user => {
+                usersMap.set(user.email, user);
+            });
+            console.log(`📁 Loaded ${usersMap.size} users from persistent storage`);
+            return usersMap;
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+    return null;
+}
+
+// Save users to file
+function saveUsers() {
+    try {
+        const usersArray = Array.from(users.values());
+        fs.writeFileSync(USERS_FILE, JSON.stringify(usersArray, null, 2));
+        console.log(`💾 Saved ${usersArray.length} users to persistent storage`);
+    } catch (error) {
+        console.error('Error saving users:', error);
+    }
+}
+
+// Initialize users from persistent storage or create defaults
+let users = loadUsers();
 let nextUserId = 1;
 
-// Sample users for testing
-const samplePasswordHash = bcrypt.hashSync('password123', 10);
-users.set('demo@example.com', {
-    id: nextUserId++,
-    username: 'DemoPlayer',
-    email: 'demo@example.com',
-    password: samplePasswordHash,
-    provider: 'email',
-    coins: 5000,
-    elo: 1200,
-    gamesPlayed: 10,
-    gamesWon: 6,
-    createdAt: new Date().toISOString(),
-    achievements: [],
-    matchHistory: [],
-    nationality: 'TR',
-    profilePicture: null
-});
+if (!users || users.size === 0) {
+    users = new Map();
+    // Sample users for testing
+    const samplePasswordHash = bcrypt.hashSync('password123', 10);
+    users.set('demo@example.com', {
+        id: nextUserId++,
+        username: 'DemoPlayer',
+        email: 'demo@example.com',
+        password: samplePasswordHash,
+        provider: 'email',
+        coins: 5000,
+        elo: 1200,
+        gamesPlayed: 10,
+        gamesWon: 6,
+        createdAt: new Date().toISOString(),
+        achievements: [],
+        matchHistory: [],
+        nationality: 'TR',
+        profilePicture: null
+    });
 
-users.set('pro@example.com', {
-    id: nextUserId++,
-    username: 'PoolPro',
-    email: 'pro@example.com',
-    password: samplePasswordHash,
-    provider: 'email',
-    coins: 15000,
-    elo: 1650,
-    gamesPlayed: 50,
-    gamesWon: 35,
-    createdAt: new Date().toISOString(),
-    achievements: ['first_win', 'ten_wins', 'streak_5', 'gold_rank'],
-    matchHistory: [],
-    nationality: 'US',
-    profilePicture: null
-});
+    users.set('pro@example.com', {
+        id: nextUserId++,
+        username: 'PoolPro',
+        email: 'pro@example.com',
+        password: samplePasswordHash,
+        provider: 'email',
+        coins: 15000,
+        elo: 1650,
+        gamesPlayed: 50,
+        gamesWon: 35,
+        createdAt: new Date().toISOString(),
+        achievements: ['first_win', 'ten_wins', 'streak_5', 'gold_rank'],
+        matchHistory: [],
+        nationality: 'US',
+        profilePicture: null
+    });
+    saveUsers();
+    console.log('📁 Created default users');
+} else {
+    // Find max user ID from loaded users
+    for (const user of users.values()) {
+        if (user.id >= nextUserId) {
+            nextUserId = user.id + 1;
+        }
+    }
+}
 
 // Middleware
 app.use(cors({
@@ -188,6 +239,7 @@ app.post('/api/auth/register', async (req, res) => {
         };
 
         users.set(email.toLowerCase(), user);
+        saveUsers(); // Persist new user
 
         const token = generateToken(user);
         setAuthCookie(res, token);
@@ -354,6 +406,7 @@ app.post('/api/profile/avatar', authenticateToken, (req, res) => {
             user.profilePicture = avatarUrl;
 
             console.log('Avatar uploaded successfully:', avatarUrl);
+            saveUsers(); // Persist avatar change
 
             res.json({
                 success: true,
@@ -384,6 +437,7 @@ app.delete('/api/profile/avatar', authenticateToken, (req, res) => {
         }
 
         user.profilePicture = null;
+        saveUsers(); // Persist avatar removal
 
         res.json({
             success: true,
@@ -454,6 +508,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
                 matchHistory: []
             };
             users.set(googleUser.email, user);
+            saveUsers(); // Persist new Google user
         }
 
         const token = generateToken(user);
@@ -517,6 +572,7 @@ app.get('/api/auth/facebook/callback', async (req, res) => {
                 matchHistory: []
             };
             users.set(fbUser.email, user);
+            saveUsers(); // Persist new Facebook user
         }
 
         const token = generateToken(user);
@@ -643,6 +699,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
             user.settings = { ...user.settings, ...settings };
         }
 
+        saveUsers(); // Persist profile changes
         res.json({ success: true, message: 'Profile updated' });
     } catch (error) {
         console.error('Profile update error:', error);

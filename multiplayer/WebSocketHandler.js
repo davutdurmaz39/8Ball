@@ -88,6 +88,7 @@ class MultiplayerServer {
         };
 
         this.connectedPlayers.set(socket.id, playerData);
+        console.log(`🔐 Auth: ${user.username} profilePicture: ${user.profilePicture || 'NONE'}`);
 
         // Check for reconnection to ongoing game
         const disconnectData = this.disconnectedPlayers.get(user.id || user.email);

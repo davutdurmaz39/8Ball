@@ -114,13 +114,22 @@
     gap: 4px !important;
 }
 
+/* Reorder Player 2: avatar first (order 1), then name below (order 2) */
 .game-page #game-header .player-2 .avatar-wrapper {
+    order: 1 !important;
     width: 45px !important;
     height: 45px !important;
     border-radius: 50% !important;
     border: 2px solid #ff4444 !important;
     overflow: hidden !important;
     background: #1a1a3a !important;
+}
+
+.game-page #game-header .player-2 .player-details {
+    order: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
 }
 
 .game-page #game-header .player-2 .avatar-img {
@@ -134,12 +143,6 @@
 /* Hide the fallback text avatar for P2 */
 .game-page #game-header .player-2 .avatar {
     display: none !important;
-}
-
-.game-page #game-header .player-2 .player-details {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
 }
 
 .game-page #game-header .player-2 .player-name {
@@ -292,26 +295,34 @@
         height: auto !important;
     }
 
-    /* Back button - top center */
+    /* Back button - bottom left (moved 5px down, 5px left from original 20px) */
     .game-page .back-btn,
     .game-page #btn-back-to-menu {
         position: fixed !important;
-        top: 10px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        z-index: 100 !important;
+        bottom: 15px !important;
+        left: 15px !important;
+        top: auto !important;
+        right: auto !important;
+        transform: none !important;
+        z-index: 9999 !important;
         background: rgba(0, 0, 0, 0.7) !important;
-        border: 1px solid rgba(0, 212, 255, 0.3) !important;
+        border: 1px solid rgba(0, 212, 255, 0.4) !important;
         color: white !important;
-        padding: 8px 20px !important;
-        border-radius: 20px !important;
-        font-size: 0.9rem !important;
+        width: 45px !important;
+        height: 45px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 50% !important;
+        font-size: 1.2rem !important;
+        padding: 0 !important;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.2) !important;
     }
 
-    /* Power gauge - LEFT side, vertical - ENSURE VISIBLE */
+    /* Power gauge - LEFT side, vertical (moved 3px left: 10px -> 7px) */
     .game-page #power-gauge {
         position: fixed !important;
-        left: max(10px, env(safe-area-inset-left)) !important;
+        left: max(7px, env(safe-area-inset-left)) !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         right: auto !important;
@@ -328,10 +339,10 @@
         display: flex !important;
     }
 
-    /* Spin control - RIGHT side - ENSURE VISIBLE */
+    /* Spin control - RIGHT side (moved 5px right: 10px -> 5px) */
     .game-page #spin-control {
         position: fixed !important;
-        right: max(10px, env(safe-area-inset-right)) !important;
+        right: max(5px, env(safe-area-inset-right)) !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         left: auto !important;
@@ -364,6 +375,7 @@
     pointer-events: none !important;
     z-index: -1 !important;
 }
+
 /* ============================================
    SECTION 7: ONLINE MATCHMAKING MODE
    Hide game container until match is found
