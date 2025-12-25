@@ -1026,10 +1026,70 @@ class MatchmakingUI {
         });
     }
 
+    stakeToTier(stake) {
+        const stakeNum = parseInt(stake);
+        for (const [key, value] of Object.entries(this.tiers)) {
+            if (value.wager === stakeNum) {
+                return key;
+            }
+        }
+        return null;
+    }
+
     show() {
         document.getElementById('matchmaking-overlay')?.classList.remove('hidden');
         // Hide the auth loading spinner since matchmaking is now visible
         document.getElementById('auth-loading')?.classList.add('hidden');
+
+        // Check for gameId in URL (coming from matchmaking.html)
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('gameId');
+
+        if (gameId) {
+            // Already matched from matchmaking.html - join the existing room
+            console.log('🎮 Joining existing game from matchmaking.html:', gameId);
+            document.body.classList.remove('online-matchmaking');
+            this.hide();
+
+            // Join the room and wait for game_start
+            this.network.socket.emit('join_room', { roomId: gameId });
+            this.network.socket.on('player_joined', (data) => {
+                console.log('✅ Rejoined room:', data);
+                this.gameActive = true;
+                if (window.gameInstance && data.room) {
+                    window.gameInstance.onGameStart({
+                        roomId: gameId,
+                        host: data.room.host,
+                        guest: data.room.guest,
+                        wager: data.room.wager,
+                        currentPlayer: data.room.gameState?.currentPlayer || 1
+                    });
+                }
+            });
+            return;
+        }
+
+        // Check for stake in URL
+        const stake = urlParams.get('stake');
+
+        if (stake) {
+            const tier = this.stakeToTier(stake);
+            if (tier) {
+                console.log(`🎮 Auto-starting matchmaking: stake=${stake}, tier=${tier}`);
+                this.selectedTier = tier;
+
+                // Ensure tier selection is hidden and searching is shown
+                document.getElementById('tier-selection')?.classList.add('hidden');
+                document.getElementById('searching-state')?.classList.remove('hidden');
+
+                // Start search after a short delay to ensure socket is ready
+                setTimeout(() => {
+                    this.startSearch();
+                }, 100);
+                return;
+            }
+        }
+
         this.showTierSelection();
     }
 

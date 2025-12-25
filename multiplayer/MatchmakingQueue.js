@@ -7,9 +7,17 @@ class MatchmakingQueue {
     constructor(roomManager) {
         this.roomManager = roomManager;
         this.queues = {
+            // Legacy tiers (for backwards compatibility)
             casual: [],      // 50 coins wager
             competitive: [], // 250 coins wager
-            highStakes: []   // 1000 coins wager
+            highStakes: [],  // 1000 coins wager
+            // New UI tiers
+            bronze: [],      // 50 coins wager
+            silver: [],      // 100 coins wager
+            gold: [],        // 250 coins wager
+            diamond: [],     // 500 coins wager
+            ruby: [],        // 1000 coins wager
+            crown: []        // 2500 coins wager
         };
         this.playerQueues = new Map(); // playerId -> {queue, joinedAt}
 
@@ -44,6 +52,7 @@ class MatchmakingQueue {
 
         this.queues[tier].push(queueEntry);
         this.playerQueues.set(player.id, { queue: tier, joinedAt: Date.now() });
+        console.log(`➕ ${player.username} joined queue '${tier}' (${this.queues[tier].length} players now in ${tier} queue)`);
 
         // Try to find a match immediately
         const match = this.tryMatch(queueEntry, tier);
@@ -108,7 +117,10 @@ class MatchmakingQueue {
             this.playerQueues.delete(bestMatch.id);
 
             // Determine wager based on tier
-            const wagers = { casual: 50, competitive: 250, highStakes: 1000 };
+            const wagers = {
+                casual: 50, competitive: 250, highStakes: 1000,
+                bronze: 50, silver: 100, gold: 250, diamond: 500, ruby: 1000, crown: 2500
+            };
             const wager = wagers[tier] || 50;
 
             // Create room (let host be the one who waited longer)

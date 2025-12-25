@@ -77,8 +77,8 @@ class GameRoom {
         const tableHeight = 500;
         const startX = tableWidth * 0.75;
         const startY = tableHeight / 2;
-        const radius = 12;
-        const gap = 0.5;
+        const radius = 14;  // Synchronized with client physics.BALL_RADIUS
+        const gap = 1;      // Synchronized with client (ballRadius * 2 + 1)
 
         // Cue ball
         balls.push({

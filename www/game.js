@@ -532,13 +532,9 @@ class PoolGame {
         const ballRadius = this.physics.BALL_RADIUS;
         const spacing = ballRadius * 2 + 1;
 
-        // Standard 8-ball rack formation:
-        // Row 0: [1] - Apex
-        // Row 1: [9, 2] - stripe, solid
-        // Row 2: [3, 8, 10] - solid, 8-BALL (center), stripe
-        // Row 3: [11, 4, 5, 12] - stripe, solid, solid, stripe
-        // Row 4: [6, 13, 7, 14, 15] - solid (back left), stripe, solid, stripe, stripe (back right)
-        const rackOrder = [1, 9, 2, 3, 8, 10, 11, 4, 5, 12, 6, 13, 7, 14, 15];
+        // Standard 8-ball rack formation (synchronized with server):
+        // Using same order as server: RoomManager.js
+        const rackOrder = [1, 9, 2, 10, 8, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
         let ballIndex = 0;
         for (let row = 0; row < 5; row++) {
             for (let col = 0; col <= row; col++) {

@@ -36,6 +36,7 @@
 
     window.startMatchmaking = function () {
         window.closeStakeModal();
+        // Go to the matchmaking page with the selected stake
         window.location.href = `matchmaking.html?stake=${selectedStake}`;
     };
 

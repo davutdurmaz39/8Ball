@@ -121,34 +121,6 @@
             gap: 15px;
         }
 
-        /* Table Preview */
-        .mm-table-preview {
-            background: linear-gradient(135deg, rgba(20, 60, 40, 0.6) 0%, rgba(15, 45, 30, 0.8) 100%);
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            border-radius: 16px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .table-type-badge {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .table-icon {
-            font-size: 3rem;
-            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
-        }
-
         /* Players Section */
         .mm-players {
             display: grid;
@@ -167,8 +139,9 @@
             gap: 8px;
         }
 
-        .mm-player-card.waiting {
-            border-color: rgba(255, 165, 0, 0.3);
+        .mm-player-card.placeholder {
+            border-style: dashed;
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .mm-avatar-container {
@@ -189,11 +162,9 @@
             border: 3px solid rgba(255, 255, 255, 0.3);
         }
 
-        .mm-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
+        .mm-avatar.placeholder {
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 2rem;
         }
 
         .mm-level-badge {
@@ -267,27 +238,10 @@
             border: 1px solid rgba(0, 200, 100, 0.4);
         }
 
-        .mm-ready-status.waiting {
-            background: rgba(255, 165, 0, 0.2);
-            color: #ffa500;
-            border: 1px solid rgba(255, 165, 0, 0.4);
-        }
-
         .mm-ready-status.searching {
             background: rgba(0, 212, 255, 0.2);
             color: #00d4ff;
             border: 1px solid rgba(0, 212, 255, 0.4);
-        }
-
-        /* Waiting Placeholder */
-        .mm-player-card.placeholder {
-            border-style: dashed;
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .mm-avatar.placeholder {
-            background: rgba(255, 255, 255, 0.1);
-            font-size: 2rem;
         }
 
         /* Stakes Section */
@@ -428,10 +382,6 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-        }
-
-        .mm-action-btn.chat .mm-action-icon {
-            background: rgba(0, 212, 255, 0.2);
         }
 
         .mm-action-btn.emojis .mm-action-icon {
@@ -582,7 +532,7 @@
 <body>
     <!-- Header -->
     <header class="mm-header">
-        <button class="mm-back-btn" onclick="window.location.href='index.html'">←</button>
+        <button class="mm-back-btn" onclick="cancelMatchmaking()">←</button>
         <div class="mm-title-section">
             <h1 class="mm-title">🎱 MINE POOL</h1>
             <div class="mm-status" id="mm-status">Finding opponent<span class="searching-dots"></span></div>
@@ -592,29 +542,27 @@
 
     <!-- Main Content -->
     <main class="mm-content">
-                <!-- Players -->
+        <!-- Players -->
         <div class="mm-players">
             <!-- Player 1 (You) -->
             <div class="mm-player-card" id="player1-card">
                 <div class="mm-avatar-container">
                     <div class="mm-avatar" id="player1-avatar">P</div>
-                    <span class="mm-level-badge">⭐ <span id="player1-level">15</span></span>
+                    <span class="mm-level-badge">⭐ <span id="player1-level">1</span></span>
                 </div>
                 <span class="mm-player-name" id="player1-name">PLAYER</span>
-                <span class="mm-player-rank" id="player1-rank">Pro League</span>
+                <span class="mm-player-rank" id="player1-rank">Searching...</span>
                 <div class="mm-player-stats">
                     <div class="mm-stat-row">
                         <span class="mm-stat-label">Win Rate</span>
-                        <span class="mm-stat-value" id="player1-winrate">68%</span>
+                        <span class="mm-stat-value" id="player1-winrate">0%</span>
                     </div>
                     <div class="mm-stat-row">
                         <span class="mm-stat-label">Total Wins</span>
-                        <span class="mm-stat-value" id="player1-wins">342</span>
+                        <span class="mm-stat-value" id="player1-wins">0</span>
                     </div>
                 </div>
-                <div class="mm-ready-status ready">
-                    ✓ READY
-                </div>
+                <div class="mm-ready-status ready">✓ READY</div>
             </div>
 
             <!-- Player 2 (Opponent) -->
@@ -634,9 +582,7 @@
                         <span class="mm-stat-value" id="player2-wins">--</span>
                     </div>
                 </div>
-                <div class="mm-ready-status searching">
-                    🔍 SEARCHING
-                </div>
+                <div class="mm-ready-status searching">🔍 SEARCHING</div>
             </div>
         </div>
 
@@ -657,7 +603,7 @@
 
         <!-- Timer -->
         <div class="mm-timer-section">
-            <div class="mm-timer-label">Match starts in</div>
+            <div class="mm-timer-label">Searching for</div>
             <div class="mm-timer-display">
                 <div class="mm-timer-box">
                     <div class="mm-timer-value" id="timer-min">00</div>
@@ -665,7 +611,7 @@
                 </div>
                 <div class="mm-timer-separator">:</div>
                 <div class="mm-timer-box">
-                    <div class="mm-timer-value" id="timer-sec">30</div>
+                    <div class="mm-timer-value" id="timer-sec">00</div>
                     <div class="mm-timer-unit">Sec</div>
                 </div>
             </div>
@@ -704,106 +650,163 @@
         </div>
     </div>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const stake = parseInt(urlParams.get('stake')) || 100;
+        let socket = null;
+        let timerInterval = null;
+        let searchStartTime = Date.now();
+
+        // Map stake to tier
+        function stakeToTier(stake) {
+            if (stake <= 50) return 'bronze';
+            if (stake <= 100) return 'silver';
+            if (stake <= 250) return 'gold';
+            if (stake <= 500) return 'diamond';
+            if (stake <= 1000) return 'ruby';
+            return 'crown';
+        }
 
         // Update stakes display
         document.getElementById('stakes-amount').textContent = stake.toLocaleString();
         document.getElementById('prize-amount').textContent = (stake * 2).toLocaleString();
 
-        // Load current user data
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            const user = JSON.parse(userData);
-            document.getElementById('player1-name').textContent = user.username.toUpperCase();
-            document.getElementById('player1-avatar').textContent = user.username.charAt(0).toUpperCase();
+        // Load current user data and connect
+        async function loadUserAndConnect() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                const data = await response.json();
 
-            const winRate = user.gamesPlayed > 0
-                ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(0)
-                : '0';
-            document.getElementById('player1-winrate').textContent = winRate + '%';
-            document.getElementById('player1-wins').textContent = user.gamesWon || 0;
+                if (data.success && data.user) {
+                    const user = data.user;
+                    window.currentUser = user;
 
-            // Calculate level
-            const level = Math.floor((user.gamesPlayed || 0) / 5) + 1;
-            document.getElementById('player1-level').textContent = level;
-        }
+                    // Update player 1 display
+                    document.getElementById('player1-name').textContent = user.username.toUpperCase();
+                    document.getElementById('player1-avatar').textContent = user.username.charAt(0).toUpperCase();
+                    document.getElementById('player1-rank').textContent = 'ELO: ' + (user.elo || 1200);
 
-        // Timer countdown
-        let timerSeconds = 30;
-        const timerInterval = setInterval(() => {
-            timerSeconds--;
-            const min = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-            const sec = (timerSeconds % 60).toString().padStart(2, '0');
-            document.getElementById('timer-min').textContent = min;
-            document.getElementById('timer-sec').textContent = sec;
+                    const winRate = user.gamesPlayed > 0
+                        ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(0)
+                        : '0';
+                    document.getElementById('player1-winrate').textContent = winRate + '%';
+                    document.getElementById('player1-wins').textContent = user.gamesWon || 0;
 
-            if (timerSeconds <= 0) {
-                clearInterval(timerInterval);
+                    const level = Math.floor((user.gamesPlayed || 0) / 5) + 1;
+                    document.getElementById('player1-level').textContent = level;
+
+                    connectAndFindMatch(user);
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html';
             }
-        }, 1000);
-
-        // Cancel matchmaking
-        function cancelMatchmaking() {
-            clearInterval(timerInterval);
-            window.location.href = 'index.html';
         }
 
-        // Simulate finding opponent (for demo)
-        function simulateMatchFound() {
-            const opponent = {
-                name: 'OPPONENT',
-                avatar: 'O',
-                winRate: '72',
-                wins: '256',
-                level: '22',
-                rank: 'Pro Master'
-            };
+        function connectAndFindMatch(user) {
+            socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
 
-            // Update opponent card
-            const card = document.getElementById('player2-card');
-            card.classList.remove('placeholder');
+            socket.on('connect', () => {
+                console.log('🔌 Connected to matchmaking server');
+                socket.emit('authenticate', {
+                    user: {
+                        id: user.id || user._id,
+                        username: user.username,
+                        elo: user.elo || 1200,
+                        coins: user.coins || 1000
+                    }
+                });
+            });
 
-            document.getElementById('player2-avatar').textContent = opponent.avatar;
-            document.getElementById('player2-avatar').classList.remove('placeholder');
-            document.getElementById('player2-name').textContent = opponent.name;
-            document.getElementById('player2-rank').textContent = opponent.rank;
-            document.getElementById('player2-winrate').textContent = opponent.winRate + '%';
-            document.getElementById('player2-wins').textContent = opponent.wins;
+            socket.on('authenticated', () => {
+                console.log('✅ Authenticated, joining matchmaking queue...');
+                socket.emit('find_match', { tier: stakeToTier(stake) });
+            });
 
-            // Update status
-            document.getElementById('mm-status').innerHTML = 'Match found!';
-            card.querySelector('.mm-ready-status').className = 'mm-ready-status ready';
-            card.querySelector('.mm-ready-status').innerHTML = '✓ READY';
+            socket.on('matchmaking_started', (data) => {
+                console.log('🔍 Searching...', data);
+                document.getElementById('mm-status').innerHTML = 'Finding opponent<span class="searching-dots"></span>';
+            });
 
-            // Show match found overlay
+            socket.on('match_found', (data) => {
+                console.log('🎮 Match found!', data);
+                handleMatchFound(data);
+            });
+
+            socket.on('matchmaking_cancelled', () => {
+                window.location.href = 'index.html';
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('Connection error:', error);
+            });
+        }
+
+        function handleMatchFound(data) {
+            const myId = window.currentUser?.id; const room = data.room; const opponent = data.opponent || ((room?.host?.id === myId) ? room?.guest : room?.host);
+
+            if (opponent) {
+                const card = document.getElementById('player2-card');
+                card.classList.remove('placeholder');
+                document.getElementById('player2-avatar').textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+                document.getElementById('player2-avatar').classList.remove('placeholder');
+                document.getElementById('player2-name').textContent = (opponent.username || 'Opponent').toUpperCase();
+                document.getElementById('player2-rank').textContent = 'ELO: ' + (opponent.elo || 1200);
+                document.getElementById('player2-winrate').textContent = '50%';
+                document.getElementById('player2-wins').textContent = opponent.gamesWon || 0;
+                document.getElementById('mm-status').innerHTML = 'Match found!';
+                card.querySelector('.mm-ready-status').className = 'mm-ready-status ready';
+                card.querySelector('.mm-ready-status').innerHTML = '✓ READY';
+            }
+
+            if (window.currentUser) {
+                document.getElementById('mf-player1-avatar').textContent = window.currentUser.username.charAt(0).toUpperCase();
+            }
+            if (opponent) {
+                document.getElementById('mf-player2-avatar').textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+            }
+
             setTimeout(() => {
                 document.getElementById('match-found-overlay').classList.add('active');
-                startGameCountdown();
+                startGameCountdown(data.gameId || data.roomId);
             }, 1000);
         }
 
-        function startGameCountdown() {
+        function startSearchTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - searchStartTime) / 1000);
+                document.getElementById('timer-min').textContent = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                document.getElementById('timer-sec').textContent = (elapsed % 60).toString().padStart(2, '0');
+            }, 1000);
+        }
+
+        function cancelMatchmaking() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (socket) { socket.emit('cancel_matchmaking'); socket.disconnect(); }
+            window.location.href = 'index.html';
+        }
+
+        function startGameCountdown(gameId) {
             let count = 3;
             const countdownEl = document.getElementById('countdown-number');
-
             const interval = setInterval(() => {
                 count--;
                 countdownEl.textContent = count;
-
                 if (count <= 0) {
                     clearInterval(interval);
-                    // Navigate to game
-                    window.location.href = `game.html?mode=online&stake=${stake}`;
+                    if (timerInterval) clearInterval(timerInterval);
+                    window.location.href = 'game.html?mode=online&stake=' + stake + '&gameId=' + (gameId || '');
                 }
             }, 1000);
         }
 
-        // For demo: simulate match found after 5 seconds
-        // In production, this would be triggered by the socket server
-        setTimeout(simulateMatchFound, 5000);
+        // Start on page load
+        loadUserAndConnect();
+        startSearchTimer();
     </script>
 </body>
 
