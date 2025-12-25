@@ -304,6 +304,25 @@ class RoomManager {
     joinRoom(roomId, player) {
         const room = this.rooms.get(roomId);
         if (!room) return { error: 'Room not found' };
+
+        // Check if this player is already in the room (rejoin after page navigation)
+        if (room.host && room.host.username === player.username) {
+            // Reconnecting host - update socket ID
+            room.host.id = player.id;
+            this.playerRooms.set(player.id, roomId);
+            console.log(`🔄 Host ${player.username} rejoined room ${roomId}`);
+            return { success: true, room, rejoin: true };
+        }
+
+        if (room.guest && room.guest.username === player.username) {
+            // Reconnecting guest - update socket ID
+            room.guest.id = player.id;
+            this.playerRooms.set(player.id, roomId);
+            console.log(`🔄 Guest ${player.username} rejoined room ${roomId}`);
+            return { success: true, room, rejoin: true };
+        }
+
+        // New player trying to join
         if (room.guest) return { error: 'Room is full' };
         if (room.status !== 'waiting') return { error: 'Game already started' };
 

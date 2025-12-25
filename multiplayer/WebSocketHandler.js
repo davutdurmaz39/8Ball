@@ -198,15 +198,28 @@ class MultiplayerServer {
         }
 
         const room = result.room;
+        socket.join(room.id);
 
-        // Check if player has enough coins
-        if (player.coins < room.wager) {
+        // Handle rejoin - player was already in this room
+        if (result.rejoin && room.status === 'playing') {
+            console.log(`🔄 ${player.username} rejoined active game in room ${roomId}`);
+            socket.emit('game_start', {
+                roomId: room.id,
+                gameState: room.gameState,
+                currentPlayer: room.gameState?.currentPlayer || 1,
+                host: room.host,
+                guest: room.guest,
+                wager: room.wager
+            });
+            return;
+        }
+
+        // Check if player has enough coins (only for new joins)
+        if (!result.rejoin && player.coins < room.wager) {
             this.roomManager.leaveRoom(player.id);
             socket.emit('room_error', { error: 'Insufficient coins' });
             return;
         }
-
-        socket.join(room.id);
 
         // Notify both players
         this.io.to(room.id).emit('player_joined', {
