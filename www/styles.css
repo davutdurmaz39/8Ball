@@ -1116,32 +1116,34 @@ body {
 
 #chat-panel {
     position: absolute;
-    bottom: 80px;
+    bottom: 20px;
     right: 20px;
     z-index: 150;
 }
 
 .chat-toggle {
-    width: 55px;
-    height: 55px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+    box-shadow: 0 3px 15px rgba(0, 212, 255, 0.3);
     transition: all 0.3s ease;
     position: relative;
+    opacity: 0.85;
 }
 
 .chat-toggle:hover {
     transform: scale(1.1);
-    box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.5);
+    opacity: 1;
 }
 
 .chat-icon {
-    font-size: 1.6rem;
+    font-size: 1.2rem;
 }
 
 .chat-badge {
@@ -3117,7 +3119,7 @@ body {
         left: 15px !important;
         gap: 8px !important;
     }
-    
+
     .side-menu-btn {
         min-width: 100px !important;
         padding: 8px 12px !important;
@@ -3134,7 +3136,7 @@ body {
         justify-content: center !important;
         flex-direction: row !important;
     }
-    
+
     .user-menu {
         top: 10px !important;
         right: 10px !important;
@@ -3195,6 +3197,7 @@ body {
         flex-direction: row !important;
     }
 }
+
 /* ============================================
    APP LOADING SCREEN
    ============================================ */

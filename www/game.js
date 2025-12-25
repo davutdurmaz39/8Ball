@@ -345,22 +345,12 @@ class PoolGame {
             this.gameState = 'aiming';
             this.currentPlayer = data.currentPlayer || 1;
 
-            // Update player names in UI
-            if (data.host) {
-                const p1Name = document.getElementById('p1-name');
-                const p1NameTop = document.getElementById('p1-name-top');
-                const p1Avatar = document.getElementById('p1-avatar-top');
-                if (p1Name) p1Name.textContent = data.host.username;
-                if (p1NameTop) p1NameTop.textContent = data.host.username;
-                if (p1Avatar) p1Avatar.textContent = data.host.username.charAt(0).toUpperCase();
+            // Update player names and avatars in UI
+            if (data.host && window.playerInfoManager) {
+                window.playerInfoManager.updatePlayer1Info(data.host);
             }
-            if (data.guest) {
-                const p2Name = document.getElementById('p2-name');
-                const p2NameTop = document.getElementById('p2-name-top');
-                const p2Avatar = document.getElementById('p2-avatar-top');
-                if (p2Name) p2Name.textContent = data.guest.username;
-                if (p2NameTop) p2NameTop.textContent = data.guest.username;
-                if (p2Avatar) p2Avatar.textContent = data.guest.username.charAt(0).toUpperCase();
+            if (data.guest && window.playerInfoManager) {
+                window.playerInfoManager.updatePlayer2Info(data.guest);
             }
 
             // Enable ball placement for break shot (only for player 1)

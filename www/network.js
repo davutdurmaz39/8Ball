@@ -184,6 +184,11 @@ class NetworkManager {
             }
         });
 
+        // Chat events
+        this.socket.on('chat_message', (data) => {
+            console.log('💬 Chat message from server:', data);
+            this.emit('chat_message', data);
+        });
         // Reconnection events
         this.socket.on('opponent_disconnecting', (data) => {
             console.log('⏱️ Opponent disconnecting, starting timer:', data.timeout + 's');
