@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="modern-design.css">
     <link rel="stylesheet" href="stake-modes.css">
     <link rel="stylesheet" href="css/mobile-layout.css?v=3">
+    <link rel="stylesheet" href="css/game-ui-adjustments.css?v=6">
     <style>
         .user-menu {
             position: fixed;
@@ -172,7 +173,8 @@
                 </div>
                 <div class="turn-indicator" id="turn-indicator"><span class="turn-text">PLAYER 1's TURN</span><span
                         class="timer-text" id="timer-text"></span></div>
-                <div class="player player-2" style="cursor: pointer;" onclick="showOpponentProfile()" title="Click to view opponent profile">
+                <div class="player player-2" style="cursor: pointer;" onclick="showOpponentProfile()"
+                    title="Click to view opponent profile">
                     <div class="player-details"><span class="player-name" id="p2-name">Player 2</span><span
                             class="ball-type" id="p2-ball-type">--</span></div>
                     <div class="avatar-wrapper">
@@ -465,7 +467,7 @@
                 online: true,
                 inGame: true
             };
-            
+
             if (window.playerProfileViewer) {
                 window.playerProfileViewer.show(opponentData.id, opponentData);
             }
