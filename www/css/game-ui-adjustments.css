@@ -511,3 +511,103 @@
     border-radius: 20px !important;
     padding: 10px 16px !important;
 }
+
+
+/* ============================================
+   FORCE HIDE FLOATING ELEMENTS AND USE PROPER CHAT PANEL
+   ============================================ */
+
+/* The chat panel structure:
+   #chat-panel
+     .chat-toggle (button)
+     .chat-container (popup)
+       .chat-header
+       .quick-chat
+       .chat-input-container
+*/
+
+/* Make sure #chat-panel is properly positioned */
+#chat-panel {
+    position: fixed !important;
+    bottom: 15px !important;
+    right: 15px !important;
+    z-index: 500 !important;
+    display: block !important;
+}
+
+/* Reset ALL children inside #chat-panel to use relative/static positioning */
+#chat-panel .chat-container,
+#chat-panel #chat-container {
+    position: absolute !important;
+    top: auto !important;
+    left: auto !important;
+    right: 0 !important;
+    bottom: 55px !important;
+    transform: none !important;
+    width: 260px !important;
+    max-height: 320px !important;
+    background: linear-gradient(135deg, rgba(15, 25, 45, 0.98), rgba(10, 20, 35, 0.99)) !important;
+    border: 2px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    z-index: 501 !important;
+}
+
+#chat-panel .quick-chat {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 5px !important;
+    padding: 8px !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: none !important;
+    z-index: auto !important;
+}
+
+#chat-panel .chat-input-container {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: auto !important;
+    padding: 8px !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+}
+
+#chat-panel .chat-input-container input {
+    flex: 1 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 18px !important;
+    padding: 8px 14px !important;
+}
+
+#chat-panel .chat-input-container button {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+}
+
+#chat-panel .quick-btn {
+    padding: 6px 8px !important;
+    font-size: 0.7rem !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+}
