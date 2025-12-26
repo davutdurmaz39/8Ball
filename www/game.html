@@ -172,7 +172,7 @@
                 </div>
                 <div class="turn-indicator" id="turn-indicator"><span class="turn-text">PLAYER 1's TURN</span><span
                         class="timer-text" id="timer-text"></span></div>
-                <div class="player player-2">
+                <div class="player player-2" style="cursor: pointer;" onclick="showOpponentProfile()" title="Click to view opponent profile">
                     <div class="player-details"><span class="player-name" id="p2-name">Player 2</span><span
                             class="ball-type" id="p2-ball-type">--</span></div>
                     <div class="avatar-wrapper">
@@ -453,6 +453,23 @@
                 }
             };
         });
+
+        // Show opponent profile when clicking on Player 2
+        function showOpponentProfile() {
+            const opponentData = window.opponentData || {
+                id: 'opponent',
+                username: document.getElementById('p2-name')?.textContent || 'Player 2',
+                elo: 1200,
+                gamesPlayed: 0,
+                gamesWon: 0,
+                online: true,
+                inGame: true
+            };
+            
+            if (window.playerProfileViewer) {
+                window.playerProfileViewer.show(opponentData.id, opponentData);
+            }
+        }
     </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -462,6 +479,7 @@
     <script src="matchmaking.js?v=4"></script>
     <script src="player-info.js?v=3"></script>
     <script src="turn-bar-position.js?v=2"></script>
+    <script src="js/player-profile-viewer.js?v=1"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
