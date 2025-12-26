@@ -433,46 +433,183 @@
             color: var(--accent-green);
         }
 
-        .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
+        /* Enhanced Achievements Section */
+        .achievements-section {
             margin-top: 28px;
+            background: linear-gradient(135deg, rgba(15, 25, 45, 0.95) 0%, rgba(10, 20, 35, 0.98) 100%);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 24px;
         }
 
-        .action-btn {
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 18px;
-            padding: 18px;
+        .achievements-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .achievements-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #fff 0%, #ccc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .achievements-counter {
+            font-family: 'Rajdhani', sans-serif;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .achievements-counter span {
+            color: var(--neon-blue);
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .achievement-card {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            cursor: pointer;
+            padding: 16px 8px;
+            background: rgba(20, 30, 50, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
             transition: all 0.3s ease;
-            text-decoration: none;
-            color: var(--text-primary);
+            cursor: pointer;
         }
 
-        .action-btn:hover {
-            background: rgba(0, 212, 255, 0.12);
-            border-color: var(--neon-blue);
+        .achievement-card:hover {
             transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
 
-        .action-btn-icon {
-            font-size: 28px;
+        .achievement-card.locked {
+            opacity: 0.6;
         }
 
-        .action-btn-text {
+        .achievement-card.locked:hover {
+            opacity: 0.8;
+        }
+
+        .achievement-icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            transition: all 0.3s ease;
+        }
+
+        /* Unlocked - Common (Cyan/Teal) */
+        .achievement-icon-box.common {
+            background: linear-gradient(135deg, #1a8b8b 0%, #0d5c5c 100%);
+            border: 2px solid #2dd4d4;
+            box-shadow: 0 4px 15px rgba(45, 212, 212, 0.25);
+        }
+
+        /* Unlocked - Rare (Blue) */
+        .achievement-icon-box.rare {
+            background: linear-gradient(135deg, #1e5a9e 0%, #0d3a6e 100%);
+            border: 2px solid #4a9eff;
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.25);
+        }
+
+        /* Unlocked - Epic (Orange) */
+        .achievement-icon-box.epic {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            border: 2px solid #f39c12;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        /* Unlocked - Legendary (Gold/Yellow) */
+        .achievement-icon-box.legendary {
+            background: linear-gradient(135deg, #f1c40f 0%, #d4a30a 100%);
+            border: 2px solid #ffd700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.35);
+        }
+
+        /* Locked (Dark Gray) */
+        .achievement-icon-box.locked {
+            background: linear-gradient(135deg, #2a3444 0%, #1e2530 100%);
+            border: 2px solid #3a4555;
+            box-shadow: none;
+        }
+
+        .achievement-icon-box.locked .achievement-icon {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .achievement-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            line-height: 1.2;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .achievement-status {
+            font-family: 'Rajdhani', sans-serif;
             font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+            font-weight: 500;
+            font-style: italic;
         }
 
-        .achievements-preview {
+        .achievement-status.unlocked {
+            color: #2dd4d4;
+        }
+
+        .achievement-status.locked-status {
+            color: var(--text-secondary);
+        }
+
+        .view-all-achievements-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--neon-blue);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .view-all-achievements-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        /* Match History Section */
+        .matches-section {
             margin-top: 28px;
             background: var(--bg-glass);
             border: 1px solid var(--border-glass);
@@ -480,7 +617,7 @@
             padding: 22px;
         }
 
-        .achievements-header {
+        .matches-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -501,37 +638,22 @@
             color: var(--gold);
         }
 
-        .achievements-list {
+        .match-item {
             display: flex;
-            gap: 16px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-        }
-
-        .achievement-badge {
-            flex-shrink: 0;
-            width: 65px;
-            height: 65px;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 149, 0, 0.1) 100%);
-            border: 2px solid var(--gold);
-            border-radius: 50%;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 0 15px var(--gold-glow);
-            transition: transform 0.3s;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
         }
 
-        .achievement-badge:hover {
-            transform: scale(1.1);
+        .match-item.win {
+            border-left: 3px solid #00ff88;
         }
 
-        .achievement-badge.locked {
-            background: var(--bg-glass);
-            border-color: var(--border-glass);
-            opacity: 0.5;
-            box-shadow: none;
+        .match-item.loss {
+            border-left: 3px solid #ff4466;
         }
 
         .logout-section {
@@ -564,24 +686,6 @@
             box-shadow: 0 0 30px rgba(255, 68, 102, 0.4);
         }
 
-        .match-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin: 5px 0;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-
-        .match-item.win {
-            border-left: 3px solid #00ff88;
-        }
-
-        .match-item.loss {
-            border-left: 3px solid #ff4466;
-        }
-
         @media (max-width: 480px) {
             .profile-container {
                 padding: 15px;
@@ -597,6 +701,16 @@
 
             .stat-value {
                 font-size: 24px;
+            }
+
+            .achievements-grid {
+                gap: 10px;
+            }
+
+            .achievement-icon-box {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
             }
         }
     </style>
@@ -685,50 +799,28 @@
                     </div>
                 </div>
             </div>
-
-            <div class="action-buttons">
-                <a href="achievements.html" class="action-btn">
-                    <span class="action-btn-icon">🏅</span>
-                    <span class="action-btn-text">Achievements</span>
-                </a>
-                <a href="history.html" class="action-btn">
-                    <span class="action-btn-icon">📜</span>
-                    <span class="action-btn-text">History</span>
-                </a>
-                <a href="friends.html" class="action-btn">
-                    <span class="action-btn-icon">👥</span>
-                    <span class="action-btn-text">Friends</span>
-                </a>
-                <a href="leaderboard.html" class="action-btn">
-                    <span class="action-btn-icon">📊</span>
-                    <span class="action-btn-text">Rankings</span>
-                </a>
-            </div>
         </div>
 
-        <!-- Match History Preview -->
-        <div class="achievements-preview">
-            <div class="achievements-header">
+        <!-- Enhanced Achievements Section -->
+        <div class="achievements-section">
+            <div class="achievements-section-header">
+                <span class="achievements-title">ACHIEVEMENTS</span>
+                <span class="achievements-counter"><span id="unlocked-count">0</span>/50 Unlocked</span>
+            </div>
+            <div class="achievements-grid" id="achievements-grid">
+                <!-- Achievements will be loaded dynamically -->
+            </div>
+            <a href="achievements.html" class="view-all-achievements-btn">View All Achievements →</a>
+        </div>
+
+        <!-- Match History Section -->
+        <div class="matches-section">
+            <div class="matches-header">
                 <div class="section-title" style="margin-bottom: 0;">Recent Matches</div>
                 <a href="history.html" class="view-all-btn">View All →</a>
             </div>
             <div id="match-history-list" style="max-height: 200px; overflow-y: auto;">
                 <p style="color: var(--text-secondary); text-align: center; padding: 20px;">Loading matches...</p>
-            </div>
-        </div>
-
-        <!-- Achievements Preview -->
-        <div class="achievements-preview">
-            <div class="achievements-header">
-                <div class="section-title" style="margin-bottom: 0;">Achievements</div>
-                <a href="achievements.html" class="view-all-btn">View All →</a>
-            </div>
-            <div class="achievements-list" id="achievements-list">
-                <div class="achievement-badge locked">🏆</div>
-                <div class="achievement-badge locked">⭐</div>
-                <div class="achievement-badge locked">🔥</div>
-                <div class="achievement-badge locked">💎</div>
-                <div class="achievement-badge locked">👑</div>
             </div>
         </div>
 
@@ -806,28 +898,84 @@
             }
         }
 
-        // Load achievements
+        // Load achievements with new card design
         async function loadAchievements() {
             try {
                 const response = await fetch('/api/achievements', { credentials: 'include' });
                 const data = await response.json();
 
-                if (data.success && data.earned) {
-                    const list = document.getElementById('achievements-list');
-                    list.innerHTML = '';
+                const grid = document.getElementById('achievements-grid');
+                grid.innerHTML = '';
 
-                    const toShow = [...data.earned.slice(0, 3), ...data.locked.slice(0, 2)];
+                if (data.success) {
+                    const earned = data.earned || [];
+                    const locked = data.locked || [];
+                    const totalAchievements = 50;
+
+                    // Update counter
+                    document.getElementById('unlocked-count').textContent = earned.length;
+
+                    // Show first 3 earned + 3 locked achievements
+                    const toShow = [...earned.slice(0, 3), ...locked.slice(0, 3)];
+
                     toShow.forEach(ach => {
-                        const badge = document.createElement('div');
-                        badge.className = 'achievement-badge' + (ach.unlocked ? '' : ' locked');
-                        badge.textContent = ach.icon;
-                        badge.title = ach.name + ': ' + ach.description;
-                        list.appendChild(badge);
+                        const card = document.createElement('div');
+                        card.className = 'achievement-card' + (ach.unlocked ? '' : ' locked');
+                        card.title = ach.description || '';
+
+                        const iconBox = document.createElement('div');
+                        iconBox.className = 'achievement-icon-box ' + (ach.unlocked ? (ach.rarity || 'common') : 'locked');
+
+                        const icon = document.createElement('span');
+                        icon.className = 'achievement-icon';
+                        icon.textContent = ach.icon || '🔒';
+                        iconBox.appendChild(icon);
+
+                        const name = document.createElement('div');
+                        name.className = 'achievement-name';
+                        name.textContent = ach.name || 'Unknown';
+
+                        const status = document.createElement('div');
+                        status.className = 'achievement-status ' + (ach.unlocked ? 'unlocked' : 'locked-status');
+                        status.textContent = ach.unlocked ? 'Unlocked' : 'Locked';
+
+                        card.appendChild(iconBox);
+                        card.appendChild(name);
+                        card.appendChild(status);
+                        grid.appendChild(card);
                     });
+
+                    // If no achievements to show, display placeholders
+                    if (toShow.length === 0) {
+                        showPlaceholderAchievements();
+                    }
+                } else {
+                    showPlaceholderAchievements();
                 }
             } catch (error) {
                 console.log('Achievements not available');
+                showPlaceholderAchievements();
             }
+        }
+
+        function showPlaceholderAchievements() {
+            const grid = document.getElementById('achievements-grid');
+            const placeholders = [
+                { icon: '🏆', name: 'First Win', rarity: 'common' },
+                { icon: '🔥', name: '10 Streak', rarity: 'common' },
+                { icon: '👑', name: 'Champion', rarity: 'epic' },
+                { icon: '⭐', name: 'Legendary', rarity: 'legendary' },
+                { icon: '💎', name: 'Perfect', rarity: 'rare' },
+                { icon: '🎖️', name: 'Elite', rarity: 'rare' }
+            ];
+
+            grid.innerHTML = placeholders.map(ph => `
+                <div class="achievement-card locked">
+                    <div class="achievement-icon-box locked"><span class="achievement-icon">${ph.icon}</span></div>
+                    <div class="achievement-name">${ph.name}</div>
+                    <div class="achievement-status locked-status">Locked</div>
+                </div>
+            `).join('');
         }
 
         // Load match history
@@ -876,7 +1024,6 @@
 
         // Change avatar
         function changeAvatar() {
-            // Create a hidden file input
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/jpeg,image/png,image/gif,image/webp';
@@ -885,13 +1032,11 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // Validate file size (5MB max)
                 if (file.size > 5 * 1024 * 1024) {
                     alert('File too large! Maximum size is 5MB.');
                     return;
                 }
 
-                // Show loading state
                 const avatarDisplay = document.getElementById('avatar-display');
                 const originalContent = avatarDisplay.innerHTML;
                 avatarDisplay.innerHTML = '⏳';
@@ -909,7 +1054,6 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        // Update avatar display with the uploaded image
                         avatarDisplay.innerHTML = '<img src="' + data.avatarUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
                         alert('Avatar updated successfully!');
                     } else {
