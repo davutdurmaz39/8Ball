@@ -129,7 +129,7 @@
 }
 
 .quick-chat-dropdown.hidden {
-    display: block !important;
+    display: none !important;
 }
 
 @keyframes dropdownSlide {
