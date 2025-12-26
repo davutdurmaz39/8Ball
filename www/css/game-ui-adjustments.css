@@ -129,7 +129,7 @@
 }
 
 .quick-chat-dropdown.hidden {
-    display: none !important;
+    display: block !important;
 }
 
 @keyframes dropdownSlide {
@@ -268,7 +268,11 @@
    HIDE OLD CHAT PANEL
    ============================================ */
 #chat-panel {
-    display: none !important;
+    position: fixed !important;
+    bottom: 15px !important;
+    right: 15px !important;
+    z-index: 500 !important;
+    display: block !important;
 }
 
 /* ============================================
