@@ -120,11 +120,21 @@ class PlayerProfileViewer {
             .ppv-content {
                 background: linear-gradient(135deg, rgba(15, 25, 45, 0.98) 0%, rgba(10, 20, 35, 0.99) 100%);
                 border: 2px solid rgba(255, 255, 255, 0.12);
-                border-radius: 24px;
-                max-width: 360px;
-                width: 100%;
+                border-radius: 18px;
+                max-width: 620px;
+                width: 95%;
+                max-height: 85vh;
                 overflow: hidden;
                 animation: ppv-slide-up 0.3s ease;
+                display: flex;
+                flex-direction: row;
+            }
+
+            @media (orientation: portrait) {
+                .ppv-content {
+                    flex-direction: column;
+                    max-width: 360px;
+                }
             }
 
             @keyframes ppv-slide-up {
@@ -140,9 +150,22 @@ class PlayerProfileViewer {
 
             .ppv-header {
                 background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 100, 150, 0.1) 100%);
-                padding: 30px 24px;
+                padding: 20px 18px;
                 text-align: center;
                 position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-width: 160px;
+                flex-shrink: 0;
+            }
+
+            @media (orientation: portrait) {
+                .ppv-header {
+                    padding: 24px 20px;
+                    min-width: unset;
+                }
             }
 
             .ppv-close {
@@ -169,18 +192,26 @@ class PlayerProfileViewer {
             }
 
             .ppv-avatar {
-                width: 90px;
-                height: 90px;
+                width: 70px;
+                height: 70px;
                 border-radius: 50%;
                 background: linear-gradient(135deg, #1a2a4a 0%, #0f1a2a 100%);
-                margin: 0 auto 14px;
+                margin: 0 auto 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 42px;
+                font-size: 32px;
                 border: 3px solid #00d4ff;
-                box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
                 overflow: hidden;
+            }
+
+            @media (orientation: portrait) {
+                .ppv-avatar {
+                    width: 80px;
+                    height: 80px;
+                    font-size: 36px;
+                }
             }
 
             .ppv-avatar img {
@@ -190,8 +221,8 @@ class PlayerProfileViewer {
             }
 
             .ppv-name {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
                 font-weight: 900;
                 color: #fff;
                 margin-bottom: 10px;
@@ -239,26 +270,44 @@ class PlayerProfileViewer {
             }
 
             .ppv-body {
-                padding: 24px;
+                padding: 16px 18px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-width: 0;
+            }
+
+            @media (orientation: portrait) {
+                .ppv-body {
+                    padding: 20px;
+                }
             }
 
             .ppv-stats-grid {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-                margin-bottom: 20px;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+
+            @media (orientation: portrait) {
+                .ppv-stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                    margin-bottom: 18px;
+                }
             }
 
             .ppv-stat {
                 text-align: center;
-                padding: 12px 6px;
+                padding: 10px 6px;
                 background: rgba(255, 255, 255, 0.05);
-                border-radius: 12px;
+                border-radius: 10px;
             }
 
             .ppv-stat-value {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
                 font-weight: 900;
                 color: #00d4ff;
                 margin-bottom: 4px;
@@ -271,8 +320,15 @@ class PlayerProfileViewer {
             }
 
             .ppv-achievements {
-                margin-bottom: 20px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        @media (min-width: 600px) and (orientation: landscape) {
+            .ppv-achievements {
+                display: block;
             }
+        }
 
             .ppv-section-title {
                 font-size: 11px;
@@ -321,23 +377,26 @@ class PlayerProfileViewer {
 
             .ppv-actions, .ppv-friend-actions {
                 display: flex;
-                gap: 10px;
+                gap: 8px;
+                flex-wrap: wrap;
             }
 
             .ppv-action-btn {
                 flex: 1;
-                padding: 12px 10px;
-                border-radius: 12px;
+                min-width: 80px;
+                padding: 10px 12px;
+                border-radius: 10px;
                 border: none;
                 font-family: 'Rajdhani', sans-serif;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 700;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 6px;
+                gap: 5px;
                 transition: all 0.3s ease;
+                white-space: nowrap;
             }
 
             .ppv-action-btn.ppv-primary {
