@@ -275,6 +275,61 @@
     display: block !important;
 }
 
+/* Chat toggle button in panel */
+#chat-panel .chat-toggle {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+}
+
+/* Chat container - positioned above toggle */
+#chat-panel .chat-container {
+    position: absolute !important;
+    bottom: 55px !important;
+    right: 0 !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    width: 280px;
+    max-height: 350px;
+    background: linear-gradient(135deg, rgba(15, 25, 45, 0.98), rgba(10, 20, 35, 0.98));
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    border-radius: 16px;
+}
+
+/* Override the chat-input-container inside chat-panel */
+#chat-panel .chat-input-container {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 10px !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    width: 100% !important;
+    box-shadow: none !important;
+}
+
+#chat-panel .chat-input-container input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 8px 14px;
+}
+
+#chat-panel .quick-chat {
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
 /* ============================================
    SPEECH BUBBLES - WHITE bubbles next to avatars
    Like classic comic speech bubbles
