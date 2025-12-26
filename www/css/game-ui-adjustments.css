@@ -167,7 +167,8 @@
 /* ============================================
    CHAT INPUT CONTAINER - Below dropdown
    ============================================ */
-.chat-input-container {
+:not(#chat-panel) > .chat-container > .chat-input-container,
+.game-container > .chat-input-container {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -446,4 +447,67 @@
     .player-2 .speech-bubble {
         margin-right: 10px;
     }
+}
+
+/* ============================================
+   FORCE CHAT PANEL ELEMENTS TO USE PROPER POSITIONING
+   ============================================ */
+#chat-panel,
+#chat-panel * {
+    box-sizing: border-box;
+}
+
+#chat-panel > .chat-container,
+#chat-panel .chat-container {
+    position: absolute !important;
+    bottom: 55px !important;
+    right: 0 !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    width: 280px !important;
+    max-width: 280px !important;
+    z-index: 501 !important;
+}
+
+#chat-panel .chat-container .quick-chat,
+#chat-panel > .chat-container > .quick-chat {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    padding: 10px !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    z-index: auto !important;
+}
+
+#chat-panel .chat-container .chat-input-container,
+#chat-panel > .chat-container > .chat-input-container {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: auto !important;
+    padding: 10px !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: none !important;
+    border-radius: 0 0 16px 16px !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+}
+
+#chat-panel .chat-container .chat-input-container input {
+    flex: 1 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 10px 16px !important;
 }
