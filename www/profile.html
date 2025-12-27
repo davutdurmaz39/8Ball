@@ -714,6 +714,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="css/page-landscape.css">
 </head>
 
 <body>
@@ -877,7 +878,9 @@
                     // Avatar - show image or initial
                     const avatarDisplay = document.getElementById('avatar-display');
                     if (data.user.profilePicture) {
-                        avatarDisplay.innerHTML = '<img src="' + data.user.profilePicture + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                        // Add cache-busting timestamp to prevent browser caching issues
+                        const avatarUrl = data.user.profilePicture + (data.user.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                        avatarDisplay.innerHTML = '<img src="' + avatarUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
                     } else {
                         avatarDisplay.textContent = (data.user.username || 'P').charAt(0).toUpperCase();
                     }
@@ -1054,7 +1057,9 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        avatarDisplay.innerHTML = '<img src="' + data.avatarUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                        // Add cache-busting timestamp to prevent browser caching issues
+                        const avatarUrl = data.avatarUrl + (data.avatarUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+                        avatarDisplay.innerHTML = '<img src="' + avatarUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
                         alert('Avatar updated successfully!');
                     } else {
                         avatarDisplay.innerHTML = originalContent;

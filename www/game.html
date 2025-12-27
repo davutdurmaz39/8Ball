@@ -326,14 +326,19 @@
                     window.currentUser = data.user;
 
                     // Update Player 1 avatar from profilePicture
-                    const p1AvatarHeader = document.getElementById('p1-avatar-header');
-                    const p1AvatarFallback = document.getElementById('p1-avatar-fallback');
-                    if (data.user.profilePicture) {
-                        if (p1AvatarHeader) { p1AvatarHeader.src = data.user.profilePicture; p1AvatarHeader.style.display = 'block'; }
-                        if (p1AvatarFallback) p1AvatarFallback.style.display = 'none';
-                    }
-                    if (window.playerInfoManager && window.playerInfoManager.updatePlayer1Info) {
-                        window.playerInfoManager.updatePlayer1Info(data.user);
+                    // ONLY for non-multiplayer modes - multiplayer uses server's host/guest assignment
+                    if (gameMode !== 'online') {
+                        const p1AvatarHeader = document.getElementById('p1-avatar-header');
+                        const p1AvatarFallback = document.getElementById('p1-avatar-fallback');
+                        if (data.user.profilePicture) {
+                            // Add cache-busting timestamp to prevent browser caching issues
+                            const avatarUrl = data.user.profilePicture + (data.user.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                            if (p1AvatarHeader) { p1AvatarHeader.src = avatarUrl; p1AvatarHeader.style.display = 'block'; }
+                            if (p1AvatarFallback) p1AvatarFallback.style.display = 'none';
+                        }
+                        if (window.playerInfoManager && window.playerInfoManager.updatePlayer1Info) {
+                            window.playerInfoManager.updatePlayer1Info(data.user);
+                        }
                     }
 
                     loadingEl.classList.add('hidden');

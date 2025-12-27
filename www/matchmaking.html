@@ -527,6 +527,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="css/page-landscape.css">
 </head>
 
 <body>
@@ -688,7 +689,9 @@
                     // Set player 1 avatar (profilePicture or initial)
                     const p1Avatar = document.getElementById('player1-avatar');
                     if (user.profilePicture) {
-                        p1Avatar.innerHTML = '<img src="' + user.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                        // Add cache-busting timestamp to prevent browser caching issues
+                        const avatarUrl = user.profilePicture + (user.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                        p1Avatar.innerHTML = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                     } else {
                         p1Avatar.textContent = user.username.charAt(0).toUpperCase();
                     }
@@ -763,7 +766,9 @@
                 // Set opponent avatar (profilePicture or initial)
                 const p2Avatar = document.getElementById('player2-avatar');
                 if (opponent.profilePicture) {
-                    p2Avatar.innerHTML = '<img src="' + opponent.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                    // Add cache-busting timestamp to prevent browser caching issues
+                    const opponentAvatarUrl = opponent.profilePicture + (opponent.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    p2Avatar.innerHTML = '<img src="' + opponentAvatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 } else {
                     p2Avatar.textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
                 }
@@ -781,7 +786,9 @@
                 // Set player 1 avatar in match found overlay
                 const mfP1Avatar = document.getElementById('mf-player1-avatar');
                 if (window.currentUser.profilePicture) {
-                    mfP1Avatar.innerHTML = '<img src="' + window.currentUser.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                    // Add cache-busting timestamp to prevent browser caching issues
+                    const mfP1Url = window.currentUser.profilePicture + (window.currentUser.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    mfP1Avatar.innerHTML = '<img src="' + mfP1Url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 } else {
                     mfP1Avatar.textContent = window.currentUser.username.charAt(0).toUpperCase();
                 }
@@ -790,7 +797,9 @@
                 // Set opponent avatar in match found overlay
                 const mfP2Avatar = document.getElementById('mf-player2-avatar');
                 if (opponent.profilePicture) {
-                    mfP2Avatar.innerHTML = '<img src="' + opponent.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                    // Add cache-busting timestamp to prevent browser caching issues
+                    const mfP2Url = opponent.profilePicture + (opponent.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    mfP2Avatar.innerHTML = '<img src="' + mfP2Url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 } else {
                     mfP2Avatar.textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
                 }

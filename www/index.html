@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="mobile-app.css">
     <link rel="stylesheet" href="mobile-landscape.css">
     <link rel="stylesheet" href="daily-rewards.css">
+    <link rel="stylesheet" href="daily-tasks.css">
     <link rel="stylesheet" href="stake-modal.css">
     <style>
         /* Reset & Base */
@@ -864,6 +865,148 @@
                 font-size: 0.6rem;
             }
         }
+
+        /* ============================================
+           MOBILE LANDSCAPE LAYOUT
+           ============================================ */
+        @media (pointer: coarse) and (orientation: landscape),
+               (max-height: 500px) and (orientation: landscape) {
+            
+            /* Hide non-essential header elements */
+            .top-header {
+                padding: 6px 12px !important;
+            }
+            
+            .header-btn {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 1rem !important;
+            }
+            
+            .header-brand-text {
+                font-size: 0.9rem !important;
+            }
+            
+            .header-8ball {
+                font-size: 1.2rem !important;
+            }
+            
+            /* Main content - horizontal flex layout */
+            .main-content {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                gap: 15px !important;
+                padding: 8px 15px !important;
+                padding-bottom: 60px !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+            }
+            
+            /* Profile card - compact left side */
+            .profile-card {
+                flex: 0 0 auto !important;
+                width: 200px !important;
+                min-width: 180px !important;
+                margin: 0 !important;
+                padding: 10px !important;
+            }
+            
+            .profile-main {
+                gap: 10px !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .profile-avatar {
+                width: 45px !important;
+                height: 45px !important;
+            }
+            
+            .profile-level {
+                font-size: 0.5rem !important;
+                padding: 2px 5px !important;
+            }
+            
+            .profile-name {
+                font-size: 0.75rem !important;
+            }
+            
+            .profile-rank-title {
+                font-size: 0.65rem !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .profile-xp-bar {
+                height: 5px !important;
+            }
+            
+            .profile-xp-text {
+                font-size: 0.5rem !important;
+            }
+            
+            .profile-stats {
+                gap: 6px !important;
+            }
+            
+            .stat-box {
+                padding: 5px 4px !important;
+            }
+            
+            .stat-icon {
+                font-size: 0.9rem !important;
+                margin-bottom: 1px !important;
+            }
+            
+            .stat-value {
+                font-size: 0.7rem !important;
+            }
+            
+            .stat-label {
+                font-size: 0.45rem !important;
+            }
+            
+            /* Game modes section - right side grid */
+            .game-modes-section {
+                flex: 1 1 auto !important;
+                padding: 8px !important;
+                max-width: 400px !important;
+            }
+            
+            .section-title {
+                font-size: 0.75rem !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .game-modes {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+            
+            .btn-mode {
+                padding: 10px 8px !important;
+                gap: 4px !important;
+            }
+            
+            .btn-mode .mode-icon {
+                font-size: 1.3rem !important;
+            }
+            
+            .btn-mode .mode-text {
+                font-size: 0.65rem !important;
+            }
+            
+            .online-badge {
+                font-size: 0.45rem !important;
+                padding: 1px 4px !important;
+            }
+            
+            /* Daily rewards - hide or minimize */
+            .daily-rewards-section {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -1203,7 +1346,9 @@
                     // Update profile avatar
                     const profileAvatar = document.getElementById('profile-avatar');
                     if (user.profilePicture) {
-                        profileAvatar.innerHTML = `<img src="${user.profilePicture}" alt="${user.username}">`;
+                        // Add cache-busting timestamp to prevent browser caching issues
+                        const avatarUrl = user.profilePicture + (user.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
+                        profileAvatar.innerHTML = `<img src="${avatarUrl}" alt="${user.username}">`;
                     } else {
                         profileAvatar.textContent = user.username.charAt(0).toUpperCase();
                     }
@@ -1258,6 +1403,11 @@
         // Bottom nav handlers
         document.getElementById('nav-profile').addEventListener('click', () => {
             window.location.href = 'profile.html';
+        });
+
+        // Settings button handler
+        document.getElementById('btn-settings').addEventListener('click', () => {
+            window.location.href = 'settings.html';
         });
 
 
@@ -1372,6 +1522,7 @@
     </script>
     <script src="stake-modal.js"></script>
     <script src="daily-rewards.js"></script>
+    <script src="daily-tasks.js"></script>
 </body>
 
 </html>

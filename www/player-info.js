@@ -64,7 +64,11 @@ function updatePlayer1Info(user) {
     // Update header avatar image
     const p1AvatarHeader = document.getElementById('p1-avatar-header');
     if (p1AvatarHeader) {
-        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        let avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        // Add cache-busting timestamp to prevent browser caching issues (Chrome/Safari)
+        if (user.profilePicture) {
+            avatarSrc = avatarSrc + (avatarSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+        }
         console.log(`🖼️ P1 Avatar Debug: profilePicture=${user.profilePicture}, using=${avatarSrc}`);
         p1AvatarHeader.src = avatarSrc;
         p1AvatarHeader.style.display = 'block';
@@ -81,7 +85,11 @@ function updatePlayer1Info(user) {
 
     if (p1AvatarImg) {
         // Use profile picture if available, otherwise use default based on username
-        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        let avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        // Add cache-busting timestamp to prevent browser caching issues (Chrome/Safari)
+        if (user.profilePicture) {
+            avatarSrc = avatarSrc + (avatarSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+        }
         p1AvatarImg.src = avatarSrc;
         p1AvatarImg.style.display = 'block';
         if (p1AvatarTop) p1AvatarTop.style.display = 'none';
@@ -119,7 +127,11 @@ function updatePlayer2Info(user) {
     // Update header avatar image
     const p2AvatarHeader = document.getElementById('p2-avatar-header');
     if (p2AvatarHeader) {
-        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        let avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        // Add cache-busting timestamp to prevent browser caching issues (Chrome/Safari)
+        if (user.profilePicture) {
+            avatarSrc = avatarSrc + (avatarSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+        }
         console.log(`🖼️ P2 Avatar Debug: profilePicture=${user.profilePicture}, using=${avatarSrc}`);
         p2AvatarHeader.src = avatarSrc;
         p2AvatarHeader.style.display = 'block';
@@ -136,7 +148,11 @@ function updatePlayer2Info(user) {
 
     if (p2AvatarImg) {
         // Use profile picture if available, otherwise use default based on username
-        const avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        let avatarSrc = user.profilePicture || getDefaultAvatar(user.username);
+        // Add cache-busting timestamp to prevent browser caching issues (Chrome/Safari)
+        if (user.profilePicture) {
+            avatarSrc = avatarSrc + (avatarSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+        }
         p2AvatarImg.src = avatarSrc;
         p2AvatarImg.style.display = 'block';
         if (p2AvatarTop) p2AvatarTop.style.display = 'none';
@@ -188,10 +204,18 @@ document.addEventListener('DOMContentLoaded', () => {
     createPlayerInfoBar();
 
     // Wait for currentUser to be available
+    // BUT do not auto-update if in a multiplayer game (that has its own player assignment)
     const checkInterval = setInterval(() => {
         if (window.currentUser) {
-            updatePlayer1Info(window.currentUser);
-            console.log('🏳️ Player info updated with nationality:', window.currentUser.nationality);
+            // Only auto-update player info if NOT in a multiplayer game
+            // In multiplayer, onGameStart handles player assignment correctly (host=P1, guest=P2)
+            const isMultiplayerGame = window.gameInstance && window.gameInstance.isMultiplayer;
+            if (!isMultiplayerGame) {
+                updatePlayer1Info(window.currentUser);
+                console.log('🏳️ Player info updated with nationality:', window.currentUser.nationality);
+            } else {
+                console.log('🎮 Multiplayer game active - skipping auto player info update');
+            }
             clearInterval(checkInterval);
         }
     }, 500);

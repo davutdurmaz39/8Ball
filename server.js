@@ -743,6 +743,196 @@ app.get('/api/achievements', authenticateToken, (req, res) => {
     }
 });
 
+
+// ============ DAILY TASKS & REWARDS ============
+
+// Claim daily reward
+app.post('/api/rewards/claim', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const { reward, day } = req.body;
+        
+        if (!reward || reward <= 0 || reward > 5000) {
+            return res.status(400).json({ success: false, error: 'Invalid reward amount' });
+        }
+
+        // Add coins to user
+        user.coins = (user.coins || 0) + reward;
+        saveUsers();
+
+        console.log(??  claimed daily reward:  coins (Day ));
+
+        res.json({ 
+            success: true, 
+            message: 'Reward claimed!',
+            coins: user.coins,
+            reward: reward
+        });
+    } catch (error) {
+        console.error('Claim reward error:', error);
+        res.status(500).json({ success: false, error: 'Failed to claim reward' });
+    }
+});
+
+// Claim task reward
+app.post('/api/tasks/claim', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const { taskId, reward } = req.body;
+        
+        if (!taskId || !reward || reward <= 0 || reward > 2000) {
+            return res.status(400).json({ success: false, error: 'Invalid task or reward' });
+        }
+
+        // Initialize completedTasks if not exists
+        if (!user.completedTasks) {
+            user.completedTasks = [];
+        }
+
+        // Check if already claimed (except for repeatable tasks)
+        if (taskId !== 'invite_friend' && user.completedTasks.includes(taskId)) {
+            return res.status(400).json({ success: false, error: 'Task already claimed' });
+        }
+
+        // Mark task as completed
+        if (!user.completedTasks.includes(taskId)) {
+            user.completedTasks.push(taskId);
+        }
+
+        // Add coins to user
+        user.coins = (user.coins || 0) + reward;
+        saveUsers();
+
+        console.log(??  completed task:  (+ coins));
+
+        res.json({ 
+            success: true, 
+            message: 'Task reward claimed!',
+            taskId: taskId,
+            coins: user.coins,
+            reward: reward
+        });
+    } catch (error) {
+        console.error('Claim task error:', error);
+        res.status(500).json({ success: false, error: 'Failed to claim task reward' });
+    }
+});
+
+// Get completed tasks for user
+app.get('/api/tasks', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ 
+            success: true, 
+            completedTasks: user.completedTasks || [],
+            invitedFriends: user.invitedFriends || 0
+        });
+    } catch (error) {
+        console.error('Get tasks error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get tasks' });
+    }
+});
+
+// Process referral during registration
+app.post('/api/referral/apply', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const { referralCode } = req.body;
+        
+        if (!referralCode) {
+            return res.status(400).json({ success: false, error: 'Referral code required' });
+        }
+
+        // Check if user already used a referral
+        if (user.usedReferral) {
+            return res.status(400).json({ success: false, error: 'Referral already applied' });
+        }
+
+        // Find the referrer by invite code
+        let referrer = null;
+        for (const u of users.values()) {
+            if (u.inviteCode && u.inviteCode === referralCode) {
+                referrer = u;
+                break;
+            }
+        }
+
+        if (!referrer) {
+            return res.status(404).json({ success: false, error: 'Invalid referral code' });
+        }
+
+        if (referrer.email === user.email) {
+            return res.status(400).json({ success: false, error: 'Cannot use your own code' });
+        }
+
+        // Award both users
+        const referralBonus = 500;
+        const referrerBonus = 1000;
+
+        user.coins = (user.coins || 0) + referralBonus;
+        user.usedReferral = referralCode;
+
+        referrer.coins = (referrer.coins || 0) + referrerBonus;
+        referrer.invitedFriends = (referrer.invitedFriends || 0) + 1;
+
+        saveUsers();
+
+        console.log(?? Referral applied:  used 's code);
+
+        res.json({ 
+            success: true, 
+            message: You received  bonus coins!,
+            bonus: referralBonus
+        });
+    } catch (error) {
+        console.error('Apply referral error:', error);
+        res.status(500).json({ success: false, error: 'Failed to apply referral' });
+    }
+});
+
+// Generate/Get invite code for user
+app.get('/api/invite-code', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Generate invite code if not exists
+        if (!user.inviteCode) {
+            const base = user.username.toUpperCase().substring(0, 4);
+            const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+            user.inviteCode = base + random;
+            saveUsers();
+        }
+
+        res.json({ 
+            success: true, 
+            inviteCode: user.inviteCode,
+            invitedFriends: user.invitedFriends || 0
+        });
+    } catch (error) {
+        console.error('Get invite code error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get invite code' });
+    }
+});
+
 // ============ TOURNAMENTS ============
 
 app.get('/api/tournaments', (req, res) => {
