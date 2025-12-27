@@ -10,26 +10,26 @@ class PhysicsEngine {
         this.BALL_RADIUS = 14;
         this.MAX_CUE_SPEED = 750;      // User's preferred max power
 
-        // Detect mobile device
+        // Detect mobile device (for UI purposes, not physics)
         this.isMobile = ('ontouchstart' in window) ||
             (navigator.maxTouchPoints > 0) ||
             (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
-        // Mobile friction multiplier - compensates for lower frame rate on mobile
-        // Mobile typically runs at 30-45fps vs PC at 60fps, so apply ~1.9x friction
-        this.mobileFrictionMultiplier = this.isMobile ? 1.9 : 1.0;
+        // NOTE: We use fixed timesteps (1/60) for physics simulation, which handles
+        // frame rate differences automatically. No friction multiplier needed - this
+        // was causing desync between mobile and PC players!
 
-        // Friction (adjusted for mobile)
+        // Friction - consistent across all devices for deterministic physics
         this.GRAVITY = 980;
-        this.MU_ROLL = 0.016 * this.mobileFrictionMultiplier;     // Rolling friction (reduced)
-        this.MU_SLIDE = 0.10 * this.mobileFrictionMultiplier;
-        this.MU_SPIN = 0.12 * this.mobileFrictionMultiplier;      // Spin friction
+        this.MU_ROLL = 0.006;      // Rolling friction (very low for smooth long rolls)
+        this.MU_SLIDE = 0.04;      // Sliding friction
+        this.MU_SPIN = 0.05;       // Spin friction
 
         // Elasticity - High for impactful breaks
-        this.E_BALL = 0.98;       // High elasticity for strong break impact
-        this.E_CUSHION = 0.80;
+        this.E_BALL = 0.98;        // High elasticity for strong break impact
+        this.E_CUSHION = 0.82;     // Slightly higher for more bouncy rails
 
-        // Time step
+        // Time step - fixed for deterministic simulation
         this.dt = 1 / 60;
 
         // Table
@@ -41,7 +41,7 @@ class PhysicsEngine {
         this.centerPocketRadius = 18;    // Center pocket radius (smaller, more recessed)
 
         if (this.isMobile) {
-            console.log('📱 Mobile detected - applying friction multiplier:', this.mobileFrictionMultiplier);
+            console.log('📱 Mobile device detected (using consistent physics)');
         }
     }
 
@@ -93,8 +93,8 @@ class PhysicsEngine {
     updateBallPhysics(ball, dt) {
         const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
 
-        // STOP if very slow (lower threshold for gradual slowdown)
-        if (speed < 0.5) {
+        // STOP if very slow - low threshold so balls roll longer
+        if (speed < 0.3) {
             ball.vx = 0;
             ball.vy = 0;
             ball.topspin = 0;
