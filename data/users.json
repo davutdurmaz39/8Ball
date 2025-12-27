@@ -1,39 +1,45 @@
 [
   {
-    "id": 1,
-    "username": "DemoPlayer",
-    "email": "demo@example.com",
-    "password": "$2a$10$1Ci/t/UMoUbL72GHbLIsCOC/nj.EPJ9o1UP6gcaMWjuFQzDJbNUtG",
-    "provider": "email",
-    "coins": 5000,
-    "elo": 1200,
+    "matchHistory": [],
+    "achievements": [],
+    "createdAt": "2025-12-25T18:49:53.180Z",
     "gamesPlayed": 10,
     "gamesWon": 6,
-    "createdAt": "2025-12-25T18:49:53.180Z",
-    "achievements": [],
-    "matchHistory": [],
-    "nationality": "TR",
-    "profilePicture": "/uploads/avatars/avatar_1766688716127_7uysj.jpg"
-  },
-  {
-    "id": 2,
-    "username": "PoolPro",
-    "email": "pro@example.com",
     "password": "$2a$10$1Ci/t/UMoUbL72GHbLIsCOC/nj.EPJ9o1UP6gcaMWjuFQzDJbNUtG",
     "provider": "email",
-    "coins": 15000,
-    "elo": 1650,
-    "gamesPlayed": 50,
-    "gamesWon": 35,
-    "createdAt": "2025-12-25T18:49:53.188Z",
+    "coins": 14700,
+    "profilePicture": "/uploads/avatars/avatar_1766688716127_7uysj.jpg",
+    "username": "DemoPlayer",
+    "nationality": "TR",
+    "cash": 0,
+    "id": 1,
+    "email": "demo@example.com",
+    "elo": 1200,
+    "cues": [
+      "dragons_breath",
+      "neon_striker",
+      "frost_bite"
+    ]
+  },
+  {
+    "matchHistory": [],
     "achievements": [
       "first_win",
       "ten_wins",
       "streak_5",
       "gold_rank"
     ],
-    "matchHistory": [],
+    "createdAt": "2025-12-25T18:49:53.188Z",
+    "gamesPlayed": 50,
+    "gamesWon": 35,
+    "password": "$2a$10$1Ci/t/UMoUbL72GHbLIsCOC/nj.EPJ9o1UP6gcaMWjuFQzDJbNUtG",
+    "provider": "email",
+    "coins": 15000,
+    "profilePicture": "/uploads/avatars/avatar_1766688726800_95mt7h.jpg",
+    "username": "PoolPro",
     "nationality": "US",
-    "profilePicture": "/uploads/avatars/avatar_1766688726800_95mt7h.jpg"
+    "id": 2,
+    "email": "pro@example.com",
+    "elo": 1650
   }
 ]

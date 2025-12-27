@@ -713,6 +713,94 @@
                 font-size: 22px;
             }
         }
+
+        /* MY CUES SECTION */
+        .cues-section {
+            margin: 30px 0;
+        }
+
+        .cues-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .cues-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #00d4ff;
+            letter-spacing: 2px;
+        }
+
+        .cues-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .cue-card {
+            background: rgba(20, 30, 50, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cue-card:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cue-card.equipped {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .cue-card .cue-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .cue-card .cue-icon.legendary { background: linear-gradient(135deg, rgba(255, 180, 0, 0.3), rgba(255, 120, 0, 0.2)); }
+        .cue-card .cue-icon.epic { background: linear-gradient(135deg, rgba(180, 0, 255, 0.3), rgba(120, 0, 200, 0.2)); }
+        .cue-card .cue-icon.rare { background: linear-gradient(135deg, rgba(0, 180, 255, 0.3), rgba(0, 100, 200, 0.2)); }
+        .cue-card .cue-icon.common { background: rgba(100, 100, 100, 0.3); }
+
+        .cue-card .cue-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+        }
+
+        .cue-card .equip-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .cue-card .equip-badge.equipped {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .cue-card .equip-badge.equip {
+            background: rgba(255, 255, 255, 0.2);
+            color: #aaa;
+        }
     </style>
     <link rel="stylesheet" href="css/page-landscape.css">
 </head>
@@ -814,6 +902,18 @@
             <a href="achievements.html" class="view-all-achievements-btn">View All Achievements â†’</a>
         </div>
 
+        <!-- My Cues Section -->
+        <div class="cues-section">
+            <div class="cues-section-header">
+                <span class="cues-title">MY CUES</span>
+                <a href="shop.html" style="color: #00d4ff; font-size: 12px; text-decoration: none;">Get More ›</a>
+            </div>
+            <div class="cues-grid" id="cues-grid">
+                <!-- Cues will be loaded dynamically -->
+                <p style="color: var(--text-secondary); text-align: center; padding: 20px; grid-column: span 2;">Loading cues...</p>
+            </div>
+        </div>
+
         <!-- Match History Section -->
         <div class="matches-section">
             <div class="matches-header">
@@ -848,57 +948,107 @@
 
         // Load user data
         async function loadProfile() {
+            // TRY API FIRST to get fresh data (including newly purchased cues)
+            console.log('Loading profile from API...');
             try {
-                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                const token = localStorage.getItem('authToken');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const response = await fetch('/api/auth/me', { headers, credentials: 'include' });
                 const data = await response.json();
 
                 if (data.success && data.user) {
-                    document.getElementById('player-name').textContent = data.user.username || 'Player';
-                    document.getElementById('player-id').textContent = 'ID: ' + (data.user.id || '------').toString().substring(0, 8);
-                    document.getElementById('coin-balance').textContent = (data.user.coins || 0).toLocaleString();
-
-                    // Stats
-                    const games = data.user.gamesPlayed || 0;
-                    const wins = data.user.gamesWon || 0;
-                    const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-
-                    document.getElementById('total-games').textContent = games;
-                    document.getElementById('wins').textContent = wins;
-                    document.getElementById('win-rate').textContent = winRate + '%';
-                    document.getElementById('win-streak').textContent = data.user.winStreak || 0;
-
-                    // Rank/ELO
-                    const elo = data.user.elo || 1200;
-                    const rankInfo = getRankFromElo(elo);
-                    document.getElementById('player-rank').textContent = rankInfo.rank.toUpperCase();
-                    document.getElementById('player-rank').style.color = rankInfo.color;
-                    document.getElementById('rank-icon').textContent = rankInfo.icon;
-                    document.getElementById('player-elo').textContent = elo + ' ELO';
-
-                    // Avatar - show image or initial
-                    const avatarDisplay = document.getElementById('avatar-display');
-                    if (data.user.profilePicture) {
-                        // Add cache-busting timestamp to prevent browser caching issues
-                        const avatarUrl = data.user.profilePicture + (data.user.profilePicture.includes('?') ? '&' : '?') + 't=' + Date.now();
-                        avatarDisplay.innerHTML = '<img src="' + avatarUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
-                    } else {
-                        avatarDisplay.textContent = (data.user.username || 'P').charAt(0).toUpperCase();
-                    }
-
-                    // Wallet stats
-                    document.getElementById('total-earned').textContent = '+' + (data.user.totalEarned || 0).toLocaleString();
-                    document.getElementById('highest-balance').textContent = (data.user.highestBalance || data.user.coins || 0).toLocaleString();
-
-                    // Load achievements and match history
-                    loadAchievements();
-                    loadMatchHistory();
+                    // Update localStorage with fresh data from API
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    displayUserProfile(data.user);
                 } else {
+                    console.log('API failed, no user');
                     window.location.href = '/login.html';
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
                 window.location.href = '/login.html';
             }
+        }
+        
+        // CUE DEFINITIONS
+        const CUE_DATA = {
+            standard: { name: 'Standard', rarity: 'common', icon: '??' },
+            dragons_breath: { name: "Dragon's Breath", rarity: 'legendary', icon: '??' },
+            neon_striker: { name: 'Neon Striker', rarity: 'epic', icon: '?' },
+            frost_bite: { name: 'Frost Bite', rarity: 'rare', icon: '??' },
+            shadow_master: { name: 'Shadow Master', rarity: 'legendary', icon: '??' },
+            classic_oak: { name: 'Classic Oak', rarity: 'common', icon: '??' }
+        };
+
+        function loadCues(userCues) {
+            const grid = document.getElementById('cues-grid');
+            if (!grid) return;
+            
+            const ownedCues = ['standard'].concat(userCues || []);
+            const selectedCue = localStorage.getItem('selectedCue') || 'standard';
+            
+            let html = '';
+            ownedCues.forEach(function(cueId) {
+                const cue = CUE_DATA[cueId];
+                if (!cue) return;
+                
+                const isEquipped = cueId === selectedCue;
+                html += '<div class="cue-card ' + (isEquipped ? 'equipped' : '') + '" onclick="equipCue(\'' + cueId + '\')">' +
+                    '<div class="cue-icon ' + cue.rarity + '">' + cue.icon + '</div>' +
+                    '<div class="cue-name">' + cue.name + '</div>' +
+                    '<div class="equip-badge ' + (isEquipped ? 'equipped' : 'equip') + '">' + (isEquipped ? '? EQUIPPED' : 'EQUIP') + '</div>' +
+                '</div>';
+            });
+            
+            if (html === '') {
+                html = '<p style="color: #667788; text-align: center; padding: 20px; grid-column: span 2;">Visit the Shop to get cues!</p>';
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        function equipCue(cueId) {
+            localStorage.setItem('selectedCue', cueId);
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            loadCues(user.cues);
+            const cue = CUE_DATA[cueId];
+            if (cue) alert('?? ' + cue.name + ' equipped!');
+        }
+        function displayUserProfile(user) {
+            document.getElementById('player-name').textContent = user.username || 'Player';
+            document.getElementById('player-id').textContent = 'ID: ' + (user.id || '------').toString().substring(0, 8);
+            document.getElementById('coin-balance').textContent = (user.coins || 0).toLocaleString();
+            
+            const games = user.gamesPlayed || 0;
+            const wins = user.gamesWon || 0;
+            const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+            
+            document.getElementById('total-games').textContent = games;
+            document.getElementById('wins').textContent = wins;
+            document.getElementById('win-rate').textContent = winRate + '%';
+            document.getElementById('win-streak').textContent = user.winStreak || 0;
+            
+            const elo = user.elo || 1200;
+            const rankInfo = getRankFromElo(elo);
+            document.getElementById('player-rank').textContent = rankInfo.rank.toUpperCase();
+            document.getElementById('player-rank').style.color = rankInfo.color;
+            document.getElementById('rank-icon').textContent = rankInfo.icon;
+            document.getElementById('player-elo').textContent = elo + ' ELO';
+            
+            const avatarDisplay = document.getElementById('avatar-display');
+            if (user.profilePicture) {
+                avatarDisplay.innerHTML = '<img src="' + user.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+            } else {
+                avatarDisplay.textContent = (user.username || 'P').charAt(0).toUpperCase();
+            }
+            
+            document.getElementById('total-earned').textContent = '+' + (user.totalEarned || 0).toLocaleString();
+            document.getElementById('highest-balance').textContent = (user.highestBalance || user.coins || 0).toLocaleString();
+            
+            loadCues(user.cues);
+            loadAchievements();
+            loadMatchHistory();
         }
 
         // Load achievements with new card design

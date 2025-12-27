@@ -324,7 +324,9 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
             achievements: user.achievements || [],
             createdAt: user.createdAt,
             nationality: user.nationality || null,
-            profilePicture: user.profilePicture || null
+            profilePicture: user.profilePicture || null,
+            cues: user.cues || [],
+            cash: user.cash || 0
         }
     });
 });

@@ -683,9 +683,9 @@
             <div class="featured-footer">
                 <div class="featured-price">
                     <span>💎</span>
-                    <span>2,500</span>
+                    <span>100</span>
                 </div>
-                <button class="unlock-btn" onclick="purchaseCue('dragons_breath', 2500, 'cash')">Unlock Now</button>
+                <button class="unlock-btn" onclick="purchaseCue('dragons_breath', 100, 'coins')">Unlock Now</button>
             </div>
         </div>
 
@@ -697,7 +697,7 @@
 
         <div class="cue-grid" id="daily-deals">
             <!-- Neon Striker -->
-            <div class="cue-card" data-rarity="epic">
+            <div class="cue-card" data-rarity="epic" data-cue-id="neon_striker">
                 <div class="cue-image epic">
                     <div class="cue-stick epic"></div>
                 </div>
@@ -722,14 +722,14 @@
                 <div class="cue-price-section">
                     <div class="cue-price">
                         <span>🪙</span>
-                        <span>45,000</span>
+                        <span>100</span>
                     </div>
-                    <button class="purchase-btn" onclick="purchaseCue('neon_striker', 45000, 'coins')">Purchase</button>
+                    <button class="purchase-btn" onclick="purchaseCue('neon_striker', 100, 'coins')">Purchase</button>
                 </div>
             </div>
 
             <!-- Frost Bite -->
-            <div class="cue-card" data-rarity="rare">
+            <div class="cue-card" data-rarity="rare" data-cue-id="frost_bite">
                 <div class="cue-image rare">
                     <div class="cue-stick rare"></div>
                 </div>
@@ -754,9 +754,9 @@
                 <div class="cue-price-section">
                     <div class="cue-price">
                         <span>🪙</span>
-                        <span>18,500</span>
+                        <span>100</span>
                     </div>
-                    <button class="purchase-btn" onclick="purchaseCue('frost_bite', 18500, 'coins')">Purchase</button>
+                    <button class="purchase-btn" onclick="purchaseCue('frost_bite', 100, 'coins')">Purchase</button>
                 </div>
             </div>
         </div>
@@ -769,7 +769,7 @@
 
         <div class="cue-grid" id="new-cues">
             <!-- Shadow Master -->
-            <div class="cue-card" data-rarity="legendary">
+            <div class="cue-card" data-rarity="legendary" data-cue-id="shadow_master">
                 <div class="cue-image legendary">
                     <div class="cue-stick legendary"></div>
                 </div>
@@ -794,15 +794,15 @@
                 <div class="cue-price-section">
                     <div class="cue-price" style="color: #00ff88;">
                         <span>💎</span>
-                        <span>3,200</span>
+                        <span>100</span>
                     </div>
                     <button class="purchase-btn cash"
-                        onclick="purchaseCue('shadow_master', 3200, 'cash')">Purchase</button>
+                        onclick="purchaseCue('shadow_master', 100, 'coins')">Purchase</button>
                 </div>
             </div>
 
             <!-- Classic Oak -->
-            <div class="cue-card" data-rarity="common">
+            <div class="cue-card" data-rarity="common" data-cue-id="classic_oak">
                 <div class="cue-image common">
                     <div class="cue-stick common"></div>
                 </div>
@@ -827,9 +827,9 @@
                 <div class="cue-price-section">
                     <div class="cue-price">
                         <span>🪙</span>
-                        <span>2,500</span>
+                        <span>100</span>
                     </div>
-                    <button class="purchase-btn" onclick="purchaseCue('classic_oak', 2500, 'coins')">Purchase</button>
+                    <button class="purchase-btn" onclick="purchaseCue('classic_oak', 100, 'coins')">Purchase</button>
                 </div>
             </div>
         </div>
@@ -855,17 +855,24 @@
         </a>
     </nav>
 
-    <script>
+        <script>
         // Load user data
         let currentUser = null;
+        let ownedCues = ['standard']; // Everyone owns the standard cue
+        let selectedCue = localStorage.getItem('selectedCue') || 'standard';
 
         async function loadUserData() {
             try {
-                const response = await fetch('/api/user', { credentials: 'include' });
+                var token = localStorage.getItem('authToken');
+                var headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                var response = await fetch('/api/user', { headers: headers, credentials: 'include' });
                 if (response.ok) {
                     const data = await response.json();
                     currentUser = data.user;
+                    ownedCues = ['standard', ...(currentUser.cues || [])];
                     updateCurrencyDisplay();
+                    updateCueButtons();
                 }
             } catch (error) {
                 console.log('Not logged in');
@@ -876,63 +883,102 @@
             if (currentUser) {
                 const coins = currentUser.coins || 0;
                 const cash = currentUser.cash || 0;
-
-                document.getElementById('user-coins').textContent =
-                    coins >= 1000 ? (coins / 1000).toFixed(1) + 'k' : coins;
+                document.getElementById('user-coins').textContent = coins >= 1000 ? (coins / 1000).toFixed(1) + 'k' : coins;
                 document.getElementById('user-cash').textContent = cash;
             }
         }
 
-        // Filter tabs
-        document.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.addEventListener('click', function () {
-                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
+        function updateCueButtons() {
+            document.querySelectorAll('.cue-card').forEach(card => {
+                const cueId = card.dataset.cueId;
+                if (!cueId) return;
+                const priceSection = card.querySelector('.cue-price-section');
+                if (!priceSection) return;
+                if (ownedCues.includes(cueId)) {
+                    const isEquipped = selectedCue === cueId;
+                    priceSection.innerHTML = '<div style="color:#00ff88;font-size:0.75rem;font-weight:700;margin-bottom:8px;">? OWNED</div>' +
+                        '<button class="purchase-btn" onclick="equipCue(\'' + cueId + '\')" style="background:' + (isEquipped ? 'linear-gradient(135deg,#00d4ff,#0099cc)' : 'linear-gradient(135deg,#444,#666)') + '">' + (isEquipped ? '? EQUIPPED' : 'EQUIP') + '</button>';
+                    card.classList.add('owned');
+                }
+            });
+            const featuredCueId = 'dragons_breath';
+            if (ownedCues.includes(featuredCueId)) {
+                const featuredFooter = document.querySelector('.featured-footer');
+                const isEquipped = selectedCue === featuredCueId;
+                if (featuredFooter) {
+                    featuredFooter.innerHTML = '<div style="color:#00ff88;font-size:1rem;font-weight:700;">? OWNED</div>' +
+                        '<button class="unlock-btn" onclick="equipCue(\'' + featuredCueId + '\')" style="background:' + (isEquipped ? 'linear-gradient(135deg,#00d4ff,#0099cc)' : 'linear-gradient(135deg,#444,#666)') + '">' + (isEquipped ? '? Equipped' : 'Equip Now') + '</button>';
+                }
+            }
+        }
 
-                const filter = this.dataset.filter;
-                filterCues(filter);
+        function equipCue(cueId) {
+            if (!ownedCues.includes(cueId)) { alert('You don\'t own this cue!'); return; }
+            selectedCue = cueId;
+            localStorage.setItem('selectedCue', cueId);
+            showToast('?? ' + formatCueName(cueId) + ' equipped!');
+            updateCueButtons();
+        }
+
+        function formatCueName(cueId) {
+            return cueId.split('_').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+        }
+
+        function showToast(message) {
+            var toast = document.getElementById('shop-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'shop-toast';
+                toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(50px);background:linear-gradient(135deg,#00ff88,#00cc6a);color:#000;padding:14px 28px;border-radius:25px;font-weight:700;opacity:0;transition:all 0.3s;z-index:10001;';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast.style.opacity = '1';
+            setTimeout(function() { toast.style.transform = 'translateX(-50%) translateY(50px)'; toast.style.opacity = '0'; }, 2500);
+        }
+
+        document.querySelectorAll('.filter-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                filterCues(this.dataset.filter);
             });
         });
 
         function filterCues(rarity) {
-            document.querySelectorAll('.cue-card').forEach(card => {
-                if (rarity === 'all' || card.dataset.rarity === rarity) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+            document.querySelectorAll('.cue-card').forEach(function(card) {
+                card.style.display = (rarity === 'all' || card.dataset.rarity === rarity) ? 'flex' : 'none';
             });
         }
 
-        // Purchase cue
         async function purchaseCue(cueId, price, currency) {
-            if (!currentUser) {
-                alert('Please login to purchase cues');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const userBalance = currency === 'coins' ? currentUser.coins : currentUser.cash;
-            if (userBalance < price) {
-                alert(`Not enough ${currency}! You need ${price} but have ${userBalance}`);
-                return;
-            }
-
-            if (!confirm(`Purchase this cue for ${price} ${currency}?`)) return;
-
+            if (!currentUser) { alert('Please login to purchase cues'); window.location.href = 'login.html'; return; }
+            if (ownedCues.includes(cueId)) { equipCue(cueId); return; }
+            var userBalance = currency === 'coins' ? currentUser.coins : currentUser.cash;
+            if (userBalance < price) { alert('Not enough ' + currency + '! You need ' + price + ' but have ' + userBalance); return; }
+            if (!confirm('Purchase ' + formatCueName(cueId) + ' for ' + price.toLocaleString() + ' ' + currency + '?')) return;
             try {
-                const response = await fetch('/api/shop/purchase', {
+                var token = localStorage.getItem('authToken');
+                var response = await fetch('/api/shop/purchase', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     credentials: 'include',
-                    body: JSON.stringify({ cueId, price, currency })
+                    body: JSON.stringify({ cueId: cueId, price: price, currency: currency })
                 });
-
-                const data = await response.json();
+                var data = await response.json();
                 if (data.success) {
-                    alert('🎉 Cue purchased successfully!');
+                    showToast('?? ' + formatCueName(cueId) + ' purchased!');
                     currentUser = data.user;
+                    ownedCues = ['standard'].concat(currentUser.cues || []);
+                    // UPDATE LOCALSTORAGE so profile page sees the new cue
+                    var storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    storedUser.cues = currentUser.cues;
+                    storedUser.coins = currentUser.coins;
+                    storedUser.cash = currentUser.cash;
+                    localStorage.setItem('user', JSON.stringify(storedUser));
                     updateCurrencyDisplay();
+                    equipCue(cueId);
                 } else {
                     alert(data.error || 'Purchase failed');
                 }
@@ -942,26 +988,35 @@
             }
         }
 
-        // Deal timer
         function updateDealTimer() {
-            const now = new Date();
-            const tomorrow = new Date(now);
+            var now = new Date();
+            var tomorrow = new Date(now);
             tomorrow.setDate(tomorrow.getDate() + 1);
             tomorrow.setHours(0, 0, 0, 0);
-
-            const diff = tomorrow - now;
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            document.getElementById('deal-timer').textContent =
-                `Ends in ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            var diff = tomorrow - now;
+            var hours = Math.floor(diff / (1000 * 60 * 60));
+            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('deal-timer').textContent = 'Ends in ' + String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
         }
-
         setInterval(updateDealTimer, 1000);
         updateDealTimer();
-
-        // Initialize
+        // Try to load from localStorage first
+        var storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                currentUser = JSON.parse(storedUser);
+                ownedCues = ['standard'].concat(currentUser.cues || []);
+                    // UPDATE LOCALSTORAGE so profile page sees the new cue
+                    var storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    storedUser.cues = currentUser.cues;
+                    storedUser.coins = currentUser.coins;
+                    storedUser.cash = currentUser.cash;
+                    localStorage.setItem('user', JSON.stringify(storedUser));
+                updateCurrencyDisplay();
+                updateCueButtons();
+            } catch(e) {}
+        }
         loadUserData();
     </script>
 </body>

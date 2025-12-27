@@ -42,7 +42,11 @@ class PoolGame {
         console.log('SoundManager initialized');
 
         // Load selected cue (from localStorage or window.selectedCue)
-        this.selectedCue = localStorage.getItem('selectedCue') || window.selectedCue || 'standard';
+        const savedCue = localStorage.getItem('selectedCue') || window.selectedCue || 'standard';
+        // Valid cue IDs in the game
+        const validCues = ['standard', 'premium', 'legendary', 'dragon', 'ice', 'viper', 'phoenix', 'shadow', 
+                          'dragons_breath', 'neon_striker', 'frost_bite', 'shadow_master', 'classic_oak'];
+        this.selectedCue = validCues.includes(savedCue) ? savedCue : 'standard';
         console.log('Selected cue loaded:', this.selectedCue);
 
         // Game state
@@ -2542,7 +2546,7 @@ class PoolGame {
         const cueBall = this.balls[0];
         if (!cueBall.active) return;
 
-        const cueLength = 280;
+        const cueLength = 364; // Extended by 30%
         const cueDistance = 25 + (this.power / 100) * 40;
         const cueX = cueBall.x - Math.cos(this.aimAngle) * cueDistance;
         const cueY = cueBall.y - Math.sin(this.aimAngle) * cueDistance;
@@ -2611,10 +2615,45 @@ class PoolGame {
                 wrap: ['#000000', '#0a0a0a', '#141414', '#0a0a0a', '#000000'],
                 rings: '#9c27b0',
                 tip: ['#311b92', '#4527a0', '#4527a0', '#283593']
+            },
+            dragons_breath: {
+                butt: ['#8b0000', '#b22222', '#dc143c', '#b22222', '#8b0000'],
+                shaft: ['#ff4500', '#ff6347', '#ff7f50', '#ffa07a', '#ff7f50', '#ff6347', '#ff4500'],
+                wrap: ['#1a0a00', '#2d1400', '#401e00', '#2d1400', '#1a0a00'],
+                rings: '#ffd700',
+                tip: ['#ff0000', '#ff4500', '#ff6347', '#dc143c']
+            },
+            neon_striker: {
+                butt: ['#1a0033', '#2d0055', '#400077', '#2d0055', '#1a0033'],
+                shaft: ['#ff00ff', '#ff44ff', '#ff88ff', '#ffaaff', '#ff88ff', '#ff44ff', '#ff00ff'],
+                wrap: ['#220044', '#330066', '#440088', '#330066', '#220044'],
+                rings: '#00ffff',
+                tip: ['#9900ff', '#bb00ff', '#dd00ff', '#7700cc']
+            },
+            frost_bite: {
+                butt: ['#001a33', '#003366', '#004080', '#003366', '#001a33'],
+                shaft: ['#00bfff', '#33ccff', '#66d9ff', '#99e6ff', '#66d9ff', '#33ccff', '#00bfff'],
+                wrap: ['#001122', '#002244', '#003366', '#002244', '#001122'],
+                rings: '#87ceeb',
+                tip: ['#0066cc', '#0088ff', '#00aaff', '#0055aa']
+            },
+            shadow_master: {
+                butt: ['#0a0a0a', '#1a1a1a', '#2a2a2a', '#1a1a1a', '#0a0a0a'],
+                shaft: ['#2d0066', '#440088', '#5500aa', '#6600cc', '#5500aa', '#440088', '#2d0066'],
+                wrap: ['#000000', '#0d0d0d', '#1a1a1a', '#0d0d0d', '#000000'],
+                rings: '#9900ff',
+                tip: ['#4400aa', '#5500cc', '#6600ee', '#3300aa']
+            },
+            classic_oak: {
+                butt: ['#3d2817', '#5c3d2e', '#6b4c3a', '#5c3d2e', '#3d2817'],
+                shaft: ['#c4a35a', '#d4b370', '#e0c080', '#ecd090', '#e0c080', '#d4b370', '#c4a35a'],
+                wrap: ['#2a2a2a', '#3a3a3a', '#4a4a4a', '#3a3a3a', '#2a2a2a'],
+                rings: '#8b7355',
+                tip: ['#4a6c8c', '#5a7c9c', '#6a8cac', '#4a6c8c']
             }
         };
 
-        const colors = cueStyles[cueStyle];
+        const colors = cueStyles[cueStyle] || cueStyles['standard']; // Fallback to standard if cue not found
 
         // === CUE SHADOW ===
         ctx.save();
