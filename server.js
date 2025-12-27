@@ -934,6 +934,85 @@ app.get('/api/invite-code', authenticateToken, (req, res) => {
 });
 
 
+
+// ============ SHOP API ============
+
+// Purchase a cue
+app.post('/api/shop/purchase', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const { cueId, price, currency } = req.body;
+        
+        if (!cueId || !price || !currency) {
+            return res.status(400).json({ success: false, error: 'Missing required fields' });
+        }
+
+        // Check if user has enough currency
+        const balance = currency === 'coins' ? (user.coins || 0) : (user.cash || 0);
+        if (balance < price) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Insufficient ' + currency 
+            });
+        }
+
+        // Deduct the price
+        if (currency === 'coins') {
+            user.coins = (user.coins || 0) - price;
+        } else {
+            user.cash = (user.cash || 0) - price;
+        }
+
+        // Add cue to user's collection
+        if (!user.cues) user.cues = [];
+        if (!user.cues.includes(cueId)) {
+            user.cues.push(cueId);
+        }
+
+        saveUsers();
+
+        console.log("SHOP: " + user.username + " purchased " + cueId + " for " + price + " " + currency);
+
+        res.json({ 
+            success: true, 
+            message: 'Cue purchased successfully!',
+            user: {
+                username: user.username,
+                coins: user.coins,
+                cash: user.cash,
+                cues: user.cues
+            }
+        });
+    } catch (error) {
+        console.error('Shop purchase error:', error);
+        res.status(500).json({ success: false, error: 'Purchase failed' });
+    }
+});
+
+// Get user's cues
+app.get('/api/shop/cues', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ 
+            success: true, 
+            cues: user.cues || [],
+            coins: user.coins || 0,
+            cash: user.cash || 0
+        });
+    } catch (error) {
+        console.error('Get cues error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get cues' });
+    }
+});
+
 // ============ FRIENDS API ============
 
 // Get user's friends list
