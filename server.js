@@ -764,7 +764,7 @@ app.post('/api/rewards/claim', authenticateToken, (req, res) => {
         user.coins = (user.coins || 0) + reward;
         saveUsers();
 
-        console.log(??  claimed daily reward:  coins (Day ));
+        console.log("REWARD: " + user.username + " claimed daily reward: " + reward + " coins (Day " + day + ")");
 
         res.json({ 
             success: true, 
@@ -811,7 +811,7 @@ app.post('/api/tasks/claim', authenticateToken, (req, res) => {
         user.coins = (user.coins || 0) + reward;
         saveUsers();
 
-        console.log(??  completed task:  (+ coins));
+        console.log("TASK: " + user.username + " completed task: " + taskId + " (+" + reward + " coins)");
 
         res.json({ 
             success: true, 
@@ -893,11 +893,11 @@ app.post('/api/referral/apply', authenticateToken, (req, res) => {
 
         saveUsers();
 
-        console.log(?? Referral applied:  used 's code);
+        console.log("REFERRAL: " + user.username + " used referral from " + referrer.username);
 
         res.json({ 
             success: true, 
-            message: You received  bonus coins!,
+            message: "You received " + referralBonus + " bonus coins!",
             bonus: referralBonus
         });
     } catch (error) {
@@ -930,6 +930,129 @@ app.get('/api/invite-code', authenticateToken, (req, res) => {
     } catch (error) {
         console.error('Get invite code error:', error);
         res.status(500).json({ success: false, error: 'Failed to get invite code' });
+    }
+});
+
+
+// ============ FRIENDS API ============
+
+// Get user's friends list
+app.get('/api/friends', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Get friends list (or create empty if doesn't exist)
+        const friendEmails = user.friends || [];
+        
+        // Build friends data with online status
+        const friends = friendEmails.map(email => {
+            const friend = users.get(email);
+            if (!friend) return null;
+            
+            // Check if friend is online (connected via WebSocket)
+            const isOnline = multiplayer.isUserOnline ? multiplayer.isUserOnline(email) : false;
+            const isInGame = multiplayer.isUserInGame ? multiplayer.isUserInGame(email) : false;
+            
+            return {
+                id: friend.id,
+                name: friend.username,
+                avatar: friend.profilePicture ? null : '??',
+                avatarUrl: friend.profilePicture || null,
+                status: isInGame ? 'ingame' : (isOnline ? 'online' : 'offline'),
+                statusText: isInGame ? 'In Game' : (isOnline ? 'Online' : 'Offline'),
+                elo: friend.elo,
+                rank: EloCalculator.getRankFromElo(friend.elo)
+            };
+        }).filter(f => f !== null);
+
+        res.json({ success: true, friends });
+    } catch (error) {
+        console.error('Get friends error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get friends' });
+    }
+});
+
+// Add a friend
+app.post('/api/friends/add', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const { friendEmail, friendUsername } = req.body;
+        
+        // Find friend by email or username
+        let friend = null;
+        if (friendEmail) {
+            friend = users.get(friendEmail.toLowerCase());
+        } else if (friendUsername) {
+            for (const u of users.values()) {
+                if (u.username.toLowerCase() === friendUsername.toLowerCase()) {
+                    friend = u;
+                    break;
+                }
+            }
+        }
+
+        if (!friend) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        if (friend.email === user.email) {
+            return res.status(400).json({ success: false, error: 'Cannot add yourself' });
+        }
+
+        // Initialize friends array if needed
+        if (!user.friends) user.friends = [];
+        
+        if (user.friends.includes(friend.email)) {
+            return res.status(400).json({ success: false, error: 'Already friends' });
+        }
+
+        user.friends.push(friend.email);
+        saveUsers();
+
+        res.json({ success: true, message: `Added ${friend.username} as friend` });
+    } catch (error) {
+        console.error('Add friend error:', error);
+        res.status(500).json({ success: false, error: 'Failed to add friend' });
+    }
+});
+
+// Remove a friend
+app.delete('/api/friends/:friendId', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const friendId = parseInt(req.params.friendId);
+        
+        // Find friend by ID
+        let friendEmail = null;
+        for (const u of users.values()) {
+            if (u.id === friendId) {
+                friendEmail = u.email;
+                break;
+            }
+        }
+
+        if (!friendEmail || !user.friends || !user.friends.includes(friendEmail)) {
+            return res.status(404).json({ success: false, error: 'Friend not found' });
+        }
+
+        user.friends = user.friends.filter(e => e !== friendEmail);
+        saveUsers();
+
+        res.json({ success: true, message: 'Friend removed' });
+    } catch (error) {
+        console.error('Remove friend error:', error);
+        res.status(500).json({ success: false, error: 'Failed to remove friend' });
     }
 });
 

@@ -866,147 +866,438 @@
             }
         }
 
+
+        /* Friends Activity - Portrait styling (before landscape) */
+        .right-column-wrapper {
+            display: contents; /* In portrait, don't wrap - just flow normally */
+        }
+
         /* ============================================
-           MOBILE LANDSCAPE LAYOUT
+           FRIENDS ACTIVITY SECTION
+           ============================================ */
+        .friends-activity-section {
+            margin: 12px;
+            background: linear-gradient(135deg, rgba(25, 35, 55, 0.95) 0%, rgba(20, 30, 50, 0.98) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .friends-activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .friends-activity-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .view-all-btn {
+            font-size: 0.7rem;
+            color: #8899aa;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .view-all-btn:hover {
+            color: #00d4ff;
+        }
+
+        .friends-activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .friend-activity-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .friend-activity-item:hover {
+            background: rgba(0, 212, 255, 0.08);
+            border-color: rgba(0, 212, 255, 0.25);
+        }
+
+        .friend-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a2a4a 0%, #0f1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            position: relative;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .friend-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .status-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #1a2540;
+        }
+
+        .status-dot.online {
+            background: #00ff88;
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+        }
+
+        .status-dot.ingame {
+            background: #f39c12;
+            box-shadow: 0 0 6px rgba(243, 156, 18, 0.6);
+        }
+
+        .status-dot.offline {
+            background: #666;
+        }
+
+        .friend-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .friend-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .friend-status {
+            font-size: 0.65rem;
+            color: #8899aa;
+        }
+
+        .friend-status.online {
+            color: #00ff88;
+        }
+
+        .friend-status.ingame {
+            color: #f39c12;
+        }
+
+        .challenge-btn {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            border: none;
+            border-radius: 15px;
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .challenge-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        }
+
+        .no-friends-msg {
+            text-align: center;
+            padding: 20px;
+            color: #8899aa;
+            font-size: 0.75rem;
+        }
+
+        .no-friends-msg a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+
+
+        /* ============================================
+           LANDSCAPE LAYOUT - CORRECT 2-ROW GRID
            ============================================ */
         @media (pointer: coarse) and (orientation: landscape),
                (max-height: 500px) and (orientation: landscape) {
             
-            /* Hide non-essential header elements */
+            body { overflow-y: auto !important; }
+            
+            /* Header */
             .top-header {
-                padding: 6px 12px !important;
+                padding: 8px 20px !important;
+                background: rgba(10, 22, 40, 0.95) !important;
             }
+            .header-brand-text { font-size: 1.1rem !important; }
+            .header-btn { width: 36px !important; height: 36px !important; }
             
-            .header-btn {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 1rem !important;
-            }
-            
-            .header-brand-text {
-                font-size: 0.9rem !important;
-            }
-            
-            .header-8ball {
-                font-size: 1.2rem !important;
-            }
-            
-            /* Main content - horizontal flex layout */
+            /* ===== MAIN GRID: 3 columns x 2 rows ===== */
             .main-content {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: flex-start !important;
-                justify-content: center !important;
-                gap: 15px !important;
-                padding: 8px 15px !important;
-                padding-bottom: 60px !important;
+                display: grid !important;
+                grid-template-columns: 280px 1fr 1fr !important;
+                grid-template-rows: auto 1fr !important;
+                gap: 12px !important;
+                padding: 12px 15px 65px 15px !important;
                 max-width: 100% !important;
-                overflow-x: hidden !important;
+                min-height: calc(100vh - 70px) !important;
+                align-items: stretch !important;
             }
             
-            /* Profile card - compact left side */
+            /* ======================= */
+            /* ROW 1, COL 1: Profile Card */
+            /* ======================= */
             .profile-card {
-                flex: 0 0 auto !important;
-                width: 200px !important;
-                min-width: 180px !important;
+                grid-column: 1 !important;
+                grid-row: 1 !important;
+                display: block !important;
+                padding: 12px !important;
                 margin: 0 !important;
-                padding: 10px !important;
             }
             
             .profile-main {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
                 gap: 10px !important;
-                margin-bottom: 8px !important;
+                margin-bottom: 10px !important;
             }
             
-            .profile-avatar {
-                width: 45px !important;
-                height: 45px !important;
-            }
+            .profile-avatar-section { flex-shrink: 0 !important; }
+            .profile-avatar { width: 50px !important; height: 50px !important; }
+            .profile-level { font-size: 0.45rem !important; padding: 2px 5px !important; margin-top: -6px !important; }
             
-            .profile-level {
-                font-size: 0.5rem !important;
-                padding: 2px 5px !important;
-            }
-            
-            .profile-name {
-                font-size: 0.75rem !important;
-            }
-            
-            .profile-rank-title {
-                font-size: 0.65rem !important;
-                margin-bottom: 4px !important;
-            }
-            
-            .profile-xp-bar {
-                height: 5px !important;
-            }
-            
-            .profile-xp-text {
-                font-size: 0.5rem !important;
-            }
+            .profile-details { flex: 1 !important; }
+            .profile-name { font-size: 0.9rem !important; }
+            .profile-rank-title { font-size: 0.65rem !important; color: #00d4ff !important; }
+            .profile-xp-bar { height: 7px !important; margin: 5px 0 !important; }
+            .profile-xp-text { font-size: 0.5rem !important; }
             
             .profile-stats {
-                gap: 6px !important;
-            }
-            
-            .stat-box {
-                padding: 5px 4px !important;
-            }
-            
-            .stat-icon {
-                font-size: 0.9rem !important;
-                margin-bottom: 1px !important;
-            }
-            
-            .stat-value {
-                font-size: 0.7rem !important;
-            }
-            
-            .stat-label {
-                font-size: 0.45rem !important;
-            }
-            
-            /* Game modes section - right side grid */
-            .game-modes-section {
-                flex: 1 1 auto !important;
-                padding: 8px !important;
-                max-width: 400px !important;
-            }
-            
-            .section-title {
-                font-size: 0.75rem !important;
-                margin-bottom: 8px !important;
-            }
-            
-            .game-modes {
-                display: grid !important;
-                grid-template-columns: repeat(2, 1fr) !important;
+                display: flex !important;
+                flex-direction: row !important;
                 gap: 8px !important;
             }
             
+            .stat-box {
+                flex: 1 !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                padding: 8px 6px !important;
+            }
+            .stat-icon { font-size: 0.9rem !important; margin-bottom: 3px !important; }
+            .stat-value { font-size: 0.8rem !important; }
+            .stat-label { font-size: 0.45rem !important; }
+            
+            /* ======================= */
+            /* ROW 1, COL 2-3: Game Modes (spans 2 columns) */
+            /* ======================= */
+            .game-modes-section {
+                grid-column: 2 / span 2 !important;
+                grid-row: 1 !important;
+                padding: 0 10px 0 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                height: 100% !important;
+            }
+            
+            .section-title {
+                font-size: 0.9rem !important;
+                margin-bottom: 12px !important;
+                text-align: center !important;
+            }
+            
+            .game-modes {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 15px !important;
+                width: 100% !important;
+                justify-content: stretch !important;
+            }
+            
             .btn-mode {
-                padding: 10px 8px !important;
-                gap: 4px !important;
+                flex: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 20px 15px !important;
+                min-height: 85px !important;
+                gap: 8px !important;
+                position: relative !important;
+                border-radius: 14px !important;
             }
             
-            .btn-mode .mode-icon {
-                font-size: 1.3rem !important;
+            /* PLAY LIVE - Green themed */
+            .btn-mode.btn-online-play {
+                background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 180, 100, 0.08) 100%) !important;
+                border: 2px solid rgba(0, 255, 136, 0.4) !important;
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.1) !important;
+            }
+            .btn-mode.btn-online-play:hover {
+                box-shadow: 0 0 30px rgba(0, 255, 136, 0.25) !important;
             }
             
-            .btn-mode .mode-text {
-                font-size: 0.65rem !important;
+            /* 2 PLAYERS - Blue themed */
+            #btn-2player {
+                background: linear-gradient(135deg, rgba(0, 150, 255, 0.15) 0%, rgba(0, 100, 200, 0.08) 100%) !important;
+                border: 2px solid rgba(0, 180, 255, 0.35) !important;
+            }
+            #btn-2player:hover {
+                box-shadow: 0 0 25px rgba(0, 180, 255, 0.2) !important;
             }
             
-            .online-badge {
-                font-size: 0.45rem !important;
-                padding: 1px 4px !important;
+            /* TOURNAMENTS - Gold/Orange themed */
+            .btn-mode.btn-tournament, #btn-tournament {
+                background: linear-gradient(135deg, rgba(255, 180, 0, 0.15) 0%, rgba(255, 120, 0, 0.08) 100%) !important;
+                border: 2px solid rgba(255, 180, 0, 0.4) !important;
+            }
+            .btn-mode.btn-tournament:hover, #btn-tournament:hover {
+                box-shadow: 0 0 25px rgba(255, 180, 0, 0.2) !important;
             }
             
-            /* Daily rewards - hide or minimize */
+            /* CUES - Purple themed (if visible) */
+            #btn-cues {
+                background: linear-gradient(135deg, rgba(180, 100, 255, 0.15) 0%, rgba(140, 60, 200, 0.08) 100%) !important;
+                border: 2px solid rgba(180, 100, 255, 0.35) !important;
+            }
+            
+            .btn-mode .mode-icon { font-size: 1.8rem !important; }
+            .btn-mode .mode-text { font-size: 0.8rem !important; font-weight: 700 !important; letter-spacing: 0.5px !important; }
+            .btn-mode .online-badge { 
+                font-size: 0.5rem !important; 
+                padding: 3px 10px !important;
+                position: absolute !important;
+                top: 8px !important;
+                right: 8px !important;
+                background: #00ff88 !important;
+                color: #000 !important;
+                border-radius: 10px !important;
+                font-weight: 700 !important;
+            }
+            
+            /* ======================= */
+            /* ROW 2, COL 1: Friends Activity */
+            /* ======================= */
+            .friends-activity-section {
+                grid-column: 1 !important;
+                grid-row: 2 !important;
+                margin: 0 !important;
+                padding: 12px !important;
+            }
+            
+            .friends-activity-title { font-size: 0.8rem !important; }
+            .view-all-btn { font-size: 0.6rem !important; }
+            .friends-activity-list { gap: 6px !important; }
+            .friend-activity-item { padding: 8px !important; }
+            .friend-avatar { width: 32px !important; height: 32px !important; }
+            .friend-name { font-size: 0.7rem !important; }
+            .friend-status { font-size: 0.55rem !important; }
+            .no-friends-msg { font-size: 0.7rem !important; padding: 25px 12px !important; }
+            
+            /* ======================= */
+            /* ROW 2, COL 2: Daily Rewards */
+            /* ======================= */
             .daily-rewards-section {
-                display: none !important;
+                grid-column: 2 !important;
+                grid-row: 2 !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 12px !important;
             }
+            
+            .daily-rewards-header { margin-bottom: 10px !important; }
+            .daily-rewards-title { font-size: 0.8rem !important; }
+            .daily-rewards-timer { font-size: 0.6rem !important; }
+            
+            .daily-login-bonus {
+                padding: 10px !important;
+                gap: 10px !important;
+                margin-bottom: 12px !important;
+            }
+            .gift-icon { width: 38px !important; height: 38px !important; font-size: 1.1rem !important; }
+            .bonus-info h4 { font-size: 0.75rem !important; }
+            .bonus-info p { font-size: 0.6rem !important; }
+            
+            .daily-streak-days { gap: 6px !important; margin-bottom: 12px !important; justify-content: center !important; }
+            .streak-day { width: 36px !important; height: 36px !important; font-size: 0.6rem !important; }
+            
+            .claim-reward-btn { padding: 12px 16px !important; font-size: 0.75rem !important; width: 100% !important; }
+            .games-progress { font-size: 0.6rem !important; margin-top: 8px !important; }
+            
+            /* ======================= */
+            /* ROW 2, COL 3: Daily Tasks */
+            /* ======================= */
+            .daily-tasks-section {
+                grid-column: 3 !important;
+                grid-row: 2 !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 12px !important;
+                overflow-y: auto !important;
+            }
+            
+            .daily-tasks-header { margin-bottom: 10px !important; }
+            .daily-tasks-title { font-size: 0.8rem !important; }
+            .tasks-earnings { font-size: 0.6rem !important; }
+            .tasks-progress { display: none !important; }
+            
+            .task-item { padding: 10px !important; gap: 8px !important; margin-bottom: 8px !important; }
+            .task-icon { width: 36px !important; height: 36px !important; font-size: 1rem !important; }
+            .task-name { font-size: 0.7rem !important; }
+            .task-description { font-size: 0.55rem !important; }
+            .task-reward { font-size: 0.7rem !important; }
+            .task-btn { padding: 6px 12px !important; font-size: 0.6rem !important; }
+            
+            .invite-section { margin-top: 12px !important; padding: 10px !important; }
+            .invite-code { font-size: 0.75rem !important; padding: 8px !important; }
+            .share-buttons { gap: 6px !important; }
+            .share-btn { padding: 6px !important; font-size: 0.55rem !important; }
+            
+            /* ======================= */
+            /* BOTTOM NAV */
+            /* ======================= */
+            .bottom-nav {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                padding: 8px 30px !important;
+                border-radius: 0 !important;
+                background: rgba(10, 20, 40, 0.98) !important;
+                justify-content: space-around !important;
+                border-top: 1px solid rgba(0, 212, 255, 0.15) !important;
+            }
+            
+            .nav-btn { padding: 8px 20px !important; gap: 4px !important; flex-direction: column !important; }
+            .nav-btn .nav-icon { font-size: 1.1rem !important; }
+            .nav-btn .nav-text { font-size: 0.6rem !important; }
         }
+
     </style>
 </head>
 
@@ -1096,10 +1387,30 @@
                 </button>
             </div>
         </div>
+
+        <!-- Friends Activity Section -->
+        <div class="friends-activity-section" id="friends-activity-section">
+        <div class="friends-activity-header">
+            <span class="friends-activity-title">?? FRIENDS ACTIVITY</span>
+            <a href="friends.html" class="view-all-btn">View All �</a>
+        </div>
+        <div class="friends-activity-list" id="friends-activity-list">
+            <!-- Friend items will be loaded here -->
+            <div class="friend-activity-item">
+                <div class="friend-avatar online">
+                    <span>??</span>
+                    <div class="status-dot online"></div>
+                </div>
+                <div class="friend-info">
+                    <div class="friend-name">Loading...</div>
+                    <div class="friend-status">Checking friends...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Daily Rewards Section -->
-    <div class="daily-rewards-section" id="daily-rewards-section" style="display: none;">
+
+        <div class="daily-rewards-section" id="daily-rewards-section" style="display: none;">
         <div class="daily-rewards-header">
             <span class="daily-rewards-title">🎁 DAILY REWARDS</span>
             <span class="daily-rewards-timer">Resets in <span id="reward-timer">23h 59m</span></span>
@@ -1133,7 +1444,34 @@
         <div class="games-progress">Games played today: <span id="games-today">0</span>/3</div>
     </div>
 
-    <!-- Bottom Navigation -->
+        <!-- Daily Tasks Section -->
+        <div class="daily-tasks-section" id="daily-tasks-section">
+            <div class="daily-tasks-header">
+                <span class="daily-tasks-title">?? DAILY TASKS</span>
+                <span class="tasks-earnings">Earn up to <span id="max-earnings">2,250</span> ??</span>
+            </div>
+            <div class="tasks-list" id="tasks-list">
+                <!-- Tasks will be loaded by daily-tasks.js -->
+            </div>
+            <div class="invite-section">
+                <div class="invite-code-header">
+                    <span class="invite-code-title">?? Your Invite Code</span>
+                    <span class="invite-count">Invited: <span id="invited-count">0</span></span>
+                </div>
+                <div class="invite-code-box">
+                    <span class="invite-code" id="invite-code">LOADING...</span>
+                    <button class="copy-code-btn" onclick="copyInviteCode()">?? Copy</button>
+                </div>
+                <div class="share-buttons">
+                    <button class="share-btn whatsapp" onclick="shareVia('whatsapp')">WhatsApp</button>
+                    <button class="share-btn telegram" onclick="shareVia('telegram')">Telegram</button>
+                    <button class="share-btn twitter" onclick="shareVia('twitter')">Twitter</button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End main-content -->
+
+        <!-- Bottom Navigation -->
     <nav class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-btn active" id="nav-home">
             <span class="nav-icon">🏠</span>
@@ -1523,6 +1861,7 @@
     <script src="stake-modal.js"></script>
     <script src="daily-rewards.js"></script>
     <script src="daily-tasks.js"></script>
+    <script src="friends-activity.js"></script>
 </body>
 
 </html>

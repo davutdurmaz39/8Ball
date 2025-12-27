@@ -437,17 +437,21 @@
     }
 
     function initTasks() {
-        // Insert tasks section after daily rewards section or main content
-        const dailyRewards = document.getElementById('daily-rewards-section');
-        const mainContent = document.getElementById('main-content');
+        // Use existing HTML if present, otherwise create dynamically
+        let section = document.getElementById('daily-tasks-section');
 
-        if (!document.getElementById('daily-tasks-section')) {
+        if (!section) {
+            // Insert tasks section after daily rewards section or main content
+            const dailyRewards = document.getElementById('daily-rewards-section');
+            const mainContent = document.getElementById('main-content');
+
             const tasksSection = createTasksSection();
             if (dailyRewards) {
                 dailyRewards.parentNode.insertBefore(tasksSection, dailyRewards.nextSibling);
             } else if (mainContent) {
                 mainContent.appendChild(tasksSection);
             }
+            section = document.getElementById('daily-tasks-section');
         }
 
         let data = getTasksData();
@@ -459,10 +463,15 @@
             saveTasksData(data);
         }
 
-        // Show section
-        const section = document.getElementById('daily-tasks-section');
+        // Show section and update invite code display
         if (section) {
             section.style.display = 'block';
+        }
+
+        // Update invite code in both possible element IDs
+        const inviteCodeEl = document.getElementById('invite-code') || document.getElementById('invite-code-display');
+        if (inviteCodeEl) {
+            inviteCodeEl.textContent = data.inviteCode;
         }
 
         updateTasksUI(data);
