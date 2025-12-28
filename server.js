@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Mine Pool Game Server with Multiplayer Support
  * Features: Authentication, WebSocket, Matchmaking, Tournaments
  */
@@ -1585,6 +1585,365 @@ app.get('/api/stats', (req, res) => {
     }
 });
 
+
+
+
+// ============ ADMIN DASHBOARD APIs ============
+
+// Admin analytics overview
+app.get('/api/admin/analytics/overview', (req, res) => {
+    try {
+        res.json({
+            success: true,
+            overview: {
+                today: {
+                    activeUsers: Array.from(users.values()).filter(u => u.lastLogin && new Date(u.lastLogin) > new Date(Date.now() - 86400000)).length,
+                    newUsers: 0,
+                    gamesPlayed: 0,
+                    revenue: 0
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Admin analytics error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load analytics' });
+    }
+});
+
+// Admin live games
+app.get('/api/admin/games/live', (req, res) => {
+    try {
+        const stats = multiplayer.getStats ? multiplayer.getStats() : { activeGames: 0, games: [] };
+        res.json({
+            success: true,
+            count: stats.activeGames || 0,
+            games: []
+        });
+    } catch (error) {
+        console.error('Admin games error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load games' });
+    }
+});
+
+// Admin user stats
+app.get('/api/admin/users/stats', (req, res) => {
+    try {
+        const allUsers = Array.from(users.values());
+        res.json({
+            success: true,
+            stats: {
+                totalUsers: allUsers.length,
+                activeUsers: allUsers.filter(u => u.lastLogin && new Date(u.lastLogin) > new Date(Date.now() - 86400000)).length,
+                bannedUsers: allUsers.filter(u => u.banned).length
+            }
+        });
+    } catch (error) {
+        console.error('Admin users stats error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load user stats' });
+    }
+});
+
+// Admin activity log
+app.get('/api/admin/settings/activity', (req, res) => {
+    try {
+        res.json({
+            success: true,
+            logs: []
+        });
+    } catch (error) {
+        console.error('Admin activity error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load activity' });
+    }
+});
+
+// Admin users list
+app.get('/api/admin/users', (req, res) => {
+    try {
+        const allUsers = Array.from(users.values()).map(u => ({
+            id: u.id,
+            username: u.username,
+            email: u.email,
+            status: u.banned ? 'banned' : 'active',
+            elo: u.elo || 1200,
+            gamesPlayed: u.gamesPlayed || 0,
+            wins: u.wins || 0,
+            losses: u.losses || 0,
+            coins: u.coins || 0
+        }));
+        res.json({ success: true, users: allUsers });
+    } catch (error) {
+        console.error('Admin users error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load users' });
+    }
+});
+
+// Admin moderation reports
+app.get('/api/admin/moderation/reports', (req, res) => {
+    try {
+        res.json({ success: true, reports: [] });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to load moderation reports' });
+    }
+});
+
+app.get('/api/admin/moderation/reports/stats', (req, res) => {
+    try {
+        res.json({ success: true, stats: { open: 0, reviewing: 0, resolved: 0 } });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to load reports stats' });
+    }
+});
+
+// Admin settings
+app.get('/api/admin/settings', (req, res) => {
+    try {
+        res.json({
+            success: true,
+            settings: {
+                game: {
+                    physics: {
+                        ballRadius: 12,
+                        pocketRadius: 18,
+                        cushionWidth: 20,
+                        maxCueSpeed: 2000,
+                        gravity: 0,
+                        muRoll: 0.01,
+                        muSlide: 0.2,
+                        muSpin: 10,
+                        eBall: 0.95,
+                        eCushion: 0.75
+                    },
+                    gameplay: {
+                        shotTimeLimit: 60,
+                        breakTimeLimit: 90,
+                        maxPower: 100,
+                        enableSpin: true,
+                        callPocket: false
+                    },
+                    economy: {
+                        startingCoins: 1000,
+                        minBet: 100,
+                        maxBet: 50000,
+                        winReward: 100
+                    }
+                },
+                features: {
+                    maintenance: false,
+                    newUserRegistration: true,
+                    chatEnabled: true,
+                    tournamentMode: true
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to load settings' });
+    }
+});
+
+// Admin analytics endpoints
+app.get('/api/admin/analytics/users', (req, res) => {
+    res.json({ success: true, data: { activeUsers: [], newUsers: [] } });
+});
+
+app.get('/api/admin/analytics/games', (req, res) => {
+    res.json({ success: true, data: { gamesPerDay: [], avgDuration: 300 } });
+});
+
+app.get('/api/admin/analytics/revenue', (req, res) => {
+    res.json({ success: true, data: { totalRevenue: 0 } });
+});
+
+app.get('/api/admin/games/history', (req, res) => {
+    res.json({ success: true, games: [] });
+});
+
+// ============ ADMIN AUTH ============
+
+// Admin login - simple username/password verification
+app.post('/api/admin/auth/login', (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Simple admin credentials (in production, use proper authentication)
+        if (username === 'admin' && password === 'admin123') {
+            res.json({
+                success: true,
+                token: 'admin-token-' + Date.now(),
+                user: { username: 'admin', role: 'admin' }
+            });
+        } else {
+            res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ success: false, error: 'Login failed' });
+    }
+});
+// ============ REPORTS & FEEDBACK API ============
+
+const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
+
+// Load reports from file
+function loadReports() {
+    try {
+        if (fs.existsSync(REPORTS_FILE)) {
+            const data = fs.readFileSync(REPORTS_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (error) {
+        console.error('Error loading reports:', error);
+    }
+    return [];
+}
+
+// Save reports to file
+function saveReports(reports) {
+    try {
+        fs.writeFileSync(REPORTS_FILE, JSON.stringify(reports, null, 2));
+    } catch (error) {
+        console.error('Error saving reports:', error);
+    }
+}
+
+let reports = loadReports();
+let nextReportId = reports.length > 0 ? Math.max(...reports.map(r => r.id)) + 1 : 1;
+
+// Submit a report (authenticated users)
+app.post('/api/reports', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const { type, subject, category, description, priority } = req.body;
+
+        if (!type || !subject || !description) {
+            return res.status(400).json({ success: false, error: 'Type, subject, and description are required' });
+        }
+
+        const report = {
+            id: nextReportId++,
+            type: type,
+            subject: subject,
+            category: category || 'other',
+            description: description,
+            priority: priority || 'low',
+            status: 'open',
+            userId: user.id,
+            username: user.username,
+            userEmail: user.email,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            adminNotes: null,
+            resolvedBy: null
+        };
+
+        reports.push(report);
+        saveReports(reports);
+
+        console.log('New ' + type + ': "' + subject + '" from ' + user.username);
+
+        res.json({ 
+            success: true, 
+            message: 'Report submitted successfully',
+            reportId: report.id
+        });
+    } catch (error) {
+        console.error('Submit report error:', error);
+        res.status(500).json({ success: false, error: 'Failed to submit report' });
+    }
+});
+
+// Get all reports (for admin)
+app.get('/api/admin/reports', (req, res) => {
+    try {
+        const { status, type, priority } = req.query;
+        
+        let filteredReports = [...reports];
+        
+        if (status && status !== 'all') {
+            filteredReports = filteredReports.filter(r => r.status === status);
+        }
+        if (type && type !== 'all') {
+            filteredReports = filteredReports.filter(r => r.type === type);
+        }
+        if (priority && priority !== 'all') {
+            filteredReports = filteredReports.filter(r => r.priority === priority);
+        }
+
+        filteredReports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json({ 
+            success: true, 
+            reports: filteredReports,
+            stats: {
+                total: reports.length,
+                open: reports.filter(r => r.status === 'open').length,
+                inProgress: reports.filter(r => r.status === 'in_progress').length,
+                resolved: reports.filter(r => r.status === 'resolved').length,
+                bugs: reports.filter(r => r.type === 'bug').length,
+                features: reports.filter(r => r.type === 'feature').length
+            }
+        });
+    } catch (error) {
+        console.error('Get reports error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get reports' });
+    }
+});
+
+// Update report status (for admin)
+app.patch('/api/admin/reports/:id', (req, res) => {
+    try {
+        const reportId = parseInt(req.params.id);
+        const report = reports.find(r => r.id === reportId);
+        
+        if (!report) {
+            return res.status(404).json({ success: false, error: 'Report not found' });
+        }
+
+        const { status, adminNotes, resolvedBy } = req.body;
+
+        if (status) report.status = status;
+        if (adminNotes !== undefined) report.adminNotes = adminNotes;
+        if (resolvedBy) report.resolvedBy = resolvedBy;
+        report.updatedAt = new Date().toISOString();
+
+        saveReports(reports);
+
+        console.log('Report #' + reportId + ' updated: status=' + (status || report.status));
+
+        res.json({ success: true, report });
+    } catch (error) {
+        console.error('Update report error:', error);
+        res.status(500).json({ success: false, error: 'Failed to update report' });
+    }
+});
+
+// Delete report (for admin)
+app.delete('/api/admin/reports/:id', (req, res) => {
+    try {
+        const reportId = parseInt(req.params.id);
+        const index = reports.findIndex(r => r.id === reportId);
+        
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'Report not found' });
+        }
+
+        reports.splice(index, 1);
+        saveReports(reports);
+
+        console.log('Report #' + reportId + ' deleted');
+
+        res.json({ success: true, message: 'Report deleted' });
+    } catch (error) {
+        console.error('Delete report error:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete report' });
+    }
+});
+
+// Serve admin panel
+app.use('/admin', express.static(path.join(__dirname, 'admin', 'client')));
 // ============ STATIC FILE SERVING ============
 
 app.get('/', (req, res) => {

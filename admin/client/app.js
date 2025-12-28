@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 8-Ball Pool Admin Panel JavaScript
  */
 
@@ -89,6 +89,23 @@ class AdminPanel {
         document.getElementById('save-physics-settings').addEventListener('click', () => {
             this.savePhysicsSettings();
         });
+
+
+        // Message filters
+        const msgTypeFilter = document.getElementById('msg-type-filter');
+        const msgStatusFilter = document.getElementById('msg-status-filter');
+
+        if (msgTypeFilter) {
+            msgTypeFilter.addEventListener('change', () => {
+                this.loadMessages(msgTypeFilter.value, msgStatusFilter.value);
+            });
+        }
+
+        if (msgStatusFilter) {
+            msgStatusFilter.addEventListener('change', () => {
+                this.loadMessages(msgTypeFilter.value, msgStatusFilter.value);
+            });
+        }
 
         // Modal close
         document.querySelector('.modal-close').addEventListener('click', () => {
@@ -224,6 +241,9 @@ class AdminPanel {
                 break;
             case 'settings':
                 this.loadSettings();
+                break;
+            case 'messages':
+                this.loadMessages();
                 break;
         }
     }
@@ -763,7 +783,172 @@ class AdminPanel {
             await this.api('/settings/game', 'PUT', { economy });
             this.showToast('Economy settings saved!', 'success');
         } catch (error) {
-            this.showToast('Failed to save economy', 'error');
+            this.showToast('Failed to save economy settings', 'error');
+        }
+    }
+
+    // Messages Page (User Reports & Feature Suggestions)
+    async loadMessages(typeFilter = 'all', statusFilter = 'all') {
+        try {
+            const params = new URLSearchParams();
+            if (typeFilter !== 'all') params.append('type', typeFilter);
+            if (statusFilter !== 'all') params.append('status', statusFilter);
+
+            const response = await fetch(`/api/admin/reports?${params.toString()}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error);
+            }
+
+            // Update stats
+            document.getElementById('msg-total').textContent = data.stats.total;
+            document.getElementById('msg-open').textContent = data.stats.open;
+            document.getElementById('msg-bugs').textContent = data.stats.bugs;
+            document.getElementById('msg-features').textContent = data.stats.features;
+            document.getElementById('messages-count').textContent = data.stats.open;
+
+            // Update table
+            const table = document.getElementById('messages-table');
+            if (data.reports.length === 0) {
+                table.innerHTML = '<tr><td colspan="8" class="loading">No messages found</td></tr>';
+            } else {
+                table.innerHTML = data.reports.map(report => `
+                    <tr>
+                        <td>#${report.id}</td>
+                        <td><span class="type-badge ${report.type}">${report.type === 'bug' ? '🐛 Bug' : '💡 Feature'}</span></td>
+                        <td title="${this.escapeHtml(report.description)}">${this.escapeHtml(report.subject.substring(0, 40))}${report.subject.length > 40 ? '...' : ''}</td>
+                        <td>${this.escapeHtml(report.username)}</td>
+                        <td><span class="priority-badge ${report.priority}">${report.priority}</span></td>
+                        <td><span class="status ${report.status}">${report.status.replace(/_/g, ' ')}</span></td>
+                        <td>${this.formatTimeAgo(new Date(report.createdAt))}</td>
+                        <td>
+                            <button class="btn-action" onclick="admin.viewMessage(${report.id})">View</button>
+                            ${report.status === 'open' ? `
+                                <button class="btn-action warning" onclick="admin.updateMessageStatus(${report.id}, 'in_progress')">Start</button>
+                            ` : ''}
+                            ${report.status !== 'resolved' ? `
+                                <button class="btn-action success" onclick="admin.updateMessageStatus(${report.id}, 'resolved')">Resolve</button>
+                            ` : ''}
+                            <button class="btn-action danger" onclick="admin.deleteMessage(${report.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load messages:', error);
+            this.showToast('Failed to load messages', 'error');
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    async viewMessage(id) {
+        try {
+            const response = await fetch('/api/admin/reports');
+            const data = await response.json();
+            const report = data.reports.find(r => r.id === id);
+
+            if (!report) {
+                this.showToast('Message not found', 'error');
+                return;
+            }
+
+            document.getElementById('modal-title').textContent = `${report.type === 'bug' ? '🐛 Bug Report' : '💡 Feature Request'} #${report.id}`;
+            document.getElementById('modal-body').innerHTML = `
+                <div class="message-detail">
+                    <div class="detail-row">
+                        <span class="label">Subject:</span>
+                        <span class="value">${this.escapeHtml(report.subject)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">From:</span>
+                        <span class="value">${this.escapeHtml(report.username)} (${report.userEmail})</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Category:</span>
+                        <span class="value">${report.category}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Priority:</span>
+                        <span class="priority-badge ${report.priority}">${report.priority}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Status:</span>
+                        <span class="status ${report.status}">${report.status.replace(/_/g, ' ')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Submitted:</span>
+                        <span class="value">${new Date(report.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div class="detail-row full">
+                        <span class="label">Description:</span>
+                        <div class="description-box">${this.escapeHtml(report.description)}</div>
+                    </div>
+                    ${report.adminNotes ? `
+                        <div class="detail-row full">
+                            <span class="label">Admin Notes:</span>
+                            <div class="description-box">${this.escapeHtml(report.adminNotes)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            this.openModal();
+        } catch (error) {
+            console.error('Failed to view message:', error);
+            this.showToast('Failed to load message details', 'error');
+        }
+    }
+
+    async updateMessageStatus(id, status) {
+        try {
+            const response = await fetch(`/api/admin/reports/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast(`Message status updated to ${status.replace(/_/g, ' ')}`);
+                this.loadMessages(
+                    document.getElementById('msg-type-filter').value,
+                    document.getElementById('msg-status-filter').value
+                );
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            console.error('Failed to update message:', error);
+            this.showToast('Failed to update message', 'error');
+        }
+    }
+
+    async deleteMessage(id) {
+        if (!confirm('Are you sure you want to delete this message?')) return;
+
+        try {
+            const response = await fetch(`/api/admin/reports/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast('Message deleted');
+                this.loadMessages(
+                    document.getElementById('msg-type-filter').value,
+                    document.getElementById('msg-status-filter').value
+                );
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            console.error('Failed to delete message:', error);
+            this.showToast('Failed to delete message', 'error');
         }
     }
 
