@@ -6,12 +6,13 @@
 const { v4: uuidv4 } = require('uuid');
 
 class GameRoom {
-    constructor(roomId, host, wager = 50) {
+    constructor(roomId, host, wager = 50, currency = 'coins') {
         this.id = roomId;
         this.host = host;
         this.guest = null;
         this.spectators = [];
         this.wager = wager;
+        this.currency = currency;
 
         this.gameState = {
             balls: [],
@@ -285,6 +286,7 @@ class GameRoom {
             spectatorCount: this.spectators.length,
             status: this.status,
             wager: this.wager,
+            currency: this.currency,
             gameState: this.gameState,
             createdAt: this.createdAt
         };
@@ -297,9 +299,9 @@ class RoomManager {
         this.playerRooms = new Map();
     }
 
-    createRoom(hostPlayer, wager = 50) {
+    createRoom(hostPlayer, wager = 50, currency = 'coins') {
         const roomId = this.generateRoomId();
-        const room = new GameRoom(roomId, hostPlayer, wager);
+        const room = new GameRoom(roomId, hostPlayer, wager, currency);
         this.rooms.set(roomId, room);
         this.playerRooms.set(hostPlayer.id, roomId);
         return room;

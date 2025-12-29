@@ -311,8 +311,8 @@ class NetworkManager {
     }
 
     // === Matchmaking ===
-    findMatch(tier = 'casual') {
-        this.socket.emit('find_match', { tier });
+    findMatch(tier = 'casual', currency = 'coins', stake = 0) {
+        this.socket.emit('find_match', { tier, currency, stake });
     }
 
     cancelMatchmaking() {

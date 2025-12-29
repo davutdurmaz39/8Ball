@@ -1879,7 +1879,15 @@
                     mainContent.style.display = 'block';
                     bottomNav.style.display = 'flex';
                 } else {
-                    window.location.href = '/login.html';
+                    {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
@@ -1897,7 +1905,15 @@
                     mainContent.style.display = 'block';
                     bottomNav.style.display = 'flex';
                 } else {
-                    window.location.href = '/login.html';
+                    {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
                 }
             }
         })();

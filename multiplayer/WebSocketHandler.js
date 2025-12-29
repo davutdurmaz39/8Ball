@@ -83,6 +83,7 @@ class MultiplayerServer {
             email: user.email,
             elo: user.elo || 1200,
             coins: user.coins || 1000,
+            qwinBalance: user.qwinBalance || 0,
             profilePicture: user.profilePicture || null,
             nationality: user.nationality || null
         };
@@ -165,16 +166,16 @@ class MultiplayerServer {
         }
 
         const wager = data?.wager || 50;
+        const currency = data?.currency || 'coins';
 
-        // Check if player has enough coins
-        if (player.coins < wager) {
-            socket.emit('room_error', { error: 'Insufficient coins' });
+        // Check if player has enough balance
+        const balance = currency === 'coins' ? player.coins : player.qwinBalance;
+        if (balance < wager) {
+            socket.emit('room_error', { error: `Insufficient ${currency}` });
             return;
         }
 
-        const room = this.roomManager.createRoom(player, wager);
-        socket.join(room.id);
-
+        const room = this.roomManager.createRoom(player, wager, currency);
         socket.emit('room_created', {
             roomId: room.id,
             room: room.toJSON()
@@ -215,11 +216,14 @@ class MultiplayerServer {
             return;
         }
 
-        // Check if player has enough coins (only for new joins)
-        if (!result.rejoin && player.coins < room.wager) {
-            this.roomManager.leaveRoom(player.id);
-            socket.emit('room_error', { error: 'Insufficient coins' });
-            return;
+        // Check if player has enough coins/qwin (only for new joins)
+        if (!result.rejoin) {
+            const balance = room.currency === 'coins' ? player.coins : player.qwinBalance;
+            if (balance < room.wager) {
+                this.roomManager.leaveRoom(player.id);
+                socket.emit('room_error', { error: `Insufficient ${room.currency}` });
+                return;
+            }
         }
 
         // Notify both players
@@ -298,7 +302,14 @@ class MultiplayerServer {
         }
 
         const tier = data?.tier || 'casual';
-        const result = this.matchmaking.addPlayer(player, tier);
+        const currency = data?.currency || 'coins';
+        const stake = data?.stake || 0;
+
+        // Update player data with latest request info
+        player.currency = currency;
+        player.stake = stake;
+
+        const result = this.matchmaking.addPlayer(player, tier, currency, stake);
 
         if (result.error) {
             socket.emit('matchmaking_error', { error: result.error });
@@ -331,7 +342,9 @@ class MultiplayerServer {
             this.io.to(result.roomId).emit('match_found', {
                 roomId: result.roomId,
                 room: room.toJSON(),
+                room: room.toJSON(),
                 wager: result.wager,
+                currency: result.currency,
                 tier: result.tier
             });
 
@@ -543,14 +556,20 @@ class MultiplayerServer {
             loser.elo || 1200
         );
 
-        // Update player ELO and coins in memory
+        // Update player ELO and coins/qwin in memory
         winner.elo = eloResult.winner.newElo;
-        winner.coins = (winner.coins || 1000) + room.wager;
         loser.elo = eloResult.loser.newElo;
-        loser.coins = Math.max(0, (loser.coins || 1000) - room.wager);
+
+        if (room.currency === 'coins') {
+            winner.coins = (winner.coins || 1000) + room.wager;
+            loser.coins = Math.max(0, (loser.coins || 1000) - room.wager);
+        } else {
+            winner.qwinBalance = (winner.qwinBalance || 0) + room.wager;
+            loser.qwinBalance = Math.max(0, (loser.qwinBalance || 0) - room.wager);
+        }
 
         // Update in user database
-        this.updateUserStats(winner, loser, room.wager, eloResult);
+        this.updateUserStats(winner, loser, room.wager, eloResult, room.currency);
 
         // Save match history
         const matchRecord = this.matchHistory.recordMatch({
@@ -560,6 +579,7 @@ class MultiplayerServer {
             winner: winnerNum,
             reason: result.reason || '8ball',
             wager: room.wager,
+            currency: room.currency || 'coins',
             eloChanges: eloResult,
             shotHistory: room.gameState.shotHistory,
             duration: Date.now() - room.createdAt
@@ -575,6 +595,7 @@ class MultiplayerServer {
             winnerName: winner.username,
             reason: result.reason,
             wager: room.wager,
+            currency: room.currency || 'coins',
             eloChanges: eloResult,
             matchId: matchRecord.id,
             achievements: {
@@ -586,12 +607,16 @@ class MultiplayerServer {
         console.log(`🏆 Game over in room ${room.id}: ${winner.username} wins!`);
     }
 
-    updateUserStats(winner, loser, wager, eloResult) {
+    updateUserStats(winner, loser, wager, eloResult, currency = 'coins') {
         // Update winner stats
         if (this.users.has(winner.email)) {
             const user = this.users.get(winner.email);
             user.elo = eloResult.winner.newElo;
-            user.coins += wager;
+            if (currency === 'coins') {
+                user.coins = (user.coins || 0) + wager;
+            } else {
+                user.qwinBalance = (user.qwinBalance || 0) + wager;
+            }
             user.gamesPlayed++;
             user.gamesWon++;
         }
@@ -600,7 +625,11 @@ class MultiplayerServer {
         if (this.users.has(loser.email)) {
             const user = this.users.get(loser.email);
             user.elo = eloResult.loser.newElo;
-            user.coins = Math.max(0, user.coins - wager);
+            if (currency === 'coins') {
+                user.coins = Math.max(0, (user.coins || 0) - wager);
+            } else {
+                user.qwinBalance = Math.max(0, (user.qwinBalance || 0) - wager);
+            }
             user.gamesPlayed++;
         }
     }

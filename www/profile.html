@@ -906,7 +906,7 @@
         <div class="cues-section">
             <div class="cues-section-header">
                 <span class="cues-title">MY CUES</span>
-                <a href="shop.html" style="color: #00d4ff; font-size: 12px; text-decoration: none;">Get More ›</a>
+                <a href="shop.html" style="color: #00d4ff; font-size: 12px; text-decoration: none;">Get More ï¿½</a>
             </div>
             <div class="cues-grid" id="cues-grid">
                 <!-- Cues will be loaded dynamically -->
@@ -963,11 +963,27 @@
                     displayUserProfile(data.user);
                 } else {
                     console.log('API failed, no user');
-                    window.location.href = '/login.html';
+                    {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
-                window.location.href = '/login.html';
+                {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
             }
         }
         
@@ -1168,10 +1184,26 @@
             try {
                 await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
                 localStorage.removeItem('user');
-                window.location.href = '/login.html';
+                {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = '/login.html';
+                {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
             }
         }
 

@@ -539,6 +539,27 @@ body {
     box-shadow: var(--shadow-glow);
 }
 
+.btn-secondary {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 35px;
+    background: transparent;
+    border: 2px solid var(--accent-cyan);
+    border-radius: 50px;
+    color: var(--accent-cyan);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    display: block;
+    margin: 15px auto 0;
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 212, 255, 0.15);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}
+
 @keyframes bounce {
 
     0%,
@@ -3280,24 +3301,26 @@ body {
     color: var(--text-secondary);
     letter-spacing: 2px;
     text-transform: uppercase;
-}  
-/* Secondary Button Style */  
-.btn-secondary {  
-    font-family: 'Orbitron', sans-serif;  
-    font-size: 1rem;  
-    font-weight: 600;  
-    padding: 12px 30px;  
-    background: rgba(0, 212, 255, 0.1);  
-    border: 2px solid #00d4ff;  
-    border-radius: 50px;  
-    color: #00d4ff;  
-    cursor: pointer;  
-    transition: 0.3s ease;  
-    display: block;  
-}  
-.btn-secondary:hover {  
-    background: #00d4ff;  
-    color: #0a0e17;  
-    transform: scale(1.05);  
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);  
-} 
+}
+
+/* Secondary Button Style */
+.btn-secondary {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 30px;
+    background: rgba(0, 212, 255, 0.1);
+    border: 2px solid #00d4ff;
+    border-radius: 50px;
+    color: #00d4ff;
+    cursor: pointer;
+    transition: 0.3s ease;
+    display: block;
+}
+
+.btn-secondary:hover {
+    background: #00d4ff;
+    color: #0a0e17;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}

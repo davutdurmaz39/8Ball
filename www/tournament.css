@@ -1,5 +1,21 @@
 /* Tournament System Styles */
 
+/* Page-level reset for scrolling */
+body.tournament-page {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    min-height: 100vh;
+    height: auto;
+}
+
+/* Tournament Page Wrapper */
+.tournament-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 40px;
+}
+
 /* Header */
 .tournament-header {
     display: flex;
@@ -8,6 +24,9 @@
     padding: 20px 40px;
     background: linear-gradient(180deg, rgba(10, 14, 23, 0.98) 0%, rgba(10, 14, 23, 0.9) 100%);
     border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .tournament-header h1 {
@@ -54,6 +73,7 @@
     padding: 40px 20px;
     max-width: 1200px;
     margin: 0 auto;
+    flex: 1;
 }
 
 .section-title {
@@ -76,6 +96,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 25px;
+    padding-bottom: 20px;
 }
 
 /* Tier Card */
@@ -314,14 +335,139 @@
 @media (max-width: 768px) {
     .tournament-header {
         padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     .tournament-header h1 {
         font-size: 1.3rem;
+        order: 2;
+        flex: 1;
+        text-align: center;
+    }
+
+    .back-btn {
+        order: 1;
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+
+    .user-coins-display {
+        order: 3;
+        padding: 8px 15px;
+        font-size: 1rem;
+    }
+
+    .tournament-content {
+        padding: 20px 15px;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+    }
+
+    .section-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 25px;
     }
 
     .tier-grid {
         grid-template-columns: 1fr;
-        padding: 0 20px;
+        gap: 20px;
+    }
+
+    .tier-card {
+        padding: 20px;
+    }
+
+    .tier-entry {
+        font-size: 1.6rem;
+    }
+
+    .tier-badge {
+        font-size: 0.75rem;
+        padding: 5px 15px;
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .tournament-header {
+        padding: 10px 15px;
+    }
+
+    .tournament-header h1 {
+        font-size: 1.1rem;
+    }
+
+    .back-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .user-coins-display {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+
+    .tournament-content {
+        padding: 15px 20px;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+
+    .section-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 15px;
+    }
+
+    .tier-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .tier-card {
+        padding: 15px;
+    }
+
+    .tier-badge {
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        margin-bottom: 10px;
+    }
+
+    .tier-entry {
+        font-size: 1.4rem;
+        margin-bottom: 12px;
+    }
+
+    .tier-prizes {
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    .prize-line {
+        font-size: 0.85rem;
+        padding: 3px 0;
+    }
+
+    .queue-status {
+        margin-bottom: 12px;
+    }
+
+    .queue-bar {
+        height: 8px;
+    }
+
+    .queue-text {
+        font-size: 0.8rem;
+    }
+
+    .btn-register {
+        padding: 10px;
+        font-size: 0.85rem;
     }
 }

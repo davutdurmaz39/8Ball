@@ -1109,10 +1109,26 @@
             try {
                 await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
                 localStorage.removeItem('user');
-                window.location.href = '/login.html';
+                {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = '/login.html';
+                {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
             }
         }
 
@@ -1126,7 +1142,15 @@
 
                 if (response.ok) {
                     localStorage.clear();
-                    window.location.href = '/login.html';
+                    {
+                    const _storedUser = localStorage.getItem('user');
+                    if (!_storedUser) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.log('Using localStorage user instead of redirecting');
+                        window.currentUser = JSON.parse(_storedUser);
+                    }
+                }
                 } else {
                     alert('Failed to delete account. Please try again.');
                 }

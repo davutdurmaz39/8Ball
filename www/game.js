@@ -44,8 +44,8 @@ class PoolGame {
         // Load selected cue (from localStorage or window.selectedCue)
         const savedCue = localStorage.getItem('selectedCue') || window.selectedCue || 'standard';
         // Valid cue IDs in the game
-        const validCues = ['standard', 'premium', 'legendary', 'dragon', 'ice', 'viper', 'phoenix', 'shadow', 
-                          'dragons_breath', 'neon_striker', 'frost_bite', 'shadow_master', 'classic_oak'];
+        const validCues = ['standard', 'premium', 'legendary', 'dragon', 'ice', 'viper', 'phoenix', 'shadow',
+            'dragons_breath', 'neon_striker', 'frost_bite', 'shadow_master', 'classic_oak'];
         this.selectedCue = validCues.includes(savedCue) ? savedCue : 'standard';
         console.log('Selected cue loaded:', this.selectedCue);
 
@@ -371,7 +371,9 @@ class PoolGame {
             this.isBreakShot = true;
 
             this.updateTurnIndicator();
-            this.showMessage('MULTIPLAYER GAME', `${this.isMyTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'} - Wager: ${data.wager || 50} 💰`);
+            const currencyIcon = data.currency === 'qwin' ? '💎' : '💰';
+            const currencyName = data.currency === 'qwin' ? 'QWIN' : 'Coins';
+            this.showMessage('MULTIPLAYER GAME', `${this.isMyTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'} - Wager: ${data.wager || 50} ${currencyIcon}`);
             this.startShotTimer();
             this.animate();
 
@@ -1277,6 +1279,56 @@ class PoolGame {
         // 4. Sync Pocketed Balls (optional but good)
         if (data.pocketedBalls) {
             // We could sync this too
+        }
+    }
+
+    // Called when game over event is received
+    onGameOver(data) {
+        console.log('🏆 Game Over Event:', data);
+        this.gameState = 'gameover';
+        this.showWinner(data.winner, data.reason, data.wager, data.currency);
+    }
+
+    showWinner(winnerNum, reason, wager = 0, currency = 'coins') {
+        if (!this.winnerScreen) return;
+
+        const isWinner = (winnerNum === this.myPlayerNumber);
+        const resultTitle = this.winnerScreen.querySelector('.result-title');
+        const resultMessage = this.winnerScreen.querySelector('.result-message');
+        const prizeAmount = this.winnerScreen.querySelector('.prize-amount');
+        const winnerAvatar = this.winnerScreen.querySelector('.winner-avatar');
+
+        // Update title and message
+        if (isWinner) {
+            resultTitle.textContent = 'YOU WIN!';
+            resultTitle.style.color = '#00ff88';
+            resultMessage.textContent = reason || 'Great Match!';
+            this.sound.playWinSound();
+        } else {
+            resultTitle.textContent = 'YOU LOSE';
+            resultTitle.style.color = '#ff4444';
+            resultMessage.textContent = reason || 'Better luck next time';
+        }
+
+        // Update prize display
+        if (wager > 0) {
+            const currencyIcon = currency === 'qwin' ? '💎' : '💰';
+            const amount = isWinner ? `+${wager * 2}` : `-${wager}`;
+            const color = isWinner ? '#00ff88' : '#ff4444';
+
+            prizeAmount.innerHTML = `<span style="color: ${color}">${amount} ${currencyIcon}</span>`;
+            prizeAmount.style.display = 'block';
+        } else {
+            prizeAmount.style.display = 'none';
+        }
+
+        // Show screen
+        this.winnerScreen.classList.remove('hidden');
+        this.winnerScreen.style.display = 'flex';
+
+        // Confetti effect if winner
+        if (isWinner) {
+            this.startConfetti();
         }
     }
 
@@ -2905,6 +2957,13 @@ class PoolGame {
 
 // Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Only initialize if the pool-table canvas exists (skip on test pages)
+    const canvas = document.getElementById('pool-table');
+    if (!canvas) {
+        console.log('Pool table canvas not found - skipping game initialization (this is expected on test pages)');
+        return;
+    }
+
     try {
         console.log('Initializing 8-Ball Pool Game...');
         window.gameInstance = new PoolGame();

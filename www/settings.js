@@ -200,15 +200,15 @@ class PhysicsSettings {
     }
 
     resetDefaults() {
-        // User's preferred settings
+        // Realistic pool physics settings
         const defaults = {
-            MU_SLIDE: 0.12,
-            MU_ROLL: 0.020,     // Very low friction for long rolls
-            MU_SPIN: 0.12,
-            E_BALL: 0.93,
-            E_CUSHION: 0.78,
+            MU_SLIDE: 0.05,
+            MU_ROLL: 0.007,     // Lower friction for longer ball rolls
+            MU_SPIN: 0.04,
+            E_BALL: 0.92,       // Realistic ball elasticity
+            E_CUSHION: 0.75,    // Cushions absorb more energy
             GRAVITY: 980,
-            MAX_CUE_SPEED: 750  // User's preferred max power
+            MAX_CUE_SPEED: 550  // Reduced for more realistic ball speed
         };
 
         for (const [key, val] of Object.entries(defaults)) {

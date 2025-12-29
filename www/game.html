@@ -315,7 +315,11 @@
             const loadingEl = document.getElementById('auth-loading');
             const userMenuEl = document.getElementById('user-menu');
             try {
-                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                const authToken = localStorage.getItem('authToken');
+                const response = await fetch('/api/auth/me', { 
+                    credentials: 'include',
+                    headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {}
+                });
                 const data = await response.json();
                 if (data.success && data.user) {
                     document.getElementById('user-name').textContent = data.user.username;
@@ -344,11 +348,41 @@
                     loadingEl.classList.add('hidden');
                     userMenuEl.style.display = 'flex';
                 } else {
-                    window.location.href = '/login.html';
+                    // API says not authenticated, try localStorage fallback
+                    const storedUser = localStorage.getItem('user');
+                    if (storedUser) {
+                        const user = JSON.parse(storedUser);
+                        console.log('Using localStorage user:', user.username);
+                        document.getElementById('user-name').textContent = user.username;
+                        document.getElementById('user-coins').textContent = user.coins || 1000;
+                        document.getElementById('user-avatar').textContent = user.username.charAt(0).toUpperCase();
+                        const p1NameEl = document.getElementById('p1-name');
+                        if (p1NameEl) p1NameEl.textContent = user.username;
+                        window.currentUser = user;
+                        loadingEl.classList.add('hidden');
+                        userMenuEl.style.display = 'flex';
+                    } else {
+                        window.location.href = '/login.html';
+                    }
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                window.location.href = '/login.html';
+                // Network error, try localStorage fallback
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    console.log('Network error, using localStorage user:', user.username);
+                    document.getElementById('user-name').textContent = user.username;
+                    document.getElementById('user-coins').textContent = user.coins || 1000;
+                    document.getElementById('user-avatar').textContent = user.username.charAt(0).toUpperCase();
+                    const p1NameEl = document.getElementById('p1-name');
+                    if (p1NameEl) p1NameEl.textContent = user.username;
+                    window.currentUser = user;
+                    loadingEl.classList.add('hidden');
+                    userMenuEl.style.display = 'flex';
+                } else {
+                    window.location.href = '/login.html';
+                }
             }
         })();
 

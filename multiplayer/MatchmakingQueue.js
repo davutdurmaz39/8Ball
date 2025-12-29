@@ -11,13 +11,20 @@ class MatchmakingQueue {
             casual: [],      // 50 coins wager
             competitive: [], // 250 coins wager
             highStakes: [],  // 1000 coins wager
-            // New UI tiers
+            // New UI tiers (Coins)
             bronze: [],      // 50 coins wager
             silver: [],      // 100 coins wager
             gold: [],        // 250 coins wager
             diamond: [],     // 500 coins wager
             ruby: [],        // 1000 coins wager
-            crown: []        // 2500 coins wager
+            crown: [],       // 2500 coins wager
+            // QWIN tiers
+            starter: [],     // 10 QWIN
+            rookie: [],      // 50 QWIN
+            pro: [],         // 100 QWIN
+            elite: [],       // 250 QWIN
+            master: [],      // 500 QWIN
+            legend: []       // 1000 QWIN
         };
         this.playerQueues = new Map(); // playerId -> {queue, joinedAt}
 
@@ -31,7 +38,7 @@ class MatchmakingQueue {
         };
     }
 
-    addPlayer(player, tier = 'casual') {
+    addPlayer(player, tier = 'casual', currency = 'coins', stake = 0) {
         // Check if already in queue
         if (this.playerQueues.has(player.id)) {
             return { error: 'Already in queue', position: this.getPosition(player.id) };
@@ -47,6 +54,9 @@ class MatchmakingQueue {
             username: player.username,
             elo: player.elo || 1200,
             coins: player.coins || 1000,
+            qwinBalance: player.qwinBalance || 0,
+            currency: player.currency || 'coins',
+            stake: player.stake || 50,
             joinedAt: Date.now()
         };
 
@@ -116,18 +126,14 @@ class MatchmakingQueue {
             this.playerQueues.delete(player.id);
             this.playerQueues.delete(bestMatch.id);
 
-            // Determine wager based on tier
-            const wagers = {
-                casual: 50, competitive: 250, highStakes: 1000,
-                bronze: 50, silver: 100, gold: 250, diamond: 500, ruby: 1000, crown: 2500
-            };
-            const wager = wagers[tier] || 50;
+            const wager = player.stake || 50;
+            const currency = player.currency || 'coins';
 
             // Create room (let host be the one who waited longer)
             const host = player.joinedAt < bestMatch.joinedAt ? player : bestMatch;
             const guest = player.joinedAt < bestMatch.joinedAt ? bestMatch : player;
 
-            const room = this.roomManager.createRoom(host, wager);
+            const room = this.roomManager.createRoom(host, wager, currency);
             this.roomManager.joinRoom(room.id, guest);
 
             return {
@@ -135,6 +141,7 @@ class MatchmakingQueue {
                 roomId: room.id,
                 opponent: bestMatch,
                 wager,
+                currency,
                 tier
             };
         }

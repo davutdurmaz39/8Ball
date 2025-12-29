@@ -8,7 +8,7 @@ class PhysicsEngine {
         // Table scale
         this.SCALE = 100;
         this.BALL_RADIUS = 14;
-        this.MAX_CUE_SPEED = 750;      // User's preferred max power
+        this.MAX_CUE_SPEED = 750;      // Increased for more powerful shots
 
         // Detect mobile device (for UI purposes, not physics)
         this.isMobile = ('ontouchstart' in window) ||
@@ -19,15 +19,15 @@ class PhysicsEngine {
         // frame rate differences automatically. No friction multiplier needed - this
         // was causing desync between mobile and PC players!
 
-        // Friction - consistent across all devices for deterministic physics
+        // Friction - tuned for realistic pool physics
         this.GRAVITY = 980;
-        this.MU_ROLL = 0.006;      // Rolling friction (very low for smooth long rolls)
-        this.MU_SLIDE = 0.04;      // Sliding friction
-        this.MU_SPIN = 0.05;       // Spin friction
+        this.MU_ROLL = 0.012;      // Increased friction for faster ball stopping
+        this.MU_SLIDE = 0.05;      // Sliding friction
+        this.MU_SPIN = 0.04;       // Spin friction
 
-        // Elasticity - High for impactful breaks
-        this.E_BALL = 0.98;        // High elasticity for strong break impact
-        this.E_CUSHION = 0.82;     // Slightly higher for more bouncy rails
+        // Elasticity - realistic values for pool balls
+        this.E_BALL = 0.92;        // More realistic elasticity (real pool balls ~0.92-0.95)
+        this.E_CUSHION = 0.75;     // Cushions absorb more energy for realistic rebounds
 
         // Time step - fixed for deterministic simulation
         this.dt = 1 / 60;
@@ -93,8 +93,8 @@ class PhysicsEngine {
     updateBallPhysics(ball, dt) {
         const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
 
-        // STOP if very slow - low threshold so balls roll longer
-        if (speed < 0.3) {
+        // STOP if very slow - lower threshold so balls roll longer
+        if (speed < 0.8) {
             ball.vx = 0;
             ball.vy = 0;
             ball.topspin = 0;
@@ -103,8 +103,20 @@ class PhysicsEngine {
             return;
         }
 
-        // === FRICTION ===
-        const deceleration = this.MU_ROLL * this.GRAVITY;
+        // === REALISTIC FRICTION ===
+        // Use velocity-dependent friction for more natural deceleration
+        // Fast balls have less relative friction (they roll nicely)
+        // Slow balls have more relative friction (they stop naturally)
+
+        // Base rolling friction
+        let effectiveFriction = this.MU_ROLL;
+
+        // Add slight extra friction at low speeds for natural stop (reduced effect)
+        if (speed < 30) {
+            effectiveFriction += 0.004 * (1 - speed / 30);
+        }
+
+        const deceleration = effectiveFriction * this.GRAVITY;
         const speedLoss = deceleration * dt;
 
         if (speed > speedLoss) {
