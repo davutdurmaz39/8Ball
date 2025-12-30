@@ -14,6 +14,16 @@ class NetworkManager {
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.callbacks = {};
+
+        // AI Match properties
+        this.isAiMatch = false;
+        this.aiOpponent = null;
+        this.myPlayerNumber = 0;
+
+        // 8-Ball pocket call
+        this.calledPocket = null;
+        this.needsPocketCall = false;
+        this.pocketCallOverlay = null;
     }
 
     connect(serverUrl = null) {
@@ -132,7 +142,21 @@ class NetworkManager {
 
         // Game events
         this.socket.on('game_start', (data) => {
-            console.log('🎮 Game starting!');
+            console.log('🎮 Game starting!', data);
+
+            // Detect AI match - check both isAiMatch flag AND isBot property on players
+            const hostIsBot = data.host && data.host.isBot;
+            const guestIsBot = data.guest && data.guest.isBot;
+            this.isAiMatch = data.isAiMatch || hostIsBot || guestIsBot;
+
+            if (this.isAiMatch) {
+                console.log('🤖 Playing against AI opponent!');
+                const isHost = data.host && data.host.id === this.playerId;
+                this.myPlayerNumber = isHost ? 1 : 2;
+                this.aiOpponent = isHost ? data.guest : data.host;
+                console.log(`🤖 I am Player ${this.myPlayerNumber}, AI is Player ${this.myPlayerNumber === 1 ? 2 : 1}`);
+            }
+
             this.emit('game_start', data);
             if (this.game && this.game.onGameStart) {
                 this.game.onGameStart(data);
@@ -155,9 +179,25 @@ class NetworkManager {
         });
 
         this.socket.on('game_state_update', (data) => {
+            console.log('📥 game_state_update received from server');
             this.emit('game_state_update', data);
             if (this.game && this.game.onGameStateUpdate) {
                 this.game.onGameStateUpdate(data);
+            }
+
+            // Handle AI turn if applicable
+            console.log(`🔍 AI Check: isAiMatch=${this.isAiMatch}, hasGameState=${!!data.gameState}, gameOver=${data.gameOver}, aiShotPending=${this.aiShotPending}`);
+            if (this.isAiMatch && data.gameState && !data.gameOver) {
+                const currentPlayer = data.gameState.currentPlayer;
+                const isAiTurn = currentPlayer !== this.myPlayerNumber;
+                console.log(`🔍 Turn Check: currentPlayer=${currentPlayer}, myPlayerNumber=${this.myPlayerNumber}, isAiTurn=${isAiTurn}`);
+
+                if (isAiTurn && this.game && !this.aiShotPending) {
+                    console.log('🤖 AI turn detected from server update, executing shot...');
+                    this.executeAiTurn(data);
+                } else if (this.aiShotPending) {
+                    console.log('🤖 AI shot already pending, skipping duplicate trigger');
+                }
             }
         });
 
@@ -419,6 +459,601 @@ class NetworkManager {
 
     isHostPlayer() {
         return this.isHost;
+    }
+
+    // === AI Turn Execution ===
+    executeAiTurn(data) {
+        if (!this.game || !this.isAiMatch) return;
+
+        // Prevent duplicate AI shots
+        if (this.aiShotPending) {
+            console.log('🤖 AI shot already pending, skipping...');
+            return;
+        }
+        this.aiShotPending = true;
+
+        // Get fresh game state
+        const balls = this.game.balls || [];
+        const cueBall = balls.find(b => b.id === 0);
+        if (!cueBall || !cueBall.active) {
+            console.log('🤖 Cue ball not available, skipping AI turn');
+            this.aiShotPending = false;
+            return;
+        }
+
+        // Add thinking delay (1.5-3 seconds)
+        const thinkingTime = 1500 + Math.random() * 1500;
+        console.log(`🤖 AI thinking for ${Math.round(thinkingTime)}ms...`);
+
+        setTimeout(() => {
+            // Get fresh ball references
+            const freshBalls = this.game.balls || [];
+            let freshCueBall = freshBalls.find(b => b.id === 0);
+            if (!freshCueBall || !freshCueBall.active) {
+                console.log('🤖 Cue ball not ready, aborting shot');
+                this.aiShotPending = false;
+                return;
+            }
+
+            // If AI has ball-in-hand, position cue ball optimally
+            if (this.game.ballInHand) {
+                console.log('🎱 AI has ball-in-hand, positioning cue ball...');
+                // Find the best position for the cue ball
+                const targetBall = this.findBestBallForAi(freshBalls);
+                if (targetBall) {
+                    // Position cue ball directly behind the target ball for easy straight shot
+                    const pockets = this.game.physics?.pockets || [
+                        { x: 40, y: 40 }, { x: 460, y: 40 }, { x: 880, y: 40 },
+                        { x: 40, y: 460 }, { x: 460, y: 460 }, { x: 880, y: 460 }
+                    ];
+
+                    // Find closest pocket to target ball
+                    let closestPocket = pockets[0];
+                    let minDist = Infinity;
+                    for (const pocket of pockets) {
+                        const dist = Math.sqrt((pocket.x - targetBall.x) ** 2 + (pocket.y - targetBall.y) ** 2);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestPocket = pocket;
+                        }
+                    }
+
+                    // Place cue ball on opposite side from pocket for straight shot
+                    const dx = closestPocket.x - targetBall.x;
+                    const dy = closestPocket.y - targetBall.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const dirX = dx / dist;
+                    const dirY = dy / dist;
+
+                    freshCueBall.x = targetBall.x - dirX * 80;
+                    freshCueBall.y = targetBall.y - dirY * 80;
+
+                    // Make sure cue ball is within table bounds
+                    freshCueBall.x = Math.max(50, Math.min(950, freshCueBall.x));
+                    freshCueBall.y = Math.max(50, Math.min(450, freshCueBall.y));
+
+                    console.log(`🎱 AI placed cue ball at (${freshCueBall.x.toFixed(0)}, ${freshCueBall.y.toFixed(0)}) for straight shot at ball ${targetBall.id}`);
+                }
+                this.game.ballInHand = false;
+            }
+
+            // Determine AI's target group (AI is typically player 2)
+            const aiPlayerNum = this.myPlayerNumber === 1 ? 2 : 1;
+            const aiGroup = this.game.playerTypes ? this.game.playerTypes[aiPlayerNum] : null;
+            console.log(`🤖 AI is Player ${aiPlayerNum}, Group: ${aiGroup || 'OPEN'}`);
+
+            // Find valid target balls based on game state
+            let targetBalls = [];
+            const activeBalls = freshBalls.filter(b => b.id > 0 && b.active);
+
+            if (!aiGroup || this.game.tableState === 'open') {
+                // Open table - can target any ball except 8-ball
+                targetBalls = activeBalls.filter(b => b.id !== 8);
+                console.log('🤖 Open table - targeting any ball');
+            } else {
+                // Closed table - target own group
+                const ownBalls = activeBalls.filter(b => b.type === aiGroup);
+
+                if (ownBalls.length > 0) {
+                    // Still have own balls - target them
+                    targetBalls = ownBalls;
+                    console.log(`🤖 Targeting ${aiGroup}s (${ownBalls.length} remaining)`);
+                } else {
+                    // All own balls pocketed - target 8-ball
+                    const eightBall = activeBalls.find(b => b.id === 8);
+                    if (eightBall) {
+                        targetBalls = [eightBall];
+                        console.log('🤖 All own balls pocketed - targeting 8-BALL!');
+                    }
+                }
+            }
+
+            if (targetBalls.length === 0) {
+                console.log('🤖 No valid target balls found');
+                this.aiShotPending = false;
+                return;
+            }
+
+            // Get pockets from physics
+            const pockets = this.game.physics?.pockets || [
+                { x: 40, y: 40 }, { x: 460, y: 40 }, { x: 880, y: 40 },
+                { x: 40, y: 460 }, { x: 460, y: 460 }, { x: 880, y: 460 }
+            ];
+
+            const ballRadius = 14;
+            const allBalls = freshBalls.filter(b => b.active && b.id !== 0);
+
+            // Helper: Check if path is clear (no obstructing balls)
+            const isPathClear = (fromX, fromY, toX, toY, excludeBallId) => {
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 1) return true;
+
+                const dirX = dx / dist;
+                const dirY = dy / dist;
+
+                for (const ball of allBalls) {
+                    if (ball.id === excludeBallId) continue;
+
+                    // Vector from start to ball center
+                    const toBallX = ball.x - fromX;
+                    const toBallY = ball.y - fromY;
+
+                    // Project onto direction
+                    const projection = toBallX * dirX + toBallY * dirY;
+                    if (projection < 0 || projection > dist) continue;
+
+                    // Perpendicular distance
+                    const perpDist = Math.abs(toBallX * (-dirY) + toBallY * dirX);
+                    if (perpDist < ballRadius * 2.2) return false; // Path blocked
+                }
+                return true;
+            };
+
+            // Helper: Calculate optimal power for distance
+            const calcPower = (distance) => Math.min(85, Math.max(40, 30 + distance * 0.12));
+
+            // Find all possible shots with scoring
+            let shots = [];
+
+            for (const ball of targetBalls) {
+                for (const pocket of pockets) {
+                    // Vector from ball to pocket
+                    const ballToPocketDx = pocket.x - ball.x;
+                    const ballToPocketDy = pocket.y - ball.y;
+                    const ballToPocketDist = Math.sqrt(ballToPocketDx * ballToPocketDx + ballToPocketDy * ballToPocketDy);
+
+                    // Skip if ball is too far from pocket (>400 units)
+                    if (ballToPocketDist > 400) continue;
+
+                    // Direction to pocket (normalized)
+                    const dirX = ballToPocketDx / ballToPocketDist;
+                    const dirY = ballToPocketDy / ballToPocketDist;
+
+                    // Ghost ball position (contact point)
+                    const ghostX = ball.x - dirX * (ballRadius * 2);
+                    const ghostY = ball.y - dirY * (ballRadius * 2);
+
+                    // Vector from cue ball to ghost ball
+                    const cueToGhostDx = ghostX - freshCueBall.x;
+                    const cueToGhostDy = ghostY - freshCueBall.y;
+                    const cueToGhostDist = Math.sqrt(cueToGhostDx * cueToGhostDx + cueToGhostDy * cueToGhostDy);
+
+                    // Aim angle
+                    const aimAngle = Math.atan2(cueToGhostDy, cueToGhostDx);
+
+                    // Cut angle
+                    const pocketAngle = Math.atan2(ballToPocketDy, ballToPocketDx);
+                    let cutAngle = Math.abs(aimAngle - pocketAngle);
+                    if (cutAngle > Math.PI) cutAngle = Math.PI * 2 - cutAngle;
+
+                    // Skip impossible cuts (> 80 degrees)
+                    if (cutAngle > Math.PI * 0.44) continue;
+
+                    // Check if cue ball path to ghost ball is clear
+                    const cueToBallClear = isPathClear(freshCueBall.x, freshCueBall.y, ghostX, ghostY, ball.id);
+
+                    // Check if ball path to pocket is clear
+                    const ballToPocketClear = isPathClear(ball.x, ball.y, pocket.x, pocket.y, ball.id);
+
+                    if (!cueToBallClear || !ballToPocketClear) continue;
+
+                    // Score this shot (higher = better)
+                    const totalDist = cueToGhostDist + ballToPocketDist;
+                    const distScore = 1000 / (totalDist + 1);
+                    const cutScore = 300 * (1 - cutAngle / (Math.PI * 0.5));
+                    const nearPocketBonus = ballToPocketDist < 100 ? 200 : 0;
+                    const score = distScore + cutScore + nearPocketBonus;
+
+                    shots.push({
+                        ball,
+                        pocket,
+                        ghostBall: { x: ghostX, y: ghostY },
+                        angle: aimAngle,
+                        power: calcPower(cueToGhostDist),
+                        cutAngle: cutAngle * 180 / Math.PI,
+                        score,
+                        cueToBallDist: cueToGhostDist,
+                        ballToPocketDist
+                    });
+                }
+            }
+
+            // Sort by score (best first)
+            shots.sort((a, b) => b.score - a.score);
+
+            let bestShot = shots[0];
+
+            if (!bestShot) {
+                // No clear pocketing shot - safety play: hit ball away from pockets
+                console.log('🤖 No clear shot - playing safety');
+                const target = targetBalls[Math.floor(Math.random() * targetBalls.length)];
+                const dx = target.x - freshCueBall.x;
+                const dy = target.y - freshCueBall.y;
+                bestShot = {
+                    ball: target,
+                    angle: Math.atan2(dy, dx),
+                    power: 35,
+                    cutAngle: 0,
+                    isSafety: true
+                };
+            }
+
+            // EXPERT DIFFICULTY: No noise - perfect aim
+            const finalAngle = bestShot.angle;
+            const finalPower = bestShot.power;
+
+            const shotType = bestShot.isSafety ? 'SAFETY' : `cut=${bestShot.cutAngle.toFixed(0)}°, dist=${(bestShot.cueToBallDist || 0).toFixed(0)}`;
+            console.log(`🤖 EXPERT AI: ball ${bestShot.ball.id} → pocket, ${shotType}, power=${finalPower.toFixed(0)}%`);
+
+            // Execute AI shot
+            this.game.gameState = 'shooting';
+            this.game.shotPocketedBalls = [];
+            this.game.wasMyShot = false;
+
+            this.game.physics.applyShot(freshCueBall, finalAngle, finalPower, 0, 0);
+
+            if (this.game.sound) {
+                this.game.sound.playCueHit(finalPower);
+            }
+
+            console.log('🤖 AI shot executed');
+            this.aiShotPending = false;
+
+            // Wait for balls to stop and handle result LOCALLY (don't use checkShotResult which talks to server)
+            this.waitForAiShotComplete();
+        }, thinkingTime);
+    }
+
+    // Wait for AI shot to complete and determine if AI continues or switches turn
+    waitForAiShotComplete() {
+        if (!this.game.physics.allBallsStopped(this.game.balls)) {
+            setTimeout(() => this.waitForAiShotComplete(), 100);
+            return;
+        }
+
+        console.log('🤖 AI shot complete - balls stopped');
+
+        // Reset ball velocities
+        this.game.balls.forEach(ball => {
+            if (ball.active) {
+                ball.vx = 0;
+                ball.vy = 0;
+                ball.spinX = 0;
+                ball.spinY = 0;
+            }
+        });
+
+        // Get AI's player number and group
+        const aiPlayerNum = this.myPlayerNumber === 1 ? 2 : 1;
+        const aiGroup = this.game.playerTypes ? this.game.playerTypes[aiPlayerNum] : null;
+
+        // Check what balls were pocketed this shot (tracked in shotPocketedBalls)
+        const pocketedBalls = this.game.shotPocketedBalls || [];
+        console.log(`🤖 Pocketed balls this shot:`, pocketedBalls.map(b => `${b.id}(${b.type})`));
+
+        // Check if 8-ball was pocketed - GAME OVER
+        const eightBallPocketed = pocketedBalls.some(b => b.id === 8);
+        if (eightBallPocketed) {
+            // Check if AI won or lost
+            const aiHadAllBallsCleared = this.game.balls.filter(b =>
+                b.id > 0 && b.id !== 8 && b.type === aiGroup && b.active
+            ).length === 0;
+
+            if (aiHadAllBallsCleared && !pocketedBalls.some(b => b.id === 0)) {
+                // AI cleared all its balls and pocketed 8-ball legally - AI WINS
+                console.log('🤖 AI pocketed 8-ball legally - AI WINS!');
+                const aiWinnerNum = this.myPlayerNumber === 1 ? 2 : 1;
+                this.game.onGameOver({ winner: aiWinnerNum, reason: 'AI pocketed the 8-ball!' });
+            } else {
+                // AI pocketed 8-ball illegally - HUMAN WINS
+                console.log('🏆 AI pocketed 8-ball early - YOU WIN!');
+                this.game.onGameOver({ winner: this.myPlayerNumber, reason: 'Opponent pocketed 8-ball early!' });
+            }
+            return;
+        }
+
+        // Check if cue ball was pocketed (scratch/foul)
+        const cueBallPocketed = pocketedBalls.some(b => b.id === 0);
+        if (cueBallPocketed) {
+            console.log('🎱 AI scratched! You get ball-in-hand');
+            // Restore cue ball for human's ball-in-hand
+            const cueBall = this.game.balls.find(b => b.id === 0);
+            if (cueBall) {
+                cueBall.active = true;
+                cueBall.x = this.game.tableWidth * 0.25;
+                cueBall.y = this.game.tableHeight / 2;
+                cueBall.vx = 0;
+                cueBall.vy = 0;
+            }
+            this.game.ballInHand = true;
+            this.game.gameState = 'aiming';
+            this.switchToHumanTurn(true); // Pass foul=true
+            return;
+        }
+
+        // Check if AI pocketed any of its own balls
+        let aiContinues = false;
+
+        if (!aiGroup || this.game.tableState === 'open') {
+            // Open table - AI continues if pocketed any non-8-ball
+            const legalPockets = pocketedBalls.filter(b => b.id !== 0 && b.id !== 8);
+            if (legalPockets.length > 0) {
+                // Assign group based on what was pocketed
+                const pocketedBall = legalPockets[0];
+                this.game.playerTypes[aiPlayerNum] = pocketedBall.type;
+                const humanPlayerNum = this.myPlayerNumber;
+                this.game.playerTypes[humanPlayerNum] = pocketedBall.type === 'solid' ? 'stripe' : 'solid';
+                this.game.tableState = 'closed';
+                console.log(`🤖 AI assigned to ${pocketedBall.type}s, continues turn!`);
+                aiContinues = true;
+            }
+        } else {
+            // Closed table - AI continues if pocketed its own group
+            const ownBallsPocketed = pocketedBalls.filter(b => b.type === aiGroup);
+            if (ownBallsPocketed.length > 0) {
+                console.log(`🤖 AI pocketed ${ownBallsPocketed.length} ${aiGroup}(s), continues turn!`);
+                aiContinues = true;
+            }
+        }
+
+        if (aiContinues) {
+            // AI continues - trigger another AI turn
+            console.log('🤖 AI continues its turn...');
+            setTimeout(() => {
+                this.executeAiTurn({});
+            }, 500);
+        } else {
+            // AI didn't pocket anything, switch to human
+            console.log(`🤖 AI didn't pocket. Your turn!`);
+            this.switchToHumanTurn();
+        }
+    }
+
+    // Helper to switch to human player's turn by notifying server
+    switchToHumanTurn(isFoul = false) {
+        console.log(`🤖 Sending AI shot result to server (foul=${isFoul})...`);
+
+        // Tell server that AI's shot is done
+        if (this.socket && this.roomId) {
+            this.socket.emit('shot_result', {
+                roomId: this.roomId,
+                foul: isFoul,
+                continueTurn: false,
+                pocketedBalls: this.game.shotPocketedBalls || [],
+                tableOpen: this.game.tableState === 'open',
+                playerTypes: this.game.playerTypes,
+                isBreakShot: false,
+                isAiShot: true,
+                ballInHand: isFoul // Opponent gets ball-in-hand if foul
+            });
+            console.log('🤖 AI shot_result sent to server');
+        }
+
+        // If foul, set up ball-in-hand for human immediately
+        if (isFoul) {
+            this.game.ballInHand = true;
+            this.game.currentPlayer = this.myPlayerNumber;
+            this.game.isMyTurn = true;
+            this.game.gameState = 'aiming';
+            this.game.updateTurnIndicator();
+            this.game.startShotTimer();
+            console.log('🎱 Ball-in-hand granted! Drag cue ball to position.');
+        } else {
+            // Normal turn switch - wait for server confirmation
+            this.game.gameState = 'waiting';
+            console.log('⏳ Waiting for server to confirm turn switch...');
+        }
+    }
+
+    // Helper: Find the best ball for AI to target (for ball-in-hand positioning)
+    findBestBallForAi(balls) {
+        const aiPlayerNum = this.myPlayerNumber === 1 ? 2 : 1;
+        const aiGroup = this.game.playerTypes ? this.game.playerTypes[aiPlayerNum] : null;
+
+        let targetBalls = balls.filter(b => b.id > 0 && b.active);
+
+        if (!aiGroup || this.game.tableState === 'open') {
+            // Open table - target any non-8-ball
+            targetBalls = targetBalls.filter(b => b.id !== 8);
+        } else {
+            // Closed table
+            const ownBalls = targetBalls.filter(b => b.type === aiGroup);
+            if (ownBalls.length > 0) {
+                targetBalls = ownBalls;
+            } else {
+                // Go for 8-ball
+                const eightBall = targetBalls.find(b => b.id === 8);
+                return eightBall || targetBalls[0];
+            }
+        }
+
+        // Find ball closest to any pocket
+        const pockets = this.game.physics?.pockets || [
+            { x: 40, y: 40 }, { x: 460, y: 40 }, { x: 880, y: 40 },
+            { x: 40, y: 460 }, { x: 460, y: 460 }, { x: 880, y: 460 }
+        ];
+
+        let bestBall = null;
+        let bestDist = Infinity;
+
+        for (const ball of targetBalls) {
+            for (const pocket of pockets) {
+                const dist = Math.sqrt((pocket.x - ball.x) ** 2 + (pocket.y - ball.y) ** 2);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestBall = ball;
+                }
+            }
+        }
+
+        return bestBall || targetBalls[0];
+    }
+
+    // Check if current player is shooting at 8-ball (all own balls cleared)
+    isShootingAtEightBall() {
+        if (!this.game || !this.game.balls) return false;
+
+        const myGroup = this.game.playerTypes ? this.game.playerTypes[this.myPlayerNumber] : null;
+        if (!myGroup) return false;
+
+        // Check if all balls of my group are pocketed
+        const myBallsRemaining = this.game.balls.filter(b =>
+            b.id > 0 && b.id !== 8 && b.type === myGroup && b.active
+        ).length;
+
+        return myBallsRemaining === 0;
+    }
+
+    // Create pocket call overlay UI - just show message, use existing table pockets
+    createPocketCallOverlay() {
+        if (this.pocketCallOverlay) return;
+
+        // Get table container for positioning
+        const tableContainer = document.getElementById('table-container');
+        if (!tableContainer) {
+            console.log('Table container not found');
+            return;
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'pocket-call-overlay';
+        overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            cursor: pointer;
+        `;
+
+        // Title message at center
+        const title = document.createElement('div');
+        title.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffd700;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(255,215,0,0.5);
+            pointer-events: none;
+            white-space: nowrap;
+        `;
+        title.textContent = '🎱 TAP A POCKET';
+        overlay.appendChild(title);
+
+        // Handle click on overlay - detect which pocket based on click position
+        overlay.addEventListener('click', (e) => {
+            const rect = overlay.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+
+            // Determine pocket by position (6 pockets)
+            // Top row: left <20%, center 40-60%, right >80%
+            // Bottom row: left <20%, center 40-60%, right >80%
+            let pocketId = null;
+
+            if (y < 0.25) {
+                // Top row
+                if (x < 0.2) pocketId = 0;       // Top left
+                else if (x > 0.4 && x < 0.6) pocketId = 1;  // Top center
+                else if (x > 0.8) pocketId = 2;  // Top right
+            } else if (y > 0.75) {
+                // Bottom row
+                if (x < 0.2) pocketId = 3;       // Bottom left
+                else if (x > 0.4 && x < 0.6) pocketId = 4;  // Bottom center
+                else if (x > 0.8) pocketId = 5;  // Bottom right
+            }
+
+            if (pocketId !== null) {
+                this.selectPocket(pocketId);
+            }
+        });
+
+        tableContainer.appendChild(overlay);
+        this.pocketCallOverlay = overlay;
+    }
+
+    // Show pocket call overlay for human player
+    showPocketCallOverlay() {
+        console.log('🎱 Showing pocket call overlay');
+        this.createPocketCallOverlay();
+        this.pocketCallOverlay.style.display = 'block';
+        this.needsPocketCall = true;
+    }
+
+    // Hide pocket call overlay
+    hidePocketCallOverlay() {
+        if (this.pocketCallOverlay) {
+            this.pocketCallOverlay.style.display = 'none';
+        }
+        this.needsPocketCall = false;
+    }
+
+    // Human selects a pocket
+    selectPocket(pocketId) {
+        console.log(`🎯 Pocket ${pocketId} selected`);
+        this.calledPocket = pocketId;
+        this.hidePocketCallOverlay();
+
+        // Resume game - player can now aim and shoot
+        if (this.game) {
+            this.game.needsCallPocket = false;
+            this.game.gameState = 'aiming';
+            this.game.startShotTimer();
+            console.log('🎱 Pocket called - you can now shoot at the 8-ball!');
+        }
+    }
+
+    // AI selects the best pocket for 8-ball
+    aiSelectPocket(eightBall) {
+        const pockets = this.game.physics?.pockets || [
+            { x: 40, y: 40 }, { x: 460, y: 40 }, { x: 880, y: 40 },
+            { x: 40, y: 460 }, { x: 460, y: 460 }, { x: 880, y: 460 }
+        ];
+
+        // Find closest pocket to 8-ball
+        let closestPocket = 0;
+        let minDist = Infinity;
+        for (let i = 0; i < pockets.length; i++) {
+            const dist = Math.sqrt(
+                (pockets[i].x - eightBall.x) ** 2 +
+                (pockets[i].y - eightBall.y) ** 2
+            );
+            if (dist < minDist) {
+                minDist = dist;
+                closestPocket = i;
+            }
+        }
+
+        this.calledPocket = closestPocket;
+        console.log(`🤖 AI calls pocket ${closestPocket}`);
+        return closestPocket;
     }
 }
 

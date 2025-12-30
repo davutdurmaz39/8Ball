@@ -1069,7 +1069,15 @@ class PoolGame {
             this.needsCallPocket = true;
             this.gameState = 'calling-pocket';
             this.stopShotTimer();
-            this.showMessage('CALL POCKET', 'Click on a pocket to call your 8-ball shot', 5000);
+
+            // Use NetworkManager overlay for visual pocket selection
+            if (window.networkManager && window.networkManager.showPocketCallOverlay) {
+                console.log('🎱 Showing pocket call overlay for 8-ball shot');
+                window.networkManager.showPocketCallOverlay();
+            } else {
+                // Fallback to message
+                this.showMessage('CALL POCKET', 'Click on a pocket to call your 8-ball shot', 5000);
+            }
         } else {
             // Normal shot, start timer
             this.startShotTimer();

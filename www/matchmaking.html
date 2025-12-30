@@ -527,7 +527,6 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/page-landscape.css">
 </head>
 
 <body>
@@ -584,39 +583,176 @@
                     </div>
                 </div>
                 <div class="mm-ready-status searching">🔍 SEARCHING</div>
+            </div>
+        </div>
 
-                socket.on('match_found', (data) => {
+        <!-- Stakes -->
+        <div class="mm-stakes">
+            <div class="mm-stakes-left">
+                <span class="mm-stakes-label">Table Stakes</span>
+                <div class="mm-stakes-amount">
+                    <span class="mm-stakes-icon">💰</span>
+                    <span id="stakes-amount">100</span>
+                </div>
+            </div>
+            <div class="mm-stakes-right">
+                <span class="mm-stakes-label">Winner Takes</span>
+                <div class="mm-prize-badge" id="prize-amount">200</div>
+            </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="mm-timer-section">
+            <div class="mm-timer-label">Searching for</div>
+            <div class="mm-timer-display">
+                <div class="mm-timer-box">
+                    <div class="mm-timer-value" id="timer-min">00</div>
+                    <div class="mm-timer-unit">Min</div>
+                </div>
+                <div class="mm-timer-separator">:</div>
+                <div class="mm-timer-box">
+                    <div class="mm-timer-value" id="timer-sec">00</div>
+                    <div class="mm-timer-unit">Sec</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mm-actions">
+            <button class="mm-action-btn chat">
+                <div class="mm-action-icon">💬</div>
+                <span class="mm-action-title">Chat</span>
+                <span class="mm-action-subtitle">Send message</span>
+            </button>
+            <button class="mm-action-btn emojis">
+                <div class="mm-action-icon">😀</div>
+                <span class="mm-action-title">Emojis</span>
+                <span class="mm-action-subtitle">Quick react</span>
+            </button>
+        </div>
+
+        <!-- Cancel Button -->
+        <button class="mm-cancel-btn" onclick="cancelMatchmaking()">❌ CANCEL MATCHMAKING</button>
+    </main>
+
+    <!-- Match Found Overlay -->
+    <div class="mm-match-found" id="match-found-overlay">
+        <div class="mm-match-found-content">
+            <h2>✅ MATCH FOUND!</h2>
+            <div class="mm-vs-display">
+                <div class="mm-avatar" id="mf-player1-avatar">P</div>
+                <span class="mm-vs-text">VS</span>
+                <div class="mm-avatar" id="mf-player2-avatar">O</div>
+            </div>
+            <div class="mm-countdown">
+                Starting in <span class="mm-countdown-number" id="countdown-number">3</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const stake = parseInt(urlParams.get('stake')) || 100;
+        let socket = null;
+        let timerInterval = null;
+        let searchStartTime = Date.now();
+
+        // Map stake to tier
+        function stakeToTier(stake) {
+            if (stake <= 50) return 'bronze';
+            if (stake <= 100) return 'silver';
+            if (stake <= 250) return 'gold';
+            if (stake <= 500) return 'diamond';
+            if (stake <= 1000) return 'ruby';
+            return 'crown';
+        }
+
+        // Update stakes display
+        document.getElementById('stakes-amount').textContent = stake.toLocaleString();
+        document.getElementById('prize-amount').textContent = (stake * 2).toLocaleString();
+
+        // Load current user data and connect
+        async function loadUserAndConnect() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                const data = await response.json();
+
+                if (data.success && data.user) {
+                    const user = data.user;
+                    window.currentUser = user;
+
+                    // Update player 1 display
+                    document.getElementById('player1-name').textContent = user.username.toUpperCase();
+                    document.getElementById('player1-avatar').textContent = user.username.charAt(0).toUpperCase();
+                    document.getElementById('player1-rank').textContent = 'ELO: ' + (user.elo || 1200);
+
+                    const winRate = user.gamesPlayed > 0
+                        ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(0)
+                        : '0';
+                    document.getElementById('player1-winrate').textContent = winRate + '%';
+                    document.getElementById('player1-wins').textContent = user.gamesWon || 0;
+
+                    const level = Math.floor((user.gamesPlayed || 0) / 5) + 1;
+                    document.getElementById('player1-level').textContent = level;
+
+                    connectAndFindMatch(user);
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        function connectAndFindMatch(user) {
+            socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
+
+            socket.on('connect', () => {
+                console.log('🔌 Connected to matchmaking server');
+                socket.emit('authenticate', {
+                    user: {
+                        id: user.id || user._id,
+                        username: user.username,
+                        elo: user.elo || 1200,
+                        coins: user.coins || 1000
+                    }
+                });
+            });
+
+            socket.on('authenticated', () => {
+                console.log('✅ Authenticated, joining matchmaking queue...');
+                socket.emit('find_match', { tier: stakeToTier(stake) });
+            });
+
+            socket.on('matchmaking_started', (data) => {
+                console.log('🔍 Searching...', data);
+                document.getElementById('mm-status').innerHTML = 'Finding opponent<span class="searching-dots"></span>';
+            });
+
+            socket.on('match_found', (data) => {
                 console.log('🎮 Match found!', data);
                 handleMatchFound(data);
-                });
+            });
 
-                socket.on('matchmaking_cancelled', () => {
+            socket.on('matchmaking_cancelled', () => {
                 window.location.href = 'index.html';
-                });
+            });
 
-                socket.on('connect_error', (error) => {
+            socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
-                });
-                }
+            });
+        }
 
-                function handleMatchFound(data) {
-                const myId = window.currentUser?.id; const room = data.room; const opponent = data.opponent ||
-                ((room?.host?.id === myId) ? room?.guest : room?.host);
+        function handleMatchFound(data) {
+            const myId = window.currentUser?.id; const room = data.room; const opponent = data.opponent || ((room?.host?.id === myId) ? room?.guest : room?.host);
 
-                if (opponent) {
+            if (opponent) {
                 const card = document.getElementById('player2-card');
                 card.classList.remove('placeholder');
-                // Set opponent avatar (profilePicture or initial)
-                const p2Avatar = document.getElementById('player2-avatar');
-                if (opponent.profilePicture) {
-                // Add cache-busting timestamp to prevent browser caching issues
-                const opponentAvatarUrl = opponent.profilePicture + (opponent.profilePicture.includes('?') ? '&' : '?')
-                + 't=' + Date.now();
-                p2Avatar.innerHTML = '<img src="' + opponentAvatarUrl + '"
-                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-                } else {
-                p2Avatar.textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
-                }
+                document.getElementById('player2-avatar').textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
                 document.getElementById('player2-avatar').classList.remove('placeholder');
                 document.getElementById('player2-name').textContent = (opponent.username || 'Opponent').toUpperCase();
                 document.getElementById('player2-rank').textContent = 'ELO: ' + (opponent.elo || 1200);
@@ -625,64 +761,53 @@
                 document.getElementById('mm-status').innerHTML = 'Match found!';
                 card.querySelector('.mm-ready-status').className = 'mm-ready-status ready';
                 card.querySelector('.mm-ready-status').innerHTML = '✓ READY';
-                }
+            }
 
-                if (window.currentUser) {
-                // Set player 1 avatar in match found overlay
-                const mfP1Avatar = document.getElementById('mf-player1-avatar');
-                if (window.currentUser.profilePicture) {
-                // Add cache-busting timestamp to prevent browser caching issues
-                const mfP1Url = window.currentUser.profilePicture + (window.currentUser.profilePicture.includes('?') ?
-                '&' : '?') + 't=' + Date.now();
-                mfP1Avatar.innerHTML = '<img src="' + mfP1Url + '"
-                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-                } else {
-                mfP1Avatar.textContent = window.currentUser.username.charAt(0).toUpperCase();
-                }
-                }
-                if (opponent) {
-                // Set opponent avatar in match found overlay
-                const mfP2Avatar = document.getElementById('mf-player2-avatar');
-                if (opponent.profilePicture) {
-                // Add cache-busting timestamp to prevent browser caching issues
-                const mfP2Url = opponent.profilePicture + (opponent.profilePicture.includes('?') ? '&' : '?') + 't=' +
-                Date.now();
-                mfP2Avatar.innerHTML = '<img src="' + mfP2Url + '"
-                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-                } else {
-                mfP2Avatar.textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
-                }
-                }
+            if (window.currentUser) {
+                document.getElementById('mf-player1-avatar').textContent = window.currentUser.username.charAt(0).toUpperCase();
+            }
+            if (opponent) {
+                document.getElementById('mf-player2-avatar').textContent = opponent.username?.charAt(0).toUpperCase() || 'O';
+            }
 
-                setTimeout(() => {
+            setTimeout(() => {
                 document.getElementById('match-found-overlay').classList.add('active');
                 startGameCountdown(data.gameId || data.roomId);
-                }, 1000);
-                }
+            }, 1000);
+        }
 
-                function startSearchTimer() {
-                timerInterval = setInterval(() => {
+        function startSearchTimer() {
+            timerInterval = setInterval(() => {
                 const elapsed = Math.floor((Date.now() - searchStartTime) / 1000);
                 document.getElementById('timer-min').textContent = Math.floor(elapsed / 60).toString().padStart(2, '0');
                 document.getElementById('timer-sec').textContent = (elapsed % 60).toString().padStart(2, '0');
-                }, 1000);
-                }
+            }, 1000);
+        }
 
-                function cancelMatchmaking() {
-                if (timerInterval) clearInterval(timerInterval);
-                if (socket) { socket.emit('cancel_matchmaking'); socket.disconnect(); }
-                window.location.href = 'index.html';
-                }
+        function cancelMatchmaking() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (socket) { socket.emit('cancel_matchmaking'); socket.disconnect(); }
+            window.location.href = 'index.html';
+        }
 
-                function startGameCountdown(gameId) {
-                let count = 5;
-                const countdownEl = document.getElementById('countdown-number');
-                const interval = setInterval(() => {
+        function startGameCountdown(gameId) {
+            let count = 3;
+            const countdownEl = document.getElementById('countdown-number');
+            const interval = setInterval(() => {
                 count--;
                 countdownEl.textContent = count;
-                if (count <= 0) { clearInterval(interval); if (timerInterval) clearInterval(timerInterval);
-                    window.location.href='game.html?mode=online&stake=' + stake + '&gameId=' + (gameId || '' ); } },
-                    1000); } // Start on page load loadUserAndConnect(); startSearchTimer(); </script>
+                if (count <= 0) {
+                    clearInterval(interval);
+                    if (timerInterval) clearInterval(timerInterval);
+                    window.location.href = 'game.html?mode=online&stake=' + stake + '&gameId=' + (gameId || '');
+                }
+            }, 1000);
+        }
+
+        // Start on page load
+        loadUserAndConnect();
+        startSearchTimer();
+    </script>
 </body>
 
 </html>

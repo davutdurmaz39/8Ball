@@ -14,6 +14,7 @@ class MultiplayerServer {
         this.users = users; // Reference to user database
         this.roomManager = new RoomManager();
         this.matchmaking = new MatchmakingQueue(this.roomManager);
+        this.matchmaking.setUsersData(Array.from(this.users.values()));
         this.matchHistory = new MatchHistory();
         this.achievements = new AchievementManager();
         this.connectedPlayers = new Map(); // socketId -> playerData
@@ -489,10 +490,21 @@ class MultiplayerServer {
         if (!room || room.status !== 'playing') return;
 
         // Accept results from the player who just shot (current player)
+        // Exception: Accept AI shot results from human player in AI matches
         const playerNum = room.getPlayerNumber(player.id);
+        const isAiMatch = room.isAiMatch || false;
+        const isAiShot = data.isAiShot || false;
+
+        console.log(`🔍 Shot result check: playerNum=${playerNum}, currentPlayer=${room.gameState.currentPlayer}, isAiMatch=${isAiMatch}, isAiShot=${isAiShot}`);
+
         if (playerNum !== room.gameState.currentPlayer) {
-            console.log(`⚠️ Ignoring shot_result from player ${playerNum}, expected from ${room.gameState.currentPlayer}`);
-            return;
+            // In AI matches, allow human to send shot results on AI's behalf
+            if (isAiMatch && isAiShot) {
+                console.log(`🤖 Accepting AI shot_result from human player (AI match proxy)`);
+            } else {
+                console.log(`⚠️ Ignoring shot_result from player ${playerNum}, expected from ${room.gameState.currentPlayer}`);
+                return;
+            }
         }
 
         console.log(`📊 Processing shot result from Player ${playerNum}`);
@@ -846,18 +858,54 @@ class MultiplayerServer {
 
     // === Background Tasks ===
     startBackgroundTasks() {
-        // Process matchmaking queues every 2 seconds
+        // Process matchmaking queues every 2 seconds (with AI fallback)
         setInterval(() => {
-            ['casual', 'competitive', 'highStakes'].forEach(tier => {
-                const result = this.matchmaking.processQueue(tier);
+            const allTiers = ['casual', 'competitive', 'highStakes', 'bronze', 'silver', 'gold', 'diamond', 'ruby', 'crown'];
+            allTiers.forEach(tier => {
+                const result = this.matchmaking.processQueueWithAI(tier);
                 if (result?.matched) {
                     const room = this.roomManager.getRoom(result.roomId);
                     if (room) {
-                        // Notify matched players
-                        this.io.to(result.roomId).emit('match_found', {
+                        const matchData = {
                             roomId: result.roomId,
-                            room: room.toJSON()
-                        });
+                            room: room.toJSON(),
+                            isAiMatch: result.isAiMatch || false,
+                            opponent: result.opponent
+                        };
+
+                        // Find player's socket and emit directly + join room
+                        for (const [socketId, player] of this.connectedPlayers) {
+                            if (room.host && player.id === room.host.id) {
+                                const socket = this.io.sockets.sockets.get(socketId);
+                                if (socket) {
+                                    socket.join(result.roomId);
+                                    socket.emit('match_found', matchData);
+                                    console.log(`📤 Sent match_found to ${player.username}`);
+                                }
+                            }
+                        }
+
+                        // Auto-start AI matches after 2 seconds
+                        if (result.isAiMatch) {
+                            console.log(`🤖 AI match in room ${result.roomId}`);
+                            setTimeout(() => {
+                                const r = this.roomManager.getRoom(result.roomId);
+                                if (r && (r.status === 'ready' || r.status === 'waiting')) {
+                                    r.isAiMatch = true;  // Mark room as AI match for shot_result handling
+                                    const gameState = r.startGame();
+                                    this.io.to(result.roomId).emit('game_start', {
+                                        roomId: r.id,
+                                        gameState,
+                                        currentPlayer: 1,
+                                        host: r.host,
+                                        guest: r.guest,
+                                        wager: r.wager,
+                                        isAiMatch: true
+                                    });
+                                    console.log(`🤖 AI Game started in ${r.id}`);
+                                }
+                            }, 2000);
+                        }
                     }
                 } else if (result?.timeout) {
                     // Notify player of timeout

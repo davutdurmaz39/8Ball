@@ -34,8 +34,13 @@ class MatchmakingQueue {
             eloRangeExpansion: 100,   // Expand by this much every interval
             expansionInterval: 5000,  // 5 seconds
             maxEloRange: 1000,        // Maximum ELO difference
-            maxWaitTime: 120000       // 2 minutes max wait
+            maxWaitTime: 120000,      // 2 minutes max wait
+            aiTimeout: 15000          // 15 seconds before AI fallback
         };
+
+        // AI bot tracking
+        this.activeBots = new Set();
+        this.usersData = null;
     }
 
     addPlayer(player, tier = 'casual', currency = 'coins', stake = 0) {
@@ -246,6 +251,91 @@ class MatchmakingQueue {
             currentEloRange: currentRange,
             playersInQueue: queue.length
         };
+    }
+
+    // === AI Bot Methods ===
+
+    setUsersData(usersData) {
+        this.usersData = usersData;
+    }
+
+    getRandomBot(playerElo = 1200) {
+        if (!this.usersData) return null;
+        const availableBots = this.usersData.filter(u => u.isBot && !this.activeBots.has(u.id));
+        if (availableBots.length === 0) return null;
+        const similarBots = availableBots.filter(b => Math.abs(b.elo - playerElo) <= 400);
+        const pool = similarBots.length > 0 ? similarBots : availableBots;
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    processQueueWithAI(tier) {
+        const queue = this.queues[tier];
+        if (!queue) return null;
+        const now = Date.now();
+        queue.sort((a, b) => a.joinedAt - b.joinedAt);
+
+        for (let i = 0; i < queue.length; i++) {
+            const player = queue[i];
+            if (!this.playerQueues.has(player.id)) continue;
+            const waitTime = now - player.joinedAt;
+
+            // Try real player first
+            const match = this.tryMatch(player, tier);
+            if (match.matched) return match;
+
+            // AI fallback after 15 seconds
+            if (waitTime >= this.settings.aiTimeout) {
+                const bot = this.getRandomBot(player.elo);
+                if (bot) {
+                    return this.matchWithBot(player, bot, tier);
+                }
+            }
+
+            // Max wait timeout
+            if (waitTime > this.settings.maxWaitTime) {
+                this.removePlayer(player.id);
+                return { timeout: true, playerId: player.id };
+            }
+        }
+        return null;
+    }
+
+    matchWithBot(player, bot, tier) {
+        this.queues[tier] = this.queues[tier].filter(p => p.id !== player.id);
+        this.playerQueues.delete(player.id);
+        this.activeBots.add(bot.id);
+
+        const wager = player.stake || 50;
+        const currency = player.currency || 'coins';
+        const room = this.roomManager.createRoom(player, wager, currency);
+
+        const botEntry = {
+            id: bot.id,
+            username: bot.username,
+            elo: bot.elo,
+            coins: bot.coins || 5000,
+            isBot: true,
+            aiDifficulty: bot.aiDifficulty || 'medium-hard',
+            profilePicture: bot.profilePicture,
+            nationality: bot.nationality
+        };
+
+        this.roomManager.joinRoom(room.id, botEntry);
+        console.log(`🤖 AI Match: ${player.username} vs ${bot.username}`);
+
+        return {
+            matched: true,
+            roomId: room.id,
+            opponent: botEntry,
+            wager,
+            currency,
+            tier,
+            isAiMatch: true
+        };
+    }
+
+    releaseBot(botId) {
+        this.activeBots.delete(botId);
     }
 }
 
