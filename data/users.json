@@ -1141,5 +1141,27 @@
     "createdAt": "2025-12-29T18:05:24.806Z",
     "aiDifficulty": "medium-hard",
     "aiAccuracy": 0.8230757514111756
+  },
+  {
+    "id": 53,
+    "username": "Demo",
+    "email": "wallet_0xdb6be62b413df944d5aba396f352b8c90b0d0cb8@minepool.game",
+    "walletAddress": "0xdb6be62b413df944d5aba396f352b8c90b0d0cb8",
+    "coins": 0,
+    "qwinBalance": 0,
+    "diamonds": 100,
+    "elo": 1200,
+    "gamesPlayed": 0,
+    "gamesWon": 0,
+    "createdAt": "2025-12-31T18:50:04.572Z",
+    "achievements": [],
+    "matchHistory": [],
+    "nationality": null,
+    "profilePicture": null,
+    "cues": [
+      "standard"
+    ],
+    "avatar": "🐯",
+    "profileComplete": true
   }
 ]

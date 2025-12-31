@@ -1,8 +1,13 @@
 // ============================================
 // UNIFIED STAKE CONFIGURATION
-// All stake tiers used across the game
+// All stake tiers used across the game - NOW IN QWIN
 // ============================================
 const STAKE_CONFIG = {
+    // Currency configuration
+    currency: 'QWIN',
+    currencyIcon: '🪙',
+    houseFeePercent: 10, // 10% house fee on winnings
+
     tiers: [
         { id: 'bronze', name: 'Bronze', wager: 50, icon: '🥉', color: '#cd7f32' },
         { id: 'silver', name: 'Silver', wager: 100, icon: '🥈', color: '#c0c0c0' },
@@ -22,6 +27,18 @@ const STAKE_CONFIG = {
 
     getDefaultTier: function () {
         return this.tiers[1]; // Silver 100 as default
+    },
+
+    // Calculate winnings after house fee
+    calculateWinnings: function (stake) {
+        const pot = stake * 2;
+        const fee = pot * (this.houseFeePercent / 100);
+        return pot - fee;
+    },
+
+    // Format amount with currency symbol
+    formatAmount: function (amount) {
+        return `${parseFloat(amount).toFixed(2)} ${this.currency}`;
     }
 };
 

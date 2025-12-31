@@ -4,14 +4,18 @@
  */
 
 const QWIN_CONFIG = {
-    // TODO: Replace with actual deployed contract address
-    CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000000',
-    CHAIN_ID: 56, // BNB Smart Chain Mainnet (Use 97 for Testnet)
-    CHAIN_NAME: 'BNB Smart Chain',
-    RPC_URL: 'https://bsc-dataseed.binance.org/',
-    BLOCK_EXPLORER: 'https://bscscan.com',
+    // QWIN Token on BSC Testnet
+    CONTRACT_ADDRESS: '0x4bdef5d6eeD17bB3c09e6678ce9690E4E4c7bA8e',
+    CHAIN_ID: 97, // BNB Smart Chain TESTNET
+    CHAIN_NAME: 'BNB Smart Chain Testnet',
+    RPC_URL: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+    BLOCK_EXPLORER: 'https://testnet.bscscan.com',
     SYMBOL: 'QWIN',
-    DECIMALS: 18
+    DECIMALS: 18,
+    // Treasury address for game deposits
+    TREASURY_ADDRESS: '0xdB6Be62B413dF944d5ABa396F352B8c90b0D0cb8',
+    // House fee on winnings (10%)
+    HOUSE_FEE_PERCENT: 10
 };
 
 // Minimal ABI for ERC-20 Token (Balance, Transfer, Approve)
@@ -140,12 +144,6 @@ class WalletManager {
     async getTokenBalance() {
         if (!this.contract || !this.userAddress) return '0';
         try {
-            // Check if contract address is valid/set
-            if (QWIN_CONFIG.CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-                console.warn('⚠️ QWIN Contract Address not set. Returning mock balance.');
-                return '1000.00'; // Mock balance for testing
-            }
-
             const balance = await this.contract.balanceOf(this.userAddress);
             return ethers.utils.formatUnits(balance, QWIN_CONFIG.DECIMALS);
         } catch (error) {
@@ -162,25 +160,24 @@ class WalletManager {
         if (!this.contract) throw new Error('Wallet not connected');
 
         try {
-            // Check if contract is valid
-            if (QWIN_CONFIG.CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-                console.log('⚠️ Mocking deposit for testing');
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-                return true;
+            // Check if treasury address is set
+            if (QWIN_CONFIG.TREASURY_ADDRESS === '0x0000000000000000000000000000000000000000') {
+                console.warn('⚠️ Treasury address not set. Mocking deposit for testing.');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                return { success: true, mock: true };
             }
 
             const amountWei = ethers.utils.parseUnits(amount.toString(), QWIN_CONFIG.DECIMALS);
-            // Placeholder treasury address - replace with actual
-            const treasuryAddress = '0x1234567890123456789012345678901234567890';
 
-            const tx = await this.contract.transfer(treasuryAddress, amountWei);
-            console.log('Deposit transaction sent:', tx.hash);
+            // Transfer QWIN to game treasury
+            const tx = await this.contract.transfer(QWIN_CONFIG.TREASURY_ADDRESS, amountWei);
+            console.log('💰 Deposit transaction sent:', tx.hash);
             await tx.wait();
-            console.log('Deposit confirmed');
+            console.log('✅ Deposit confirmed');
 
-            return true;
+            return { success: true, txHash: tx.hash };
         } catch (error) {
-            console.error('Deposit failed:', error);
+            console.error('❌ Deposit failed:', error);
             throw error;
         }
     }

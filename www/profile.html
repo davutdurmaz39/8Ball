@@ -773,10 +773,21 @@
             font-size: 24px;
         }
 
-        .cue-card .cue-icon.legendary { background: linear-gradient(135deg, rgba(255, 180, 0, 0.3), rgba(255, 120, 0, 0.2)); }
-        .cue-card .cue-icon.epic { background: linear-gradient(135deg, rgba(180, 0, 255, 0.3), rgba(120, 0, 200, 0.2)); }
-        .cue-card .cue-icon.rare { background: linear-gradient(135deg, rgba(0, 180, 255, 0.3), rgba(0, 100, 200, 0.2)); }
-        .cue-card .cue-icon.common { background: rgba(100, 100, 100, 0.3); }
+        .cue-card .cue-icon.legendary {
+            background: linear-gradient(135deg, rgba(255, 180, 0, 0.3), rgba(255, 120, 0, 0.2));
+        }
+
+        .cue-card .cue-icon.epic {
+            background: linear-gradient(135deg, rgba(180, 0, 255, 0.3), rgba(120, 0, 200, 0.2));
+        }
+
+        .cue-card .cue-icon.rare {
+            background: linear-gradient(135deg, rgba(0, 180, 255, 0.3), rgba(0, 100, 200, 0.2));
+        }
+
+        .cue-card .cue-icon.common {
+            background: rgba(100, 100, 100, 0.3);
+        }
 
         .cue-card .cue-name {
             font-size: 12px;
@@ -861,15 +872,16 @@
             </div>
 
             <div class="wallet-section">
-                <div class="section-title">Wallet</div>
+                <div class="section-title">QWIN Wallet</div>
                 <div class="wallet-card">
                     <div class="wallet-header">
                         <div class="wallet-title">
-                            <span class="wallet-icon">💰</span>
-                            <span class="wallet-label">Balance</span>
+                            <span class="wallet-icon">🪙</span>
+                            <span class="wallet-label">QWIN Balance</span>
                         </div>
-                        <button class="add-funds-btn" onclick="addFunds()">
-                            <span>+</span> Add
+                        <button class="add-funds-btn" onclick="depositQwin()"
+                            style="background: linear-gradient(135deg, #00ff88, #00cc66);">
+                            ⬆️ Deposit
                         </button>
                     </div>
                     <div class="balance-amount">
@@ -910,7 +922,8 @@
             </div>
             <div class="cues-grid" id="cues-grid">
                 <!-- Cues will be loaded dynamically -->
-                <p style="color: var(--text-secondary); text-align: center; padding: 20px; grid-column: span 2;">Loading cues...</p>
+                <p style="color: var(--text-secondary); text-align: center; padding: 20px; grid-column: span 2;">Loading
+                    cues...</p>
             </div>
         </div>
 
@@ -964,14 +977,14 @@
                 } else {
                     console.log('API failed, no user');
                     {
-                    const _storedUser = localStorage.getItem('user');
-                    if (!_storedUser) {
-                        window.location.href = '/login.html';
-                    } else {
-                        console.log('Using localStorage user instead of redirecting');
-                        window.currentUser = JSON.parse(_storedUser);
+                        const _storedUser = localStorage.getItem('user');
+                        if (!_storedUser) {
+                            window.location.href = '/login.html';
+                        } else {
+                            console.log('Using localStorage user instead of redirecting');
+                            window.currentUser = JSON.parse(_storedUser);
+                        }
                     }
-                }
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
@@ -986,7 +999,7 @@
                 }
             }
         }
-        
+
         // CUE DEFINITIONS
         const CUE_DATA = {
             standard: { name: 'Standard', rarity: 'common', icon: '??' },
@@ -1000,27 +1013,27 @@
         function loadCues(userCues) {
             const grid = document.getElementById('cues-grid');
             if (!grid) return;
-            
+
             const ownedCues = ['standard'].concat(userCues || []);
             const selectedCue = localStorage.getItem('selectedCue') || 'standard';
-            
+
             let html = '';
-            ownedCues.forEach(function(cueId) {
+            ownedCues.forEach(function (cueId) {
                 const cue = CUE_DATA[cueId];
                 if (!cue) return;
-                
+
                 const isEquipped = cueId === selectedCue;
                 html += '<div class="cue-card ' + (isEquipped ? 'equipped' : '') + '" onclick="equipCue(\'' + cueId + '\')">' +
                     '<div class="cue-icon ' + cue.rarity + '">' + cue.icon + '</div>' +
                     '<div class="cue-name">' + cue.name + '</div>' +
                     '<div class="equip-badge ' + (isEquipped ? 'equipped' : 'equip') + '">' + (isEquipped ? '? EQUIPPED' : 'EQUIP') + '</div>' +
-                '</div>';
+                    '</div>';
             });
-            
+
             if (html === '') {
                 html = '<p style="color: #667788; text-align: center; padding: 20px; grid-column: span 2;">Visit the Shop to get cues!</p>';
             }
-            
+
             grid.innerHTML = html;
         }
 
@@ -1035,33 +1048,33 @@
             document.getElementById('player-name').textContent = user.username || 'Player';
             document.getElementById('player-id').textContent = 'ID: ' + (user.id || '------').toString().substring(0, 8);
             document.getElementById('coin-balance').textContent = (user.coins || 0).toLocaleString();
-            
+
             const games = user.gamesPlayed || 0;
             const wins = user.gamesWon || 0;
             const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-            
+
             document.getElementById('total-games').textContent = games;
             document.getElementById('wins').textContent = wins;
             document.getElementById('win-rate').textContent = winRate + '%';
             document.getElementById('win-streak').textContent = user.winStreak || 0;
-            
+
             const elo = user.elo || 1200;
             const rankInfo = getRankFromElo(elo);
             document.getElementById('player-rank').textContent = rankInfo.rank.toUpperCase();
             document.getElementById('player-rank').style.color = rankInfo.color;
             document.getElementById('rank-icon').textContent = rankInfo.icon;
             document.getElementById('player-elo').textContent = elo + ' ELO';
-            
+
             const avatarDisplay = document.getElementById('avatar-display');
             if (user.profilePicture) {
                 avatarDisplay.innerHTML = '<img src="' + user.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
             } else {
                 avatarDisplay.textContent = (user.username || 'P').charAt(0).toUpperCase();
             }
-            
+
             document.getElementById('total-earned').textContent = '+' + (user.totalEarned || 0).toLocaleString();
             document.getElementById('highest-balance').textContent = (user.highestBalance || user.coins || 0).toLocaleString();
-            
+
             loadCues(user.cues);
             loadAchievements();
             loadMatchHistory();
@@ -1257,9 +1270,9 @@
             input.click();
         }
 
-        // Add funds
-        function addFunds() {
-            alert('Shop coming soon! Earn coins by winning games.');
+        // Deposit QWIN tokens
+        function depositQwin() {
+            alert('Connect your wallet and deposit QWIN to play!\n\nTreasury: 0xdB6...0cb8\nNetwork: BSC Testnet');
         }
 
         // Load profile on page load

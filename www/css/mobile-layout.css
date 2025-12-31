@@ -55,7 +55,7 @@
 .game-page #game-header .player-1 {
     position: fixed !important;
     top: 8px !important;
-    left: 8px !important;
+    left: 3px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -63,8 +63,8 @@
 }
 
 .game-page #game-header .player-1 .avatar-wrapper {
-    width: 45px !important;
-    height: 45px !important;
+    width: 65px !important;
+    height: 65px !important;
     border-radius: 50% !important;
     border: 2px solid #00ff88 !important;
     overflow: hidden !important;
@@ -106,7 +106,7 @@
 .game-page #game-header .player-2 {
     position: fixed !important;
     top: 8px !important;
-    right: 8px !important;
+    right: 3px !important;
     left: auto !important;
     display: flex !important;
     flex-direction: column !important;
@@ -117,8 +117,8 @@
 /* Reorder Player 2: avatar first (order 1), then name below (order 2) */
 .game-page #game-header .player-2 .avatar-wrapper {
     order: 1 !important;
-    width: 45px !important;
-    height: 45px !important;
+    width: 65px !important;
+    height: 65px !important;
     border-radius: 50% !important;
     border: 2px solid #ff4444 !important;
     overflow: hidden !important;

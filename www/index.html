@@ -1523,9 +1523,9 @@
             </div>
             <div class="profile-stats">
                 <div class="stat-box">
-                    <span class="stat-icon coins">💰</span>
+                    <span class="stat-icon coins">🪙</span>
                     <span class="stat-value" id="stat-coins">24,580</span>
-                    <span class="stat-label">Coins</span>
+                    <span class="stat-label">QWIN</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-icon winrate">📊</span>
@@ -1880,14 +1880,14 @@
                     bottomNav.style.display = 'flex';
                 } else {
                     {
-                    const _storedUser = localStorage.getItem('user');
-                    if (!_storedUser) {
-                        window.location.href = '/login.html';
-                    } else {
-                        console.log('Using localStorage user instead of redirecting');
-                        window.currentUser = JSON.parse(_storedUser);
+                        const _storedUser = localStorage.getItem('user');
+                        if (!_storedUser) {
+                            window.location.href = '/login.html';
+                        } else {
+                            console.log('Using localStorage user instead of redirecting');
+                            window.currentUser = JSON.parse(_storedUser);
+                        }
                     }
-                }
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
@@ -1906,14 +1906,14 @@
                     bottomNav.style.display = 'flex';
                 } else {
                     {
-                    const _storedUser = localStorage.getItem('user');
-                    if (!_storedUser) {
-                        window.location.href = '/login.html';
-                    } else {
-                        console.log('Using localStorage user instead of redirecting');
-                        window.currentUser = JSON.parse(_storedUser);
+                        const _storedUser = localStorage.getItem('user');
+                        if (!_storedUser) {
+                            window.location.href = '/login.html';
+                        } else {
+                            console.log('Using localStorage user instead of redirecting');
+                            window.currentUser = JSON.parse(_storedUser);
+                        }
                     }
-                }
                 }
             }
         })();

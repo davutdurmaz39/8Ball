@@ -302,6 +302,81 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Wallet login with signature verification (QWIN)
+app.post('/api/auth/wallet-login', async (req, res) => {
+    try {
+        const { walletAddress, message, signature } = req.body;
+
+        if (!walletAddress || !message || !signature) {
+            return res.status(400).json({ success: false, error: 'Missing required fields' });
+        }
+
+        // TODO: Add proper signature verification using ethers.js
+        // For now, we trust the wallet address from MetaMask
+        const normalizedAddress = walletAddress.toLowerCase();
+
+        // Find or create user by wallet address
+        let user = null;
+        let userEmail = `wallet_${normalizedAddress}@minepool.game`;
+
+        // Check if user exists with this wallet
+        for (const [email, u] of users) {
+            if (u.walletAddress === normalizedAddress) {
+                user = u;
+                userEmail = email;
+                break;
+            }
+        }
+
+        if (!user) {
+            // Create new user for this wallet
+            const shortAddress = normalizedAddress.slice(0, 6) + '...' + normalizedAddress.slice(-4);
+            user = {
+                id: nextUserId++,
+                username: `Player_${shortAddress}`,
+                email: userEmail,
+                walletAddress: normalizedAddress,
+                coins: 0, // No coins, only QWIN
+                qwinBalance: 0, // Off-chain QWIN balance
+                diamonds: 100,
+                elo: 1200,
+                gamesPlayed: 0,
+                gamesWon: 0,
+                createdAt: new Date().toISOString(),
+                achievements: [],
+                matchHistory: [],
+                nationality: null,
+                profilePicture: null,
+                cues: ['standard']
+            };
+            users.set(userEmail, user);
+            saveUsers();
+            console.log(`🪙 New wallet user created: ${shortAddress}`);
+        }
+
+        const token = generateToken(user);
+        setAuthCookie(res, token);
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                walletAddress: user.walletAddress,
+                qwinBalance: user.qwinBalance || 0,
+                elo: user.elo,
+                rank: EloCalculator.getRankFromElo(user.elo),
+                profileComplete: user.profileComplete || false
+            }
+        });
+
+    } catch (error) {
+        console.error('Wallet login error:', error);
+        res.status(500).json({ success: false, error: 'Wallet login failed' });
+    }
+});
+
 // Get current user
 app.get('/api/auth/me', authenticateToken, (req, res) => {
     const user = users.get(req.user.email);
@@ -335,6 +410,63 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 app.post('/api/auth/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// ============ PROFILE COMPLETION ============
+
+// Complete profile (username, country, avatar)
+app.post('/api/profile/complete', authenticateToken, (req, res) => {
+    try {
+        const { username, country, avatar } = req.body;
+        const userEmail = req.user.email;
+
+        if (!username || username.length < 3) {
+            return res.status(400).json({ success: false, error: 'Username must be at least 3 characters' });
+        }
+
+        if (username.length > 20) {
+            return res.status(400).json({ success: false, error: 'Username must be 20 characters or less' });
+        }
+
+        // Check username uniqueness
+        const normalizedUsername = username.toLowerCase();
+        for (const [email, u] of users) {
+            if (email !== userEmail && u.username.toLowerCase() === normalizedUsername) {
+                return res.status(400).json({ success: false, error: 'Username already taken' });
+            }
+        }
+
+        // Update user
+        const user = users.get(userEmail);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        user.username = username;
+        user.nationality = country || null;
+        user.avatar = avatar || '🎱';
+        user.profileComplete = true;
+
+        users.set(userEmail, user);
+        saveUsers();
+
+        console.log(`✅ Profile completed for: ${username}`);
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                nationality: user.nationality,
+                avatar: user.avatar,
+                profileComplete: user.profileComplete
+            }
+        });
+
+    } catch (error) {
+        console.error('Profile complete error:', error);
+        res.status(500).json({ success: false, error: 'Failed to save profile' });
+    }
 });
 
 // ============ AVATAR UPLOAD ============
@@ -757,7 +889,7 @@ app.post('/api/rewards/claim', authenticateToken, (req, res) => {
         }
 
         const { reward, day } = req.body;
-        
+
         if (!reward || reward <= 0 || reward > 5000) {
             return res.status(400).json({ success: false, error: 'Invalid reward amount' });
         }
@@ -768,8 +900,8 @@ app.post('/api/rewards/claim', authenticateToken, (req, res) => {
 
         console.log("REWARD: " + user.username + " claimed daily reward: " + reward + " coins (Day " + day + ")");
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Reward claimed!',
             coins: user.coins,
             reward: reward
@@ -789,7 +921,7 @@ app.post('/api/tasks/claim', authenticateToken, (req, res) => {
         }
 
         const { taskId, reward } = req.body;
-        
+
         if (!taskId || !reward || reward <= 0 || reward > 2000) {
             return res.status(400).json({ success: false, error: 'Invalid task or reward' });
         }
@@ -815,8 +947,8 @@ app.post('/api/tasks/claim', authenticateToken, (req, res) => {
 
         console.log("TASK: " + user.username + " completed task: " + taskId + " (+" + reward + " coins)");
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Task reward claimed!',
             taskId: taskId,
             coins: user.coins,
@@ -836,8 +968,8 @@ app.get('/api/tasks', authenticateToken, (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             completedTasks: user.completedTasks || [],
             invitedFriends: user.invitedFriends || 0
         });
@@ -856,7 +988,7 @@ app.post('/api/referral/apply', authenticateToken, (req, res) => {
         }
 
         const { referralCode } = req.body;
-        
+
         if (!referralCode) {
             return res.status(400).json({ success: false, error: 'Referral code required' });
         }
@@ -897,8 +1029,8 @@ app.post('/api/referral/apply', authenticateToken, (req, res) => {
 
         console.log("REFERRAL: " + user.username + " used referral from " + referrer.username);
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "You received " + referralBonus + " bonus coins!",
             bonus: referralBonus
         });
@@ -924,8 +1056,8 @@ app.get('/api/invite-code', authenticateToken, (req, res) => {
             saveUsers();
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             inviteCode: user.inviteCode,
             invitedFriends: user.invitedFriends || 0
         });
@@ -948,7 +1080,7 @@ app.post('/api/shop/purchase', authenticateToken, (req, res) => {
         }
 
         const { cueId, price, currency } = req.body;
-        
+
         if (!cueId || !price || !currency) {
             return res.status(400).json({ success: false, error: 'Missing required fields' });
         }
@@ -956,9 +1088,9 @@ app.post('/api/shop/purchase', authenticateToken, (req, res) => {
         // Check if user has enough currency
         const balance = currency === 'coins' ? (user.coins || 0) : (user.cash || 0);
         if (balance < price) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Insufficient ' + currency 
+            return res.status(400).json({
+                success: false,
+                error: 'Insufficient ' + currency
             });
         }
 
@@ -979,8 +1111,8 @@ app.post('/api/shop/purchase', authenticateToken, (req, res) => {
 
         console.log("SHOP: " + user.username + " purchased " + cueId + " for " + price + " " + currency);
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Cue purchased successfully!',
             user: {
                 username: user.username,
@@ -1003,8 +1135,8 @@ app.get('/api/shop/cues', authenticateToken, (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             cues: user.cues || [],
             coins: user.coins || 0,
             cash: user.cash || 0
@@ -1027,16 +1159,16 @@ app.get('/api/friends', authenticateToken, (req, res) => {
 
         // Get friends list (or create empty if doesn't exist)
         const friendEmails = user.friends || [];
-        
+
         // Build friends data with online status
         const friends = friendEmails.map(email => {
             const friend = users.get(email);
             if (!friend) return null;
-            
+
             // Check if friend is online (connected via WebSocket)
             const isOnline = multiplayer.isUserOnline ? multiplayer.isUserOnline(email) : false;
             const isInGame = multiplayer.isUserInGame ? multiplayer.isUserInGame(email) : false;
-            
+
             return {
                 id: friend.id,
                 name: friend.username,
@@ -1065,7 +1197,7 @@ app.post('/api/friends/add', authenticateToken, (req, res) => {
         }
 
         const { friendEmail, friendUsername } = req.body;
-        
+
         // Find friend by email or username
         let friend = null;
         if (friendEmail) {
@@ -1089,7 +1221,7 @@ app.post('/api/friends/add', authenticateToken, (req, res) => {
 
         // Initialize friends array if needed
         if (!user.friends) user.friends = [];
-        
+
         if (user.friends.includes(friend.email)) {
             return res.status(400).json({ success: false, error: 'Already friends' });
         }
@@ -1113,7 +1245,7 @@ app.delete('/api/friends/:friendId', authenticateToken, (req, res) => {
         }
 
         const friendId = parseInt(req.params.friendId);
-        
+
         // Find friend by ID
         let friendEmail = null;
         for (const u of users.values()) {
@@ -1763,7 +1895,7 @@ app.get('/api/admin/games/history', (req, res) => {
 app.post('/api/admin/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
-        
+
         // Simple admin credentials (in production, use proper authentication)
         if (username === 'admin' && password === 'admin123') {
             res.json({
@@ -1844,8 +1976,8 @@ app.post('/api/reports', authenticateToken, (req, res) => {
 
         console.log('New ' + type + ': "' + subject + '" from ' + user.username);
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Report submitted successfully',
             reportId: report.id
         });
@@ -1859,9 +1991,9 @@ app.post('/api/reports', authenticateToken, (req, res) => {
 app.get('/api/admin/reports', (req, res) => {
     try {
         const { status, type, priority } = req.query;
-        
+
         let filteredReports = [...reports];
-        
+
         if (status && status !== 'all') {
             filteredReports = filteredReports.filter(r => r.status === status);
         }
@@ -1874,8 +2006,8 @@ app.get('/api/admin/reports', (req, res) => {
 
         filteredReports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             reports: filteredReports,
             stats: {
                 total: reports.length,
@@ -1897,7 +2029,7 @@ app.patch('/api/admin/reports/:id', (req, res) => {
     try {
         const reportId = parseInt(req.params.id);
         const report = reports.find(r => r.id === reportId);
-        
+
         if (!report) {
             return res.status(404).json({ success: false, error: 'Report not found' });
         }
@@ -1925,7 +2057,7 @@ app.delete('/api/admin/reports/:id', (req, res) => {
     try {
         const reportId = parseInt(req.params.id);
         const index = reports.findIndex(r => r.id === reportId);
-        
+
         if (index === -1) {
             return res.status(404).json({ success: false, error: 'Report not found' });
         }

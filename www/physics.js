@@ -21,7 +21,7 @@ class PhysicsEngine {
 
         // Friction - tuned for realistic pool physics
         this.GRAVITY = 980;
-        this.MU_ROLL = 0.008;      // Reduced friction for longer ball roll
+        this.MU_ROLL = 0.014;      // Increased friction for faster ball stop
         this.MU_SLIDE = 0.05;      // Sliding friction
         this.MU_SPIN = 0.04;       // Spin friction
 
@@ -73,7 +73,9 @@ class PhysicsEngine {
             if (ball.sidespin === undefined) ball.sidespin = 0;
         });
 
-        // Use fixed timestep for consistent physics
+        // FIXED TIMESTEP PHYSICS
+        // Same physics on all devices - 4 sub-steps per frame at 1/60 second
+        // Frame rate differences handled by visual smoothness, not physics
         const steps = 4;
         const dt = this.dt / steps;
 
