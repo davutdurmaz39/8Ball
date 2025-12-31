@@ -193,7 +193,8 @@ const setAuthCookie = (res, token) => {
 
 // ============ AUTH ROUTES ============
 
-// Register with email/password
+// [DEPRECATED - Wallet Only Auth] Register with email/password
+/* REMOVED: Email/password registration - wallet-only authentication now
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -261,8 +262,10 @@ app.post('/api/auth/register', async (req, res) => {
         res.status(500).json({ success: false, error: 'Registration failed' });
     }
 });
+// END OF DEPRECATED REGISTRATION */
 
-// Login with email/password
+// [DEPRECATED - Wallet Only Auth] Login with email/password
+/* REMOVED: Email/password login - wallet-only authentication now
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -301,6 +304,7 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({ success: false, error: 'Login failed' });
     }
 });
+// END OF DEPRECATED LOGIN */
 
 // Wallet login with signature verification (QWIN)
 app.post('/api/auth/wallet-login', async (req, res) => {
