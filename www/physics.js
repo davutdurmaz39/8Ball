@@ -21,7 +21,7 @@ class PhysicsEngine {
 
         // Friction - tuned for realistic pool physics
         this.GRAVITY = 980;
-        this.MU_ROLL = 0.012;      // Increased friction for faster ball stopping
+        this.MU_ROLL = 0.008;      // Reduced friction for longer ball roll
         this.MU_SLIDE = 0.05;      // Sliding friction
         this.MU_SPIN = 0.04;       // Spin friction
 
@@ -94,7 +94,7 @@ class PhysicsEngine {
         const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
 
         // STOP if very slow - lower threshold so balls roll longer
-        if (speed < 0.8) {
+        if (speed < 0.5) {
             ball.vx = 0;
             ball.vy = 0;
             ball.topspin = 0;
@@ -112,8 +112,8 @@ class PhysicsEngine {
         let effectiveFriction = this.MU_ROLL;
 
         // Add slight extra friction at low speeds for natural stop (reduced effect)
-        if (speed < 30) {
-            effectiveFriction += 0.004 * (1 - speed / 30);
+        if (speed < 20) {
+            effectiveFriction += 0.002 * (1 - speed / 20);
         }
 
         const deceleration = effectiveFriction * this.GRAVITY;

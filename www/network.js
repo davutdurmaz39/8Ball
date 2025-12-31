@@ -680,39 +680,252 @@ class NetworkManager {
                 }
             }
 
+            // EXPERT AI: Add bank shot detection (bounce off cushion)
+            const findBankShots = () => {
+                const bankShots = [];
+                const tableWidth = 960;
+                const tableHeight = 500;
+                const cushion = 25;
+
+                for (const ball of targetBalls) {
+                    for (const pocket of pockets) {
+                        // Try each cushion (left, right, top, bottom)
+                        const cushions = [
+                            { axis: 'x', value: cushion, mirror: 2 * cushion },           // Left
+                            { axis: 'x', value: tableWidth - cushion, mirror: 2 * (tableWidth - cushion) }, // Right
+                            { axis: 'y', value: cushion, mirror: 2 * cushion },           // Top
+                            { axis: 'y', value: tableHeight - cushion, mirror: 2 * (tableHeight - cushion) } // Bottom
+                        ];
+
+                        for (const cush of cushions) {
+                            // Mirror pocket across cushion
+                            let mirrorPocket;
+                            if (cush.axis === 'x') {
+                                mirrorPocket = { x: cush.mirror - pocket.x, y: pocket.y };
+                            } else {
+                                mirrorPocket = { x: pocket.x, y: cush.mirror - pocket.y };
+                            }
+
+                            // Calculate intersection with cushion (where bank happens)
+                            const dx = mirrorPocket.x - ball.x;
+                            const dy = mirrorPocket.y - ball.y;
+
+                            let bankPoint;
+                            if (cush.axis === 'x') {
+                                const t = (cush.value - ball.x) / dx;
+                                if (t > 0 && t < 1) {
+                                    bankPoint = { x: cush.value, y: ball.y + t * dy };
+                                }
+                            } else {
+                                const t = (cush.value - ball.y) / dy;
+                                if (t > 0 && t < 1) {
+                                    bankPoint = { x: ball.x + t * dx, y: cush.value };
+                                }
+                            }
+
+                            if (!bankPoint) continue;
+                            if (bankPoint.x < cushion || bankPoint.x > tableWidth - cushion) continue;
+                            if (bankPoint.y < cushion || bankPoint.y > tableHeight - cushion) continue;
+
+                            // Ghost ball for hitting ball toward bank point
+                            const ballToBankDx = bankPoint.x - ball.x;
+                            const ballToBankDy = bankPoint.y - ball.y;
+                            const ballToBankDist = Math.sqrt(ballToBankDx ** 2 + ballToBankDy ** 2);
+
+                            const ghostX = ball.x - (ballToBankDx / ballToBankDist) * (ballRadius * 2);
+                            const ghostY = ball.y - (ballToBankDy / ballToBankDist) * (ballRadius * 2);
+
+                            // Check paths
+                            const cueToGhostClear = isPathClear(freshCueBall.x, freshCueBall.y, ghostX, ghostY, ball.id);
+                            const ballToBankClear = isPathClear(ball.x, ball.y, bankPoint.x, bankPoint.y, ball.id);
+
+                            if (!cueToGhostClear || !ballToBankClear) continue;
+
+                            const cueToGhostDx = ghostX - freshCueBall.x;
+                            const cueToGhostDy = ghostY - freshCueBall.y;
+                            const cueToGhostDist = Math.sqrt(cueToGhostDx ** 2 + cueToGhostDy ** 2);
+
+                            const totalDist = cueToGhostDist + ballToBankDist +
+                                Math.sqrt((pocket.x - bankPoint.x) ** 2 + (pocket.y - bankPoint.y) ** 2);
+
+                            // Bank shots get lower score (harder shots)
+                            const score = 400 / (totalDist + 1);
+
+                            bankShots.push({
+                                ball,
+                                pocket,
+                                ghostBall: { x: ghostX, y: ghostY },
+                                angle: Math.atan2(cueToGhostDy, cueToGhostDx),
+                                power: Math.min(80, Math.max(50, 40 + totalDist * 0.1)),
+                                cutAngle: 0,
+                                score,
+                                cueToBallDist: cueToGhostDist,
+                                ballToPocketDist: totalDist,
+                                isBank: true
+                            });
+                        }
+                    }
+                }
+                return bankShots;
+            };
+
+            // Add bank shots to consideration (only if no good direct shots)
+            if (shots.length === 0 || shots[0].score < 150) {
+                const bankShots = findBankShots();
+                shots.push(...bankShots);
+                if (bankShots.length > 0) {
+                    console.log(`🤖 Found ${bankShots.length} bank shot opportunities`);
+                }
+            }
+
             // Sort by score (best first)
             shots.sort((a, b) => b.score - a.score);
 
             let bestShot = shots[0];
 
             if (!bestShot) {
-                // No clear pocketing shot - safety play: hit ball away from pockets
-                console.log('🤖 No clear shot - playing safety');
-                const target = targetBalls[Math.floor(Math.random() * targetBalls.length)];
-                const dx = target.x - freshCueBall.x;
-                const dy = target.y - freshCueBall.y;
-                bestShot = {
-                    ball: target,
-                    angle: Math.atan2(dy, dx),
-                    power: 35,
-                    cutAngle: 0,
-                    isSafety: true
-                };
+                // EXPERT SAFETY PLAY: Strategic defensive shot
+                console.log('🤖 No pocketing shot - playing expert safety');
+
+                // Strategy: Hit a ball and leave cue ball near a cushion
+                // Also try to send target ball away from pockets
+
+                let bestSafetyShot = null;
+                let bestSafetyScore = -Infinity;
+
+                for (const target of targetBalls) {
+                    // Calculate angle to hit ball
+                    const dx = target.x - freshCueBall.x;
+                    const dy = target.y - freshCueBall.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+
+                    if (!isPathClear(freshCueBall.x, freshCueBall.y, target.x, target.y, target.id)) {
+                        continue;
+                    }
+
+                    // Check all pockets - safety is better if ball goes away from pockets
+                    let minPocketDist = Infinity;
+                    for (const pocket of pockets) {
+                        const pDist = Math.sqrt((pocket.x - target.x) ** 2 + (pocket.y - target.y) ** 2);
+                        if (pDist < minPocketDist) minPocketDist = pDist;
+                    }
+
+                    // Score: prefer hitting balls that are far from pockets
+                    // Also prefer leaving cue ball at opposite end of table
+                    const distScore = minPocketDist / 5; // Ball far from pockets = good
+                    const cueBallScore = dist > 200 ? 20 : 0; // Long distance = harder for opponent
+                    const score = distScore + cueBallScore;
+
+                    if (score > bestSafetyScore) {
+                        bestSafetyScore = score;
+                        bestSafetyShot = {
+                            ball: target,
+                            angle: angle,
+                            power: 30 + Math.random() * 15, // Soft but controlled
+                            cutAngle: 0,
+                            isSafety: true
+                        };
+                    }
+                }
+
+                if (bestSafetyShot) {
+                    // Add draw spin to control cue ball (don't follow through)
+                    bestSafetyShot.spinY = 0.5; // Draw back
+                    bestShot = bestSafetyShot;
+                    console.log(`🤖 Safety: hit ball ${bestShot.ball.id} softly with draw`);
+                } else {
+                    // Fallback: random target
+                    const target = targetBalls[Math.floor(Math.random() * targetBalls.length)];
+                    bestShot = {
+                        ball: target,
+                        angle: Math.atan2(target.y - freshCueBall.y, target.x - freshCueBall.x),
+                        power: 30,
+                        cutAngle: 0,
+                        isSafety: true
+                    };
+                }
             }
 
-            // EXPERT DIFFICULTY: No noise - perfect aim
+            // EXPERT AI: Calculate strategic spin for position play
+            const calculatePositionSpin = (shot, cueBall, remainingTargets, pockets) => {
+                if (shot.isSafety || remainingTargets.length === 0) {
+                    return { spinX: 0, spinY: 0 };
+                }
+
+                // Find the next best target ball after this shot
+                let nextTarget = null;
+                let bestNextScore = -Infinity;
+
+                for (const ball of remainingTargets) {
+                    if (ball.id === shot.ball.id) continue;
+                    for (const pocket of pockets) {
+                        const dist = Math.sqrt((pocket.x - ball.x) ** 2 + (pocket.y - ball.y) ** 2);
+                        const score = 1000 / (dist + 1);
+                        if (score > bestNextScore) {
+                            bestNextScore = score;
+                            nextTarget = ball;
+                        }
+                    }
+                }
+
+                if (!nextTarget) return { spinX: 0, spinY: 0 };
+
+                // Calculate where cue ball will naturally go after impact
+                const impactAngle = shot.angle;
+                const cutAngleRad = (shot.cutAngle || 0) * Math.PI / 180;
+
+                // For thin cuts, cue ball deflects more; for straight shots, follows through
+                // Use draw (backspin) for control on most shots
+                // Use follow (topspin) when next ball is in front
+
+                let spinY = 0; // Topspin(-) / Backspin(+)
+                let spinX = 0; // English
+
+                // If cut angle is small (< 30°), use follow to continue forward
+                if (cutAngleRad < 0.5) {
+                    spinY = -0.4; // Follow/topspin
+                }
+                // Medium cuts (30-50°), use slight draw
+                else if (cutAngleRad < 0.9) {
+                    spinY = 0.3; // Draw
+                }
+                // Sharp cuts, use strong draw to pull back
+                else {
+                    spinY = 0.6; // Strong draw
+                }
+
+                // Position adjustment: if next target is to the side, add english
+                if (nextTarget) {
+                    const ghostBall = shot.ghostBall || { x: shot.ball.x, y: shot.ball.y };
+                    const nextAngle = Math.atan2(nextTarget.y - ghostBall.y, nextTarget.x - ghostBall.x);
+                    const angleDiff = nextAngle - impactAngle;
+
+                    // Add side spin to help with positioning
+                    if (angleDiff > 0.3) spinX = 0.3;  // Right english
+                    else if (angleDiff < -0.3) spinX = -0.3; // Left english
+                }
+
+                return { spinX, spinY };
+            };
+
+            // Get spin for this shot
+            const spin = calculatePositionSpin(bestShot, freshCueBall, targetBalls, pockets);
+
+            // EXPERT DIFFICULTY: Perfect aim with strategic spin
             const finalAngle = bestShot.angle;
             const finalPower = bestShot.power;
 
-            const shotType = bestShot.isSafety ? 'SAFETY' : `cut=${bestShot.cutAngle.toFixed(0)}°, dist=${(bestShot.cueToBallDist || 0).toFixed(0)}`;
+            const spinInfo = `spin=(${spin.spinX.toFixed(1)},${spin.spinY.toFixed(1)})`;
+            const shotType = bestShot.isSafety ? 'SAFETY' : `cut=${bestShot.cutAngle.toFixed(0)}°, ${spinInfo}`;
             console.log(`🤖 EXPERT AI: ball ${bestShot.ball.id} → pocket, ${shotType}, power=${finalPower.toFixed(0)}%`);
 
-            // Execute AI shot
+            // Execute AI shot with spin
             this.game.gameState = 'shooting';
             this.game.shotPocketedBalls = [];
             this.game.wasMyShot = false;
 
-            this.game.physics.applyShot(freshCueBall, finalAngle, finalPower, 0, 0);
+            this.game.physics.applyShot(freshCueBall, finalAngle, finalPower, spin.spinX, spin.spinY);
 
             if (this.game.sound) {
                 this.game.sound.playCueHit(finalPower);
