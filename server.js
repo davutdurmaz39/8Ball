@@ -414,6 +414,9 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
             createdAt: user.createdAt,
             nationality: user.nationality || null,
             profilePicture: user.profilePicture || null,
+            profileComplete: user.profileComplete || false,
+            walletAddress: user.walletAddress || null,
+            qwinBalance: user.qwinBalance || 0,
             cues: user.cues || [],
             cash: user.cash || 0
         }

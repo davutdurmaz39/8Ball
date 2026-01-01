@@ -1863,6 +1863,13 @@
 
                 if (data.success && data.user) {
                     const user = data.user;
+                    
+                    // Check if profile is complete - redirect to complete-profile if not
+                    if (!user.profileComplete) {
+                        window.location.href = '/complete-profile.html';
+                        return;
+                    }
+                    
                     window.currentUser = user;
                     localStorage.setItem('user', JSON.stringify(user));
 
