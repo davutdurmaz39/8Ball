@@ -451,6 +451,36 @@
                 mainContent.appendChild(tasksSection);
             }
             section = document.getElementById('daily-tasks-section');
+        } else {
+            // Section exists, but check if invite-section is missing
+            let inviteSection = document.getElementById('invite-section');
+            if (!inviteSection) {
+                // Add invite section to existing tasks section
+                const inviteHtml = `
+                    <div class="invite-section" id="invite-section">
+                        <div class="invite-code-header">
+                            <span class="invite-code-title">👥 Your Invite Code</span>
+                            <span class="invite-count">Friends invited: <span id="invited-count">0</span></span>
+                        </div>
+                        <div class="invite-code-box">
+                            <div class="invite-code" id="invite-code-display">LOADING...</div>
+                            <button class="copy-code-btn" id="copy-code-btn" onclick="window.copyInviteCode()">📋 Copy</button>
+                        </div>
+                        <div class="share-buttons">
+                            <button class="share-btn whatsapp" onclick="window.shareInviteCode('whatsapp')">
+                                📱 WhatsApp
+                            </button>
+                            <button class="share-btn telegram" onclick="window.shareInviteCode('telegram')">
+                                ✈️ Telegram
+                            </button>
+                            <button class="share-btn twitter" onclick="window.shareInviteCode('twitter')">
+                                🐦 Twitter
+                            </button>
+                        </div>
+                    </div>
+                `;
+                section.insertAdjacentHTML('beforeend', inviteHtml);
+            }
         }
 
         let data = getTasksData();
