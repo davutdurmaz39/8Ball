@@ -310,7 +310,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Wallet login with signature verification (QWIN)
 app.post('/api/auth/wallet-login', async (req, res) => {
     try {
-        const { walletAddress, message, signature } = req.body;
+        const { walletAddress, message, signature, referralCode } = req.body;
 
         if (!walletAddress || !message || !signature) {
             return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -332,6 +332,7 @@ app.post('/api/auth/wallet-login', async (req, res) => {
         // Find or create user by wallet address
         let user = null;
         let userEmail = `wallet_${normalizedAddress}@minepool.game`;
+        let isNewUser = false;
 
         // Check if user exists with this wallet
         for (const [email, u] of users) {
@@ -343,6 +344,7 @@ app.post('/api/auth/wallet-login', async (req, res) => {
         }
 
         if (!user) {
+            isNewUser = true;
             // Create new user for this wallet
             const shortAddress = normalizedAddress.slice(0, 6) + '...' + normalizedAddress.slice(-4);
             user = {
@@ -361,11 +363,42 @@ app.post('/api/auth/wallet-login', async (req, res) => {
                 matchHistory: [],
                 nationality: null,
                 profilePicture: null,
-                cues: ['standard']
+                cues: ['standard'],
+                referralCode: null, // Will be generated when needed
+                referredBy: null,
+                referrals: [], // Users this person has referred
+                referralRewardsClaimed: 0
             };
+
+            // Process referral code if provided
+            if (referralCode) {
+                // Find the user who owns this referral code
+                for (const [email, inviter] of users) {
+                    if (inviter.referralCode === referralCode) {
+                        user.referredBy = inviter.id;
+
+                        // Add to inviter's referrals list
+                        if (!inviter.referrals) inviter.referrals = [];
+                        inviter.referrals.push({
+                            id: user.id,
+                            username: user.username,
+                            joinedAt: new Date().toISOString(),
+                            rewardClaimed: false
+                        });
+
+                        // Credit the inviter with 500 coins
+                        inviter.coins = (inviter.coins || 0) + 500;
+                        users.set(email, inviter);
+
+                        console.log(`🎁 Referral bonus: ${inviter.username} earned 500 coins for inviting a friend!`);
+                        break;
+                    }
+                }
+            }
+
             users.set(userEmail, user);
             saveUsers();
-            console.log(`🪙 New wallet user created: ${shortAddress}`);
+            console.log(`🪙 New wallet user created: ${shortAddress}${referralCode ? ` (referred by code: ${referralCode})` : ''}`);
         }
 
         const token = generateToken(user);
@@ -484,6 +517,71 @@ app.post('/api/profile/complete', authenticateToken, (req, res) => {
     } catch (error) {
         console.error('Profile complete error:', error);
         res.status(500).json({ success: false, error: 'Failed to save profile' });
+    }
+});
+
+// ============ REFERRAL SYSTEM ============
+
+// Generate a unique referral code for a user
+function generateReferralCode(user) {
+    const base = user.username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 4) || 'MINE';
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${base}${random}`;
+}
+
+// Get or generate referral code
+app.get('/api/referral/code', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Generate referral code if not exists
+        if (!user.referralCode) {
+            user.referralCode = generateReferralCode(user);
+            users.set(req.user.email, user);
+            saveUsers();
+        }
+
+        const referralLink = `${req.protocol}://${req.get('host')}/login.html?ref=${user.referralCode}`;
+
+        res.json({
+            success: true,
+            referralCode: user.referralCode,
+            referralLink: referralLink,
+            referrals: user.referrals || [],
+            totalReferrals: (user.referrals || []).length,
+            totalEarnings: (user.referrals || []).length * 500
+        });
+    } catch (error) {
+        console.error('Get referral code error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get referral code' });
+    }
+});
+
+// Get referral statistics
+app.get('/api/referral/stats', authenticateToken, (req, res) => {
+    try {
+        const user = users.get(req.user.email);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const referrals = user.referrals || [];
+
+        res.json({
+            success: true,
+            totalReferrals: referrals.length,
+            referrals: referrals.map(r => ({
+                username: r.username,
+                joinedAt: r.joinedAt
+            })),
+            totalEarnings: referrals.length * 500
+        });
+    } catch (error) {
+        console.error('Get referral stats error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get referral stats' });
     }
 });
 

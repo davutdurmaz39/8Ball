@@ -427,10 +427,14 @@
                 const message = `Login to Mine Pool: ${walletAddress} at ${Date.now()}`;
                 const signature = await window.ethereum.request({ method: 'personal_sign', params: [message, walletAddress] });
 
+                // Check for referral code in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const referralCode = urlParams.get('ref');
+
                 const response = await fetch(`${API_URL}/wallet-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ walletAddress, message, signature }),
+                    body: JSON.stringify({ walletAddress, message, signature, referralCode }),
                     credentials: 'include'
                 });
 

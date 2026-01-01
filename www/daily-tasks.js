@@ -170,17 +170,34 @@
         updateTasksUI(data);
     }
 
+    // Fetch referral code from server
+    async function fetchReferralCode() {
+        try {
+            const response = await fetch('/api/referral/code', { credentials: 'include' });
+            const data = await response.json();
+            if (data.success) {
+                return {
+                    code: data.referralCode,
+                    link: data.referralLink,
+                    totalReferrals: data.totalReferrals,
+                    totalEarnings: data.totalEarnings
+                };
+            }
+        } catch (error) {
+            console.error('Failed to fetch referral code:', error);
+        }
+        return null;
+    }
+
     // Copy invite code
-    function copyInviteCode() {
-        let data = getTasksData();
-        if (!data.inviteCode) {
-            data.inviteCode = generateInviteCode();
-            saveTasksData(data);
+    async function copyInviteCode() {
+        const referral = await fetchReferralCode();
+        if (!referral) {
+            showToast('❌ Failed to get invite code');
+            return;
         }
 
-        const inviteLink = `${window.location.origin}/login.html?ref=${data.inviteCode}`;
-
-        navigator.clipboard.writeText(inviteLink).then(() => {
+        navigator.clipboard.writeText(referral.link).then(() => {
             const btn = document.getElementById('copy-code-btn');
             if (btn) {
                 btn.classList.add('copied');
@@ -190,26 +207,28 @@
                     btn.textContent = '📋 Copy';
                 }, 2000);
             }
+            showToast('📋 Invite link copied!');
         }).catch(() => {
             // Fallback for older browsers
             const input = document.createElement('input');
-            input.value = inviteLink;
+            input.value = referral.link;
             document.body.appendChild(input);
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
+            showToast('📋 Invite link copied!');
         });
     }
 
     // Share invite via platforms
-    function shareInvite(platform) {
-        let data = getTasksData();
-        if (!data.inviteCode) {
-            data.inviteCode = generateInviteCode();
-            saveTasksData(data);
+    async function shareInvite(platform) {
+        const referral = await fetchReferralCode();
+        if (!referral) {
+            showToast('❌ Failed to get invite link');
+            return;
         }
 
-        const inviteLink = `${window.location.origin}/login.html?ref=${data.inviteCode}`;
+        const inviteLink = referral.link;
         const message = `🎱 Join me on Mine Pool! Use my invite code and get bonus coins! ${inviteLink}`;
 
         let shareUrl = '';
@@ -330,20 +349,20 @@
             tasksContainer.appendChild(taskEl);
         });
 
-        // Update invite code display
-        if (!data.inviteCode) {
-            data.inviteCode = generateInviteCode();
-            saveTasksData(data);
-        }
-        const inviteCodeEl = document.getElementById('invite-code-display');
-        if (inviteCodeEl) {
-            inviteCodeEl.textContent = data.inviteCode;
-        }
+        // Fetch and update referral info from server
+        fetchReferralCode().then(referral => {
+            if (referral) {
+                const inviteCodeEl = document.getElementById('invite-code-display');
+                if (inviteCodeEl) {
+                    inviteCodeEl.textContent = referral.code;
+                }
 
-        const invitedCountEl = document.getElementById('invited-count');
-        if (invitedCountEl) {
-            invitedCountEl.textContent = data.invitedFriends || 0;
-        }
+                const invitedCountEl = document.getElementById('invited-count');
+                if (invitedCountEl) {
+                    invitedCountEl.textContent = referral.totalReferrals || 0;
+                }
+            }
+        });
     }
 
     // Create tasks section HTML
