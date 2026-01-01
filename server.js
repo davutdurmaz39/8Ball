@@ -520,6 +520,62 @@ app.post('/api/profile/complete', authenticateToken, (req, res) => {
     }
 });
 
+// Change username
+app.post('/api/profile/change-username', authenticateToken, (req, res) => {
+    try {
+        const { username } = req.body;
+        const userEmail = req.user.email;
+
+        // Validation
+        if (!username || username.trim().length < 3) {
+            return res.status(400).json({ success: false, error: 'Username must be at least 3 characters' });
+        }
+
+        if (username.length > 20) {
+            return res.status(400).json({ success: false, error: 'Username must be 20 characters or less' });
+        }
+
+        // Only allow alphanumeric, underscores and hyphens
+        if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+            return res.status(400).json({ success: false, error: 'Username can only contain letters, numbers, underscores and hyphens' });
+        }
+
+        // Check username uniqueness
+        const normalizedUsername = username.toLowerCase();
+        for (const [email, u] of users) {
+            if (email !== userEmail && u.username.toLowerCase() === normalizedUsername) {
+                return res.status(400).json({ success: false, error: 'Username already taken' });
+            }
+        }
+
+        // Get and update user
+        const user = users.get(userEmail);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const oldUsername = user.username;
+        user.username = username;
+        users.set(userEmail, user);
+        saveUsers();
+
+        console.log(`📝 Username changed: ${oldUsername} → ${username}`);
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+        console.error('Change username error:', error);
+        res.status(500).json({ success: false, error: 'Failed to change username' });
+    }
+});
+
 // ============ REFERRAL SYSTEM ============
 
 // Generate a unique referral code for a user
