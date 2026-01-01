@@ -24,36 +24,6 @@
             reward: 500,
             url: 'https://t.me/MinePoolGame',
             type: 'social'
-        },
-        {
-            id: 'youtube_subscribe',
-            name: 'Subscribe YouTube',
-            description: 'Watch & Subscribe',
-            icon: '▶️',
-            iconClass: 'youtube',
-            reward: 750,
-            url: 'https://youtube.com/@MinePoolGame',
-            type: 'social'
-        },
-        {
-            id: 'discord_join',
-            name: 'Join Discord',
-            description: 'Chat with players',
-            icon: '💬',
-            iconClass: 'discord',
-            reward: 500,
-            url: 'https://discord.gg/MinePool',
-            type: 'social'
-        },
-        {
-            id: 'invite_friend',
-            name: 'Invite a Friend',
-            description: 'Share your code',
-            icon: '👥',
-            iconClass: 'invite',
-            reward: 1000,
-            type: 'invite',
-            repeatable: true
         }
     ];
 
@@ -379,12 +349,12 @@
                     <span class="tasks-icon">📋</span>
                     DAILY TASKS
                 </span>
-                <span class="tasks-reset-timer">Earn up to <span id="potential-earnings">3,250</span> 💰</span>
+                <span class="tasks-reset-timer">Earn up to <span id="potential-earnings">1,000</span> 💰</span>
             </div>
             
             <div class="tasks-progress">
                 <div class="progress-circle" style="--progress: 0%">
-                    <div class="progress-circle-inner">0/4</div>
+                    <div class="progress-circle-inner">0/2</div>
                 </div>
                 <div class="tasks-progress-info">
                     <h4>Complete Tasks</h4>
@@ -394,28 +364,6 @@
             
             <div id="tasks-list" class="tasks-list">
                 <!-- Tasks will be rendered here -->
-            </div>
-            
-            <div class="invite-section" id="invite-section">
-                <div class="invite-code-header">
-                    <span class="invite-code-title">👥 Your Invite Code</span>
-                    <span class="invite-count">Friends invited: <span id="invited-count">0</span></span>
-                </div>
-                <div class="invite-code-box">
-                    <div class="invite-code" id="invite-code-display">LOADING...</div>
-                    <button class="copy-code-btn" id="copy-code-btn" onclick="window.copyInviteCode()">📋 Copy</button>
-                </div>
-                <div class="share-buttons">
-                    <button class="share-btn whatsapp" onclick="window.shareInviteCode('whatsapp')">
-                        📱 WhatsApp
-                    </button>
-                    <button class="share-btn telegram" onclick="window.shareInviteCode('telegram')">
-                        ✈️ Telegram
-                    </button>
-                    <button class="share-btn twitter" onclick="window.shareInviteCode('twitter')">
-                        🐦 Twitter
-                    </button>
-                </div>
             </div>
         `;
 
