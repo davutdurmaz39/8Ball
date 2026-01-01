@@ -394,6 +394,7 @@ app.post('/api/auth/wallet-login', async (req, res) => {
 // Get current user
 app.get('/api/auth/me', authenticateToken, (req, res) => {
     const user = users.get(req.user.email);
+    console.log(`📊 /api/auth/me called for: ${req.user.email}, found: ${!!user}, profileComplete: ${user?.profileComplete}`);
     if (!user) {
         return res.status(404).json({ success: false, error: 'User not found' });
     }
@@ -467,7 +468,7 @@ app.post('/api/profile/complete', authenticateToken, (req, res) => {
         users.set(userEmail, user);
         saveUsers();
 
-        console.log(`✅ Profile completed for: ${username}`);
+        console.log(`✅ Profile completed for: ${username} (email: ${userEmail}, profileComplete: ${user.profileComplete})`);
 
         res.json({
             success: true,
