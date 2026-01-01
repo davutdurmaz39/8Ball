@@ -13,6 +13,7 @@ const cors = require('cors');
 const { Server } = require('socket.io');
 const multer = require('multer');
 const fs = require('fs');
+const { ethers } = require('ethers');
 
 // Multiplayer modules
 const { MultiplayerServer } = require('./multiplayer/WebSocketHandler');
@@ -315,9 +316,18 @@ app.post('/api/auth/wallet-login', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Missing required fields' });
         }
 
-        // TODO: Add proper signature verification using ethers.js
-        // For now, we trust the wallet address from MetaMask
+        // Verify wallet signature to prevent impersonation
         const normalizedAddress = walletAddress.toLowerCase();
+        try {
+            const recoveredAddress = ethers.verifyMessage(message, signature);
+            if (recoveredAddress.toLowerCase() !== normalizedAddress) {
+                console.log(`❌ Wallet auth failed: signature mismatch`);
+                return res.status(401).json({ success: false, error: 'Invalid signature' });
+            }
+        } catch (sigError) {
+            console.error('Signature verification error:', sigError.message);
+            return res.status(401).json({ success: false, error: 'Signature verification failed' });
+        }
 
         // Find or create user by wallet address
         let user = null;

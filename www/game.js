@@ -1221,8 +1221,8 @@ class PoolGame {
                     console.log('   - Cue ball reactivated for my turn');
                 }
 
-                // Start shot timer for my turn
-                this.startShotTimer();
+                // Check if player needs to call pocket for 8-ball, or start normal timer
+                this.checkCallPocket();
             } else if (!this.isMyTurn) {
                 // If it's not my turn, set to waiting
                 this.gameState = 'waiting';

@@ -2,7 +2,7 @@
  * Player Info Manager - Handles profile pictures, national flags, and player info bar
  */
 
-// Convert country code to flag emoji
+// Convert country code to flag emoji (fallback)
 function getFlagEmoji(countryCode) {
     if (!countryCode) return '';
     const codePoints = countryCode
@@ -10,6 +10,21 @@ function getFlagEmoji(countryCode) {
         .split('')
         .map(char => 127397 + char.charCodeAt(0));
     return String.fromCodePoint(...codePoints);
+}
+
+// Get flag image URL from CDN
+function getFlagImageUrl(countryCode, size = 40) {
+    if (!countryCode) return null;
+    // Using flagcdn.com for high-quality flag images
+    return `https://flagcdn.com/w${size}/${countryCode.toLowerCase()}.png`;
+}
+
+// Set flag image on an element
+function setFlagImage(element, countryCode, countryName) {
+    if (!element || !countryCode) return;
+    const flagUrl = getFlagImageUrl(countryCode, 40);
+    const name = countryName || COUNTRY_NAMES[countryCode.toUpperCase()] || countryCode;
+    element.innerHTML = `<img src="${flagUrl}" alt="${name}" title="${name}" class="flag-img" onerror="this.parentElement.textContent='${getFlagEmoji(countryCode)}'">`;
 }
 
 // Country code to name mapping
@@ -58,7 +73,7 @@ function updatePlayer1Info(user) {
 
     const p1Flag = document.getElementById('p1-flag');
     if (p1Flag && user.nationality) {
-        p1Flag.textContent = getFlagEmoji(user.nationality);
+        setFlagImage(p1Flag, user.nationality);
     }
 
     // Update header avatar image
@@ -101,8 +116,7 @@ function updatePlayer1Info(user) {
 
     const p1FlagTop = document.getElementById('p1-flag-top');
     if (p1FlagTop && user.nationality) {
-        p1FlagTop.textContent = getFlagEmoji(user.nationality);
-        p1FlagTop.title = COUNTRY_NAMES[user.nationality] || user.nationality;
+        setFlagImage(p1FlagTop, user.nationality);
     }
 }
 
@@ -121,7 +135,7 @@ function updatePlayer2Info(user) {
 
     const p2Flag = document.getElementById('p2-flag');
     if (p2Flag && user.nationality) {
-        p2Flag.textContent = getFlagEmoji(user.nationality);
+        setFlagImage(p2Flag, user.nationality);
     }
 
     // Update header avatar image
@@ -164,8 +178,7 @@ function updatePlayer2Info(user) {
 
     const p2FlagTop = document.getElementById('p2-flag-top');
     if (p2FlagTop && user.nationality) {
-        p2FlagTop.textContent = getFlagEmoji(user.nationality);
-        p2FlagTop.title = COUNTRY_NAMES[user.nationality] || user.nationality;
+        setFlagImage(p2FlagTop, user.nationality);
     }
 }
 

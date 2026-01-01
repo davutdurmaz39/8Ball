@@ -1144,7 +1144,7 @@
   },
   {
     "id": 53,
-    "username": "Demo",
+    "username": "Bleda",
     "email": "wallet_0xdb6be62b413df944d5aba396f352b8c90b0d0cb8@minepool.game",
     "walletAddress": "0xdb6be62b413df944d5aba396f352b8c90b0d0cb8",
     "coins": 0,
@@ -1156,7 +1156,7 @@
     "createdAt": "2025-12-31T18:50:04.572Z",
     "achievements": [],
     "matchHistory": [],
-    "nationality": null,
+    "nationality": "TR",
     "profilePicture": "/uploads/avatars/avatar_1767208556775_ybhtgm.jpg",
     "cues": [
       "standard"

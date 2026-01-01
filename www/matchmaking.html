@@ -182,6 +182,30 @@
             gap: 2px;
         }
 
+        .mm-flag {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 24px;
+            height: 18px;
+            overflow: hidden;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .mm-flag:empty {
+            display: none;
+        }
+
+        .mm-flag img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
         .mm-player-name {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.9rem;
@@ -548,6 +572,7 @@
             <div class="mm-player-card" id="player1-card">
                 <div class="mm-avatar-container">
                     <div class="mm-avatar" id="player1-avatar">P</div>
+                    <span class="mm-flag" id="player1-flag"></span>
                     <span class="mm-level-badge">⭐ <span id="player1-level">1</span></span>
                 </div>
                 <span class="mm-player-name" id="player1-name">PLAYER</span>
@@ -569,6 +594,7 @@
             <div class="mm-player-card placeholder" id="player2-card">
                 <div class="mm-avatar-container">
                     <div class="mm-avatar placeholder" id="player2-avatar">?</div>
+                    <span class="mm-flag" id="player2-flag"></span>
                 </div>
                 <span class="mm-player-name" id="player2-name">???</span>
                 <span class="mm-player-rank" id="player2-rank">Searching...</span>
@@ -659,6 +685,21 @@
         let timerInterval = null;
         let searchStartTime = Date.now();
 
+
+        // Get flag image URL from CDN
+        function getFlagImageUrl(countryCode, size = 40) {
+            if (!countryCode) return null;
+            return `https://flagcdn.com/w${size}/${countryCode.toLowerCase()}.png`;
+        }
+
+        // Set flag image on element
+        function setFlagImage(elementId, countryCode) {
+            const element = document.getElementById(elementId);
+            if (!element || !countryCode) return;
+            const flagUrl = getFlagImageUrl(countryCode, 40);
+            element.innerHTML = `<img src="${flagUrl}" alt="${countryCode}">`;
+        }
+
         // Map stake to tier
         function stakeToTier(stake) {
             if (stake <= 50) return 'bronze';
@@ -696,6 +737,11 @@
 
                     const level = Math.floor((user.gamesPlayed || 0) / 5) + 1;
                     document.getElementById('player1-level').textContent = level;
+
+                    // Display player 1 flag
+                    if (user.nationality) {
+                        setFlagImage('player1-flag', user.nationality);
+                    }
 
                     connectAndFindMatch(user);
                 } else {
@@ -761,6 +807,11 @@
                 document.getElementById('mm-status').innerHTML = 'Match found!';
                 card.querySelector('.mm-ready-status').className = 'mm-ready-status ready';
                 card.querySelector('.mm-ready-status').innerHTML = '✓ READY';
+                
+                // Display opponent flag
+                if (opponent.nationality) {
+                    setFlagImage('player2-flag', opponent.nationality);
+                }
             }
 
             if (window.currentUser) {

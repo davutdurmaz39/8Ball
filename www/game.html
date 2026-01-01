@@ -166,6 +166,7 @@
                         <img class="avatar-img" id="p1-avatar-header" src="assets/avatars/default_1.png" alt="P1"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="avatar" id="p1-avatar-fallback" style="display:none;">P1</div>
+                        <span class="player-flag" id="p1-flag" title=""></span>
                     </div>
                     <div class="player-details"><span class="player-name" id="p1-name">Player 1</span><span
                             class="ball-type" id="p1-ball-type">--</span></div>
@@ -181,6 +182,7 @@
                         <img class="avatar-img" id="p2-avatar-header" src="assets/avatars/default_2.png" alt="P2"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="avatar" id="p2-avatar-fallback" style="display:none;">P2</div>
+                        <span class="player-flag" id="p2-flag" title=""></span>
                     </div>
                     <div class="speech-bubble hidden" id="p2-speech-bubble"></div>
                 </div>
@@ -316,7 +318,7 @@
             const userMenuEl = document.getElementById('user-menu');
             try {
                 const authToken = localStorage.getItem('authToken');
-                const response = await fetch('/api/auth/me', { 
+                const response = await fetch('/api/auth/me', {
                     credentials: 'include',
                     headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {}
                 });
