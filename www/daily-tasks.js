@@ -24,10 +24,20 @@
             reward: 500,
             url: 'https://t.me/MinePoolGame',
             type: 'social'
+        },
+        {
+            id: 'invite_friend',
+            name: 'Invite a Friend',
+            description: 'Share your code',
+            icon: '👥',
+            iconClass: 'invite',
+            reward: 500,
+            type: 'invite',
+            repeatable: true
         }
     ];
 
-    const INVITE_REWARD_PER_FRIEND = 1000;
+    const INVITE_REWARD_PER_FRIEND = 500;
 
     // Get tasks data from localStorage
     function getTasksData() {
@@ -349,12 +359,12 @@
                     <span class="tasks-icon">📋</span>
                     DAILY TASKS
                 </span>
-                <span class="tasks-reset-timer">Earn up to <span id="potential-earnings">1,000</span> 💰</span>
+                <span class="tasks-reset-timer">Earn up to <span id="potential-earnings">1,500</span> 💰</span>
             </div>
             
             <div class="tasks-progress">
                 <div class="progress-circle" style="--progress: 0%">
-                    <div class="progress-circle-inner">0/2</div>
+                    <div class="progress-circle-inner">0/3</div>
                 </div>
                 <div class="tasks-progress-info">
                     <h4>Complete Tasks</h4>
@@ -364,6 +374,28 @@
             
             <div id="tasks-list" class="tasks-list">
                 <!-- Tasks will be rendered here -->
+            </div>
+            
+            <div class="invite-section" id="invite-section">
+                <div class="invite-code-header">
+                    <span class="invite-code-title">👥 Your Invite Code</span>
+                    <span class="invite-count">Friends invited: <span id="invited-count">0</span></span>
+                </div>
+                <div class="invite-code-box">
+                    <div class="invite-code" id="invite-code-display">LOADING...</div>
+                    <button class="copy-code-btn" id="copy-code-btn" onclick="window.copyInviteCode()">📋 Copy</button>
+                </div>
+                <div class="share-buttons">
+                    <button class="share-btn whatsapp" onclick="window.shareInviteCode('whatsapp')">
+                        📱 WhatsApp
+                    </button>
+                    <button class="share-btn telegram" onclick="window.shareInviteCode('telegram')">
+                        ✈️ Telegram
+                    </button>
+                    <button class="share-btn twitter" onclick="window.shareInviteCode('twitter')">
+                        🐦 Twitter
+                    </button>
+                </div>
             </div>
         `;
 
